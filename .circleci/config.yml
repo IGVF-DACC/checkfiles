@@ -30,7 +30,7 @@ jobs:
             pip install coveralls
       - run:
           name: Tests
-          command: pytest
+          command: pytest --cov=checkfiles
       - run:
           name: Upload coverage report
           command:
