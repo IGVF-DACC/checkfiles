@@ -4,6 +4,7 @@ import boto3
 import hashlib
 import os
 
+
 def lambda_handler(event, context):
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = event['Records'][0]['s3']['object']['key']
@@ -18,21 +19,24 @@ def lambda_handler(event, context):
         if md5sum_encode != etag:
             calculated_md5sum = calculate_checksum(bucket, key)
             if calculated_md5sum != etag:
-                errors['md5sum'] = 'File metadata-specified md5sum ' + md5sum_encode + 'does not match the calculated md5sum ' + calculated_md5sum
+                errors['md5sum'] = 'File metadata-specified md5sum ' + md5sum_encode + \
+                    'does not match the calculated md5sum ' + calculated_md5sum
         if file_size_s3 != file_size_encode:
-                errors['file_size'] = 'File metadata-specified file_size ' + file_size_encode + 'does not match the size of the file in S3 bucket ' + file_size_s3
+            errors['file_size'] = 'File metadata-specified file_size ' + file_size_encode + \
+                'does not match the size of the file in S3 bucket ' + file_size_s3
         if errors:
             return {
-            'accession': accession,
-            'status': 'content error',
-            'errors': errors
-        }
+                'accession': accession,
+                'status': 'content error',
+                'errors': errors
+            }
         else:
             return {
-            'accession': accession,
-            'status': 'progress'
-            }           
+                'accession': accession,
+                'status': 'progress'
+            }
     return None
+
 
 def get_file_metadata_from_encode(accession):
     session = requests.Session()
@@ -41,8 +45,9 @@ def get_file_metadata_from_encode(accession):
     session.auth = (username, password)
     url = 'https://www.encodeproject.org/files/' + accession + '?format=json'
     response = session.get(url)
-    file_metadata = response.json()  
+    file_metadata = response.json()
     return file_metadata
+
 
 def calculate_checksum(bucket, key):
     s3 = boto3.client('s3')
