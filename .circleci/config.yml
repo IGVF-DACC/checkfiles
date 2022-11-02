@@ -25,7 +25,13 @@ jobs:
       - checkout
       - run:
           name: Install dependencies
-          command: pip install -r requirements.txt
+          command: |
+            pip install -r requirements.txt
+            pip install coveralls
       - run:
           name: Tests
           command: pytest
+      - run:
+          name: Upload coverage report
+          command:
+            coveralls
