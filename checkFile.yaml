@@ -12,5 +12,9 @@ Resources:
       MemorySize: 128
       Timeout: 3
       Role: 'arn:aws:iam::281708499374:role/lambdaReadS3MingjieRole'
+      Environment:
+        Variables:
+          PASSWORD: xxxxxxxxxxxxxx
+          USERNAME: XXXXXXX
       Layers:
         - 'arn:aws:lambda:us-west-2:281708499374:layer:requests:3'
