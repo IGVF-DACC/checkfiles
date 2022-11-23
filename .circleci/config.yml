@@ -26,7 +26,7 @@ jobs:
       - run:
           name: Authorize Google Cloud SDK
           command: |
-            echo $(GCLOUD_SERVICE_KEY) > /tmp/sa_key.json
+            echo ${GCLOUD_SERVICE_KEY} > /tmp/sa_key.json
             gcloud auth activate-service-account --key-file=/tmp/sa_key.json
             rm /tmp/sa_key.json
             gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
