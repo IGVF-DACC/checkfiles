@@ -26,7 +26,8 @@ jobs:
       - run:
           name: Authorize Google Cloud SDK
           command: |
-            echo $GOOGLE_APPLICATION_CREDENTIALS | gcloud auth activate-service-account --key-file=-
+            echo ${GOOGLE_APPLICATION_CREDENTIALS} > /tmp/sa_key.json
+            gcloud auth activate-service-account --key-file=/tmp/sa_key.json
             gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
       - run:
           name: Install dependencies
@@ -42,3 +43,7 @@ jobs:
           name: Upload coverage report
           command:
             coveralls
+      - run:
+          name: remove sa_key.json
+          command:
+            rm /tmp/sa_key.json
