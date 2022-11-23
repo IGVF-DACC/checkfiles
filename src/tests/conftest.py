@@ -1,28 +1,16 @@
 import pytest
+from google.cloud import storage
+
+PROJECT_ID = 'igvf-file-validation'
+BUCKET_NAME = 'igvf-file-validation_test_files'
 
 
 @pytest.fixture
-def event_new_file():
-    return {
-        'Records': [
-            {
-                'messageId': '5ba51b39-01ed-4f71-adb5-ec059cfca0ca',
-                'receiptHandle': 'AQEBpG1/Dn4g+I2IT9NF0wG2/3OH4zAJwMTRSyK5qkOnvVE/Zs5oztHJVeeQ8wxkj+d4Ed03mOwq7UIN+JtrcP2O0FRMzOnwUwuUpE965+qc8sge539Sy0JepHHUKek5eNrJSYtHHtd5t6EOlsfnjARkyPd9ttoDxUlr+biNMA4sD26MKTLrwyp2zt0zFJZUSKjFuS/huxS2PGTnxUDilSRwQv39XVQW2RuKNOBhjAjh2UXytYr+EdV3Z2mtoZwoUDTzXZPrOCuNenlsE+qMFEpJJH0IFHfj+hYlksyQWZRXboH9ZJeeWh0YMarEESDMcURM9qFUSILK0NmJUzahEu9/aCowU73Gi5kg8ykN2eQ42cZ//PQ/3vwOhatmmDtYyH53CDNeoNe2nOt5DKAr4xMljQ==',
-                'body': "{\"Records\":[{\"eventVersion\":\"2.1\",\"eventSource\":\"aws:s3\",\"awsRegion\":\"us-west-2\",\"eventTime\":\"2022-11-03T14:26:47.419Z\",\"eventName\":\"ObjectCreated:Put\",\"userIdentity\":{\"principalId\":\"AWS:AIDAUDFZCSGXF3KECAQ3H\"},\"requestParameters\":{\"sourceIPAddress\":\"47.187.164.58\"},\"responseElements\":{\"x-amz-request-id\":\"CADXBZP0EMF1P0EN\",\"x-amz-id-2\":\"2Y0LNUrBO4ofXiBEIvUivTiCQgB+SiaPc6WDU3zBv3RymUILpm/iuaW1KnhVv+l5tM+FOZjqKnP/XW2xhYJhbm9PAMLonjkZ\"},\"s3\":{\"s3SchemaVersion\":\"1.0\",\"configurationId\":\"sqs-trigger\",\"bucket\":{\"name\":\"checkfile-mingjie\",\"ownerIdentity\":{\"principalId\":\"A22RVPTF9VSGSX\"},\"arn\":\"arn:aws:s3:::checkfile-mingjie\"},\"object\":{\"key\":\"2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF080HPN.tsv\",\"size\":1439779,\"eTag\":\"e4aec322d041c6f987e17dbcf93a3465\",\"sequencer\":\"006363CFA7501D5998\"}}}]}",
-                'attributes': {
-                    'ApproximateReceiveCount': '1',
-                    'SentTimestamp': '1667485608151',
-                    'SenderId': 'AIDAJFWZWTE5KRAMGW5A2',
-                    'ApproximateFirstReceiveTimestamp': '1667485608162'
-                },
-                'messageAttributes': {},
-                'md5OfBody': '5ed12fada8ba77fac8601ab906f4d91e',
-                'eventSource': 'aws:sqs',
-                'eventSourceARN': 'arn:aws:sqs:us-west-2:281708499374:CheckfilesQueue',
-                'awsRegion': 'us-west-2'
-            }
-        ]
-    }
+def blob_fastq_gz_small():
+    storage_client = storage.Client(project=PROJECT_ID)
+    bucket = storage_client.bucket(BUCKET_NAME)
+    blob = bucket.blob('ENCFF594AYI.fastq.gz')
+    return blob
 
 
 @pytest.fixture
