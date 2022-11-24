@@ -40,6 +40,8 @@ jobs:
             pip install coveralls
       - run:
           name: Tests
+          environment:
+            GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa_key.json
           command: pytest --cov=checkfiles
       - run:
           name: Upload coverage report
