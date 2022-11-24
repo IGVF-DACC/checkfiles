@@ -29,6 +29,8 @@ jobs:
             echo ${GCLOUD_SERVICE_KEY} > /tmp/sa_key.json
             gcloud auth activate-service-account --key-file=/tmp/sa_key.json
             gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
+          environment:
+            GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa_key.json
       - run:
           name: Install dependencies
           command: |
