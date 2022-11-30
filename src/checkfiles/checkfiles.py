@@ -10,11 +10,12 @@ import time
 from google.cloud import storage
 
 # Retrieve User-defined env vars
-MD5SUM = os.getenv('MD5SUM')
-FILE_FORMAT = os.getenv('FILE_FORMAT')
-UUID = os.getenv('UUID', '462bd56-9278-48aa-bc55-9eff587ba2c7')
 BUCKET_NAME = os.getenv('BUCKET_NAME', 'igvf-file-validation_test_files')
 BLOB_NAME = os.getenv('BLOB_NAME', 'ENCFF080HPN.tsv')
+MD5SUM = os.getenv('MD5SUM')
+FILE_FORMAT = os.getenv('FILE_FORMAT', 'tsv')
+UUID = os.getenv('UUID', '462bd56-9278-48aa-bc55-9eff587ba2c7')
+FILE_SIZE = os.getenv('FILE_SIZE', 1439779)
 
 ZIP_FILE_FORMAT = [
     'bam',
@@ -27,60 +28,64 @@ EXCLUDE_FORMAT = [
     'bai',
 ]
 
-CHECKS = {
-    'BAM_QUICKCHECK': 'bam_quickcheck',
-    'VALIDATE_FILES': 'validateFiles',
-    'MD5SUM': 'md5sum',
-    'CONTENT_MD5SUM': 'content_md5sum',
-    'FILE_SIZE': 'file_size',
-    'READ_COUNT': 'read_count',
-    'FASTQ_SIGNATURE': 'fastq_signature',
-    'BAM_STATS': 'bam_stats',
-    'BAM_MAPPED_RUN_TYPE': 'bam_mapped_run_type',
-    'BAM_MAPPED_READ_LENGTH': 'bam_mapped_read_length',
-    'BAM_MAPPED_RUN_TYPE_EXTRACION': 'bam_mapped_run_type_extraction',
-    'BAM_MAPPED_READ_LENGTH_EXTRACTION': 'bam_mapped_read_length_extraction',
+'''
+Items to check:
+bam_quickcheck
+validateFiles
+md5sum
+content_md5sum
+file_size
+read_count
+fastq_signature
+bam_stats
+bam_mapped_run_type
+bam_mapped_read_length
+bam_mapped_run_type_extraction
+bam_mapped_read_length_extraction
 
-}
 
-ERRORS = {
-    'ASSEMBLY': 'assembly',
-    'GENOME_ANNOTATION': 'genome_annotation',
-    'MD5SUM': 'md5sum',
-    'CONTENT_MD5SUM': 'content_md5sum',
-    'LOOKUP_FOR_CONTENT_MD5SUM': 'lookup_for_content_md5sum',
-    'GZIP': 'gzip',
-    'VALIDATE_FILES': 'validateFiles',
-    'FASTQ_FORMAT_READ_NAME': 'fastq_format_read_name',
-    'FASTQ_READ_NAME_ENCODING': 'fastq_read_name_encoding',
-    'UNZIPPED_FASTQ_STREAMING': 'unzipped_fastq_streaming',
-    'FASTQ_INCONSISTENT_READ_NUMBERS': 'inconsistent_read_numbers',
-    'FASTQ_READ_LENGTH': 'fastq_read_lenghth',
-    'FASTQ_INFORMATION_EXTRACTION': 'fastq_information_extraction',
-    'FASTQ_NOT_UNIQUE_FLOWCELL_DETAILS': 'fastq_not_unique_flowcell_details',
-    'BAM_STATS_DECODING_FAILURE': 'bam_stats_decoding_failure',
-    'BAM_QUICKCHECK': 'bam_quickcheck',
-    'BAM_STATS_EXTRACTION': 'bam_stats_extraction',
-    'BAM_MISSING_MAPPED_PROPERTIES': 'bam_missing_mapped_properties',
+All the errors are listed here:
+assembly
+genome_annotation
+md5sum
+content_md5sum
+lookup_for_content_md5sum
+gzip
+file_size
+validateFiles
+fastq_format_read_name
+fastq_read_name_encoding
+unzipped_fastq_streaming
+inconsistent_read_numbers
+fastq_read_lenghth
+fastq_information_extraction
+fastq_not_unique_flowcell_details
+bam_stats_decoding_failure
+bam_quickcheck
+bam_stats_extraction
+bam_missing_mapped_properties
+'''
 
-}
 
 # metadata for all file: derived_from
 # metadata for fastq need to have: read_name_details, platform, fastq_signature
 
 
-def main(bucket_name, blob_name, uuid, md5sum, file_format):
+def main(bucket_name, blob_name, uuid, md5sum, file_format, file_size):
     print(f'Checking file uuid {uuid}...')
     storage_client = storage.Client(project='igvf-file-validation')
     bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(blob_name)
+    blob = bucket.get_blob(blob_name)
 
     errors = {}
     results = {}
     content_error = []
 
     is_gzipped = is_file_gzipped(blob)
+    print('is file gziped:', is_gzipped)
     check_valid_gzipped_file_format(errors, is_gzipped, file_format)
+    results['file_size'] = blob.size
+    check_file_size(errors, file_size, blob.size)
 
     print(f'Completed file validation for file uuid {uuid}.')
 
@@ -115,16 +120,21 @@ def is_file_gzipped(blob):
 
 def check_valid_gzipped_file_format(errors, is_gzipped, file_format):
     if file_format in ZIP_FILE_FORMAT and not is_gzipped:
-        errors[ERRORS.GZIP] = 'file should be gzipped'
-    if file_format not in ZIP_FILE_FORMAT and is_gzipped:
-        errors[ERRORS.GZIP] = 'file should not be gzipped'
-    return ''
+        errors['gzip'] = f'{file_format} file should be gzipped'
+    elif file_format not in ZIP_FILE_FORMAT and is_gzipped:
+        errors['gzip'] = f'{file_format} file should not be gzipped'
+
+
+def check_file_size(errors, file_size, blob_size):
+    if blob_size != file_size:
+        errors['file_size'] = f'submitted file zise {str(file_size)} does not mactch file zise {str(blob_size)}'
 
 
 # Start script
 if __name__ == '__main__':
     try:
-        response = main(BUCKET_NAME, BLOB_NAME, UUID, MD5SUM, FILE_FORMAT)
+        response = main(BUCKET_NAME, BLOB_NAME, UUID,
+                        MD5SUM, FILE_FORMAT, FILE_SIZE)
         print(json.dumps(response))
     except Exception as err:
         message = f'file uuid #{UUID} failed: {str(err)}'
