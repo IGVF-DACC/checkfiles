@@ -7,6 +7,7 @@ import json
 import os
 import sys
 import time
+import logging
 from google.cloud import storage
 
 # Retrieve User-defined env vars
@@ -69,10 +70,12 @@ bam_missing_mapped_properties
 
 # metadata for all file: derived_from
 # metadata for fastq need to have: read_name_details, platform, fastq_signature
+logging.basicConfig(
+    format='%(asctime)s | %(levelname)s: %(message)s', level=logging.NOTSET)
 
 
 def main(bucket_name, blob_name, uuid, md5sum, file_format, file_size):
-    print(f'Checking file uuid {uuid}...')
+    logging.info(f'Checking file uuid {uuid}...')
     storage_client = storage.Client(project='igvf-file-validation')
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.get_blob(blob_name)
@@ -82,12 +85,12 @@ def main(bucket_name, blob_name, uuid, md5sum, file_format, file_size):
     content_error = []
 
     is_gzipped = is_file_gzipped(blob)
-    print('is file gziped:', is_gzipped)
+    logging.info(f'is file gziped: {is_gzipped}')
     check_valid_gzipped_file_format(errors, is_gzipped, file_format)
     results['file_size'] = blob.size
     check_file_size(errors, file_size, blob.size)
 
-    print(f'Completed file validation for file uuid {uuid}.')
+    logging.info(f'Completed file validation for file uuid {uuid}.')
 
     if errors:
         return {
@@ -135,9 +138,9 @@ if __name__ == '__main__':
     try:
         response = main(BUCKET_NAME, BLOB_NAME, UUID,
                         MD5SUM, FILE_FORMAT, FILE_SIZE)
-        print(json.dumps(response))
+        logging.info(json.dumps(response))
     except Exception as err:
         message = f'file uuid #{UUID} failed: {str(err)}'
 
-        print(json.dumps({'message': message, 'severity': 'ERROR'}))
+        logging.info(json.dumps({'message': message, 'severity': 'ERROR'}))
         sys.exit(1)  # Retry Job Task by exiting the process
