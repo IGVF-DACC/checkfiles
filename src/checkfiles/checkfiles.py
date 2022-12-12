@@ -1,8 +1,8 @@
 import json
-#import requests
+import requests
 import hashlib
 import gzip
-#import pysam
+import pysam
 import json
 import os
 import sys
@@ -12,11 +12,13 @@ from google.cloud import storage
 
 # Retrieve User-defined env vars
 BUCKET_NAME = os.getenv('BUCKET_NAME', 'igvf-file-validation_test_files')
-BLOB_NAME = os.getenv('BLOB_NAME', 'ENCFF080HPN.tsv')
-MD5SUM = os.getenv('MD5SUM')
-FILE_FORMAT = os.getenv('FILE_FORMAT', 'tsv')
+# file examples: ENCFF594AYI.fastq.gz, ENCFF206HGF.bam, ENCFF080HPN.tsv
+BLOB_NAME = os.getenv('BLOB_NAME', 'ENCFF206HGF.bam')
+MD5SUM = os.getenv('MD5SUM', 'e4aec322d041c6f987e17dbcf93a3465')
+FILE_FORMAT = os.getenv('FILE_FORMAT', 'bam')
 UUID = os.getenv('UUID', '462bd56-9278-48aa-bc55-9eff587ba2c7')
 FILE_SIZE = os.getenv('FILE_SIZE', 1439779)
+NUMBER_OF_READS = os.getenv('NUMBER_OF_READS', 1709)
 
 ZIP_FILE_FORMAT = [
     'bam',
@@ -29,8 +31,10 @@ EXCLUDE_FORMAT = [
     'bai',
 ]
 
+CONTENT_MD5SUM_URL = 'https://www.encodeproject.org/search/?type=File&format=json&content_md5sum='
+
 '''
-Items to check:
+Items to check in old file:
 bam_quickcheck
 validateFiles
 md5sum
@@ -45,14 +49,14 @@ bam_mapped_run_type_extraction
 bam_mapped_read_length_extraction
 
 
-All the errors are listed here:
+All the content errors checked in old file are listed here:
 assembly
 genome_annotation
-md5sum
-content_md5sum
-lookup_for_content_md5sum
 gzip
 file_size
+md5sum
+content_md5sum
+bam_quickcheck
 validateFiles
 fastq_format_read_name
 fastq_read_name_encoding
@@ -62,7 +66,6 @@ fastq_read_lenghth
 fastq_information_extraction
 fastq_not_unique_flowcell_details
 bam_stats_decoding_failure
-bam_quickcheck
 bam_stats_extraction
 bam_missing_mapped_properties
 '''
@@ -71,10 +74,10 @@ bam_missing_mapped_properties
 # metadata for all file: derived_from
 # metadata for fastq need to have: read_name_details, platform, fastq_signature
 logging.basicConfig(
-    format='%(asctime)s | %(levelname)s: %(message)s', level=logging.NOTSET)
+    format='%(asctime)s | %(levelname)s: %(message)s', level=logging.INFO)
 
 
-def main(bucket_name, blob_name, uuid, md5sum, file_format, file_size):
+def main(bucket_name, blob_name, uuid, md5sum, file_format, file_size, number_of_reads):
     logging.info(f'Checking file uuid {uuid}...')
     storage_client = storage.Client(project='igvf-file-validation')
     bucket = storage_client.bucket(bucket_name)
@@ -89,6 +92,15 @@ def main(bucket_name, blob_name, uuid, md5sum, file_format, file_size):
     check_valid_gzipped_file_format(errors, is_gzipped, file_format)
     results['file_size'] = blob.size
     check_file_size(errors, file_size, blob.size)
+    check_md5sum(errors, md5sum, blob.md5_hash)
+
+    if is_gzipped:
+        check_content_md5sum(errors, blob)
+
+    if file_format == 'bam':
+        pysam_bam_check(errors, bucket_name, blob_name, number_of_reads)
+    #    if 'bam_error' not in errors:
+    #        generate_bai_file(blob)
 
     logging.info(f'Completed file validation for file uuid {uuid}.')
 
@@ -130,17 +142,72 @@ def check_valid_gzipped_file_format(errors, is_gzipped, file_format):
 
 def check_file_size(errors, file_size, blob_size):
     if blob_size != file_size:
-        errors['file_size'] = f'submitted file zise {str(file_size)} does not mactch file zise {str(blob_size)}'
+        errors['file_size'] = f'submitted file zise {str(file_size)} does not mactch file zise {str(blob_size)} in google storage'
+
+
+def check_md5sum(errors, md5sum, md5_base64):
+    import base64
+    import binascii
+    blob_md5sum = str(binascii.hexlify(
+        base64.urlsafe_b64decode(md5_base64)), 'utf-8')
+    logging.info(f'the md5sum is {blob_md5sum}')
+    if md5sum != blob_md5sum:
+        errors['md5sum'] = f'submitted file md5sum {(md5sum)} does not mactch file md5sum {blob_md5sum} in google storage'
+
+
+def check_content_md5sum(errors, blob, chunk_size=128*6400000):
+    md5 = hashlib.md5()
+    with blob.open('rb') as zipped_file:
+        with gzip.open(zipped_file) as f:
+            while chunk := f.read(chunk_size):
+                md5.update(chunk)
+    content_md5sum = md5.hexdigest()
+    logging.info(f'content md5sum is {content_md5sum}')
+    url = CONTENT_MD5SUM_URL + content_md5sum
+    session = requests.Session()
+    username = os.getenv('ENCODE_ACCESS_KEY')
+    password = os.getenv('ENCODE_CECRET_KEY')
+    session.auth = (username, password)
+    conflict_files = session.get(url).json()['@graph']
+    if conflict_files:
+        accessions = []
+        for file in conflict_files:
+            accessions.append(file['accession'])
+        errors[
+            'content_md5sum'] = f"content md5sum conflicts with content md5sum of existing file(s): {', '.join(accessions)}"
+
+
+def pysam_bam_check(errors, bucket_name, blob_name, number_of_reads):
+    file_path = 'gs://' + bucket_name + '/' + blob_name
+    try:
+        pysam.quickcheck(file_path)
+        result = pysam.stats(file_path)
+        if 'SN\tis sorted:\t0' in result:
+            errors['bam_error'] = 'the bam file is not sorted'
+        else:
+            samfile = pysam.AlignmentFile(file_path, 'rb')
+            count = samfile.count(until_eof=True)
+            logging.info(f'the number of reads: {count}')
+            if count != number_of_reads:
+                errors['bam_error'] = f'sumbitted number of reads {number_of_reads} does not match number of reads {count} in google storage'
+            samfile.close()
+    except pysam.utils.SamtoolsError as e:
+        errors['bam_error'] = f'file is not valid bam file by SamtoolsError: {str(e)}'
+
+
+def generate_bai_file(blob):
+    content = blob.download_as_bytes()
+    pysam.index(content)
 
 
 # Start script
 if __name__ == '__main__':
     try:
         response = main(BUCKET_NAME, BLOB_NAME, UUID,
-                        MD5SUM, FILE_FORMAT, FILE_SIZE)
+                        MD5SUM, FILE_FORMAT, FILE_SIZE, NUMBER_OF_READS)
         logging.info(json.dumps(response))
     except Exception as err:
-        message = f'file uuid #{UUID} failed: {str(err)}'
+        message = f'exception occurred when checking file uuid #{UUID}: {str(err)}'
 
-        logging.info(json.dumps({'message': message, 'severity': 'ERROR'}))
+        logging.info(json.dumps({'exception': message}))
         sys.exit(1)  # Retry Job Task by exiting the process
