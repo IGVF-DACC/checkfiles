@@ -8,3 +8,4 @@ gcsfuse --key-file=${GOOGLE_APPLICATION_CREDENTIALS} ${BUCKET_NAME} ${DATA_DIR}
 echo foobarbaz
 ls /mnt
 python3 checkfiles/checkfiles.py
+ls /mnt
