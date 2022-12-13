@@ -9,13 +9,15 @@ import os
 import sys
 import time
 import logging
+import base64
+import binascii
 from google.cloud import storage
 
 # file examples: ENCFF594AYI.fastq.gz, ENCFF206HGF.bam, ENCFF080HPN.tsv
 BUCKET_NAME = os.getenv('BUCKET_NAME', 'igvf-file-validation_test_files')
-BLOB_NAME = os.getenv('BLOB_NAME', 'ENCFF594AYI.fastq.gz')
+BLOB_NAME = os.getenv('BLOB_NAME', 'ENCFF206HGF.bam')
 MD5SUM = os.getenv('MD5SUM', 'e4aec322d041c6f987e17dbcf93a3465')
-FILE_FORMAT = os.getenv('FILE_FORMAT', 'fastq')
+FILE_FORMAT = os.getenv('FILE_FORMAT', 'bam')
 UUID = os.getenv('UUID', '462bd56-9278-48aa-bc55-9eff587ba2c7')
 FILE_SIZE = os.getenv('FILE_SIZE', 1371)
 NUMBER_OF_READS = os.getenv('NUMBER_OF_READS', 24)
@@ -33,43 +35,6 @@ EXCLUDE_FORMAT = [
 ]
 
 CONTENT_MD5SUM_URL = 'https://www.encodeproject.org/search/?type=File&format=json&content_md5sum='
-
-'''
-Items to check in old file:
-bam_quickcheck
-validateFiles
-md5sum
-content_md5sum
-file_size
-read_count
-fastq_signature
-bam_stats
-bam_mapped_run_type
-bam_mapped_read_length
-bam_mapped_run_type_extraction
-bam_mapped_read_length_extraction
-
-
-All the content errors checked in old file are listed here:
-assembly
-genome_annotation
-gzip
-file_size
-md5sum
-content_md5sum
-bam_quickcheck
-validateFiles
-fastq_format_read_name
-fastq_read_name_encoding
-unzipped_fastq_streaming
-inconsistent_read_numbers
-fastq_read_lenghth
-fastq_information_extraction
-fastq_not_unique_flowcell_details
-bam_stats_decoding_failure
-bam_stats_extraction
-bam_missing_mapped_properties
-'''
 
 
 # metadata for all file: derived_from
@@ -97,7 +62,7 @@ def main(bucket_name, blob_name, uuid, md5sum, file_format, file_size, number_of
     check_md5sum(errors, md5sum, blob.md5_hash)
 
     if is_gzipped:
-        check_content_md5sum(errors, blob)
+        check_content_md5sum(errors, file_path)
 
     if file_format == 'bam':
         bam_pysam_check(errors, bucket_name, blob_name, number_of_reads)
@@ -150,8 +115,6 @@ def check_file_size(errors, file_size, blob_size):
 
 
 def check_md5sum(errors, md5sum, md5_base64):
-    import base64
-    import binascii
     blob_md5sum = str(binascii.hexlify(
         base64.urlsafe_b64decode(md5_base64)), 'utf-8')
     logging.info(f'the md5sum is {blob_md5sum}')
@@ -159,12 +122,11 @@ def check_md5sum(errors, md5sum, md5_base64):
         errors['md5sum'] = f'submitted file md5sum {(md5sum)} does not mactch file md5sum {blob_md5sum} in google storage'
 
 
-def check_content_md5sum(errors, blob, chunk_size=128*6400000):
+def check_content_md5sum(errors, file_path, chunk_size=128*6400000):
     md5 = hashlib.md5()
-    with blob.open('rb') as zipped_file:
-        with gzip.open(zipped_file) as f:
-            while chunk := f.read(chunk_size):
-                md5.update(chunk)
+    with gzip.open(file_path) as f:
+        while chunk := f.read(chunk_size):
+            md5.update(chunk)
     content_md5sum = md5.hexdigest()
     logging.info(f'content md5sum is {content_md5sum}')
     url = CONTENT_MD5SUM_URL + content_md5sum
