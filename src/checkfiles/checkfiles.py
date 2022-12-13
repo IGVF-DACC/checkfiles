@@ -13,7 +13,7 @@ import base64
 import binascii
 from google.cloud import storage
 
-# file examples: ENCFF594AYI.fastq.gz, ENCFF206HGF.bam, ENCFF080HPN.tsv
+# some files for test: ENCFF594AYI.fastq.gz, ENCFF206HGF.bam, ENCFF080HPN.tsv
 BUCKET_NAME = os.getenv('BUCKET_NAME', 'igvf-file-validation_test_files')
 BLOB_NAME = os.getenv('BLOB_NAME', 'ENCFF206HGF.bam')
 MD5SUM = os.getenv('MD5SUM', 'e4aec322d041c6f987e17dbcf93a3465')
@@ -52,9 +52,8 @@ def main(bucket_name, blob_name, uuid, md5sum, file_format, file_size, number_of
 
     errors = {}
     results = {}
-    content_error = []
 
-    is_gzipped = is_file_gzipped(blob)
+    is_gzipped = is_file_gzipped(file_path)
     logging.info(f'is file gziped: {is_gzipped}')
     check_valid_gzipped_file_format(errors, is_gzipped, file_format)
     results['file_size'] = blob.size
@@ -65,7 +64,7 @@ def main(bucket_name, blob_name, uuid, md5sum, file_format, file_size, number_of
         check_content_md5sum(errors, file_path)
 
     if file_format == 'bam':
-        bam_pysam_check(errors, bucket_name, blob_name, number_of_reads)
+        bam_pysam_check(errors, file_path, number_of_reads)
         if 'bam_error' not in errors:
             bam_generate_bai_file(file_path)
     elif file_format == 'fastq':
@@ -86,20 +85,12 @@ def main(bucket_name, blob_name, uuid, md5sum, file_format, file_size, number_of
         }
 
 
-def update_content_error(errors, error_message):
-    if 'content_error' not in errors:
-        errors['content_error'] = error_message
-    else:
-        errors['content_error'] += ', ' + error_message
-
-
-def is_file_gzipped(blob):
-    with blob.open('rb') as f:
-        try:
-            gzip.GzipFile(fileobj=f).read(1)
-            return True
-        except gzip.BadGzipFile:
-            return False
+def is_file_gzipped(file_path):
+    try:
+        gzip.GzipFile(filename=file_path).read(1)
+        return True
+    except gzip.BadGzipFile:
+        return False
 
 
 def check_valid_gzipped_file_format(errors, is_gzipped, file_format):
@@ -109,9 +100,9 @@ def check_valid_gzipped_file_format(errors, is_gzipped, file_format):
         errors['gzip'] = f'{file_format} file should not be gzipped'
 
 
-def check_file_size(errors, file_size, blob_size):
-    if blob_size != file_size:
-        errors['file_size'] = f'submitted file zise {str(file_size)} does not mactch file zise {str(blob_size)} in google storage'
+def check_file_size(errors, file_size, size_in_cloud_storage):
+    if size_in_cloud_storage != file_size:
+        errors['file_size'] = f'submitted file zise {str(file_size)} does not mactch file zise {str(size_in_cloud_storage)} in cloud storage'
 
 
 def check_md5sum(errors, md5sum, md5_base64):
@@ -119,7 +110,7 @@ def check_md5sum(errors, md5sum, md5_base64):
         base64.urlsafe_b64decode(md5_base64)), 'utf-8')
     logging.info(f'the md5sum is {blob_md5sum}')
     if md5sum != blob_md5sum:
-        errors['md5sum'] = f'submitted file md5sum {(md5sum)} does not mactch file md5sum {blob_md5sum} in google storage'
+        errors['md5sum'] = f'submitted file md5sum {(md5sum)} does not mactch file md5sum {blob_md5sum} in cloud storage'
 
 
 def check_content_md5sum(errors, file_path, chunk_size=128*6400000):
@@ -143,8 +134,7 @@ def check_content_md5sum(errors, file_path, chunk_size=128*6400000):
             'content_md5sum'] = f"content md5sum conflicts with content md5sum of existing file(s): {', '.join(accessions)}"
 
 
-def bam_pysam_check(errors, bucket_name, blob_name, number_of_reads):
-    file_path = 'gs://' + bucket_name + '/' + blob_name
+def bam_pysam_check(errors, file_path, number_of_reads):
     try:
         pysam.quickcheck(file_path)
         result = pysam.stats(file_path)
@@ -155,7 +145,7 @@ def bam_pysam_check(errors, bucket_name, blob_name, number_of_reads):
             count = samfile.count(until_eof=True)
             logging.info(f'the number of reads: {count}')
             if count != number_of_reads:
-                errors['bam_error'] = f'sumbitted number of reads {number_of_reads} does not match number of reads {count} in google storage'
+                errors['bam_error'] = f'sumbitted number of reads {number_of_reads} does not match number of reads {count} in cloud storage'
             samfile.close()
     except pysam.utils.SamtoolsError as e:
         errors['bam_error'] = f'file is not valid bam file by SamtoolsError: {str(e)}'
@@ -170,9 +160,9 @@ def fastq_check(errors, file_path, number_of_reads, read_length):
     count = len(fq)
     avg_len = int(fq.avglen)
     if count != number_of_reads:
-        errors['fastq_number_of_reads'] = f'sumbitted number of reads {number_of_reads} does not match number of reads {count} in google storage'
+        errors['fastq_number_of_reads'] = f'sumbitted number of reads {number_of_reads} does not match number of reads {count} in cloud storage'
     if avg_len != read_length:
-        errors['fastq_read_length'] = f'sumbitted read length {read_length} does not match read length {avg_len} in google storage'
+        errors['fastq_read_length'] = f'sumbitted read length {read_length} does not match read length {avg_len} in cloud storage'
 
 
 # Start script
