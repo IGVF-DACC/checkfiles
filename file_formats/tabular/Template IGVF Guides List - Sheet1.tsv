@@ -1,0 +1,3 @@
+How to use this document: 		Copy this template to create a spreadsheet with your guides & the following supporting information. Link your spreadsheet in the Project Design Resources - IGVF gRNA tab																	
+GUIDES	name/email/affiliation	chrom	chromStart	chromEnd	name	strandPerturbationTarget	PerturbationTargetID	chrTSS	startTSS	endTSS	strandGene	measuredGeneSymbol	measuredEnsemblID	guideSpacerSeq	guideSeq	guideType	Notes	score_explanation	notes
+		string	uint	uint	string	char[1]	string	string	string	string	string	string	string	string	string	string	lstring		
