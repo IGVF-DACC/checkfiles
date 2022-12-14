@@ -1,5 +1,5 @@
 from checkfiles.checkfiles import is_file_gzipped, check_valid_gzipped_file_format, check_file_size
-from checkfiles.checkfiles import check_md5sum, check_content_md5sum, bam_pysam_check
+from checkfiles.checkfiles import check_md5sum, check_content_md5sum, bam_pysam_check, fastq_check, file_validation, get_local_file_path
 
 
 def test_is_file_gzipped_gzipped():
@@ -87,3 +87,68 @@ def test_bam_pysam_check_number_of_read():
     bam_pysam_check(errors, file_path, number_of_reads)
     assert errors == {
         'bam_error': 'sumbitted number of reads 158 does not match number of reads 1709 in cloud storage'}
+
+
+def test_fastq_check_number_fail():
+    file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
+    errors = {}
+    number_of_reads = 1
+    read_length = 1
+    fastq_check(errors, file_path, number_of_reads, read_length)
+    assert errors == {
+        'fastq_number_of_reads': 'sumbitted number of reads 1 does not match number of reads 25 in cloud storage',
+        'fastq_read_length': 'sumbitted read length 1 does not match read length 58 in cloud storage'
+    }
+
+
+def test_main_fastq(mocker):
+    file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
+    bucket_name = 'igvf-file-validation_test_files'
+    blob_name = 'ENCFF594AYI.fastq.gz'
+    uuid = 'a3b754b6-0213-4ed4-a5f3-124f90273561'
+    md5sum = '3e814f4af7a4c13460584b26fbe32dc4'
+    file_format = 'fastq'
+    file_size = 1371
+    number_of_reads = 25
+    read_length = 58
+    mocker.patch('checkfiles.checkfiles.get_local_file_path',
+                 return_value=file_path)
+    result = file_validation(bucket_name, blob_name, uuid, md5sum,
+                             file_format, file_size, number_of_reads, read_length)
+    assert result == {
+        'uuid': 'a3b754b6-0213-4ed4-a5f3-124f90273561',
+        'validation_result': 'failed',
+        'errors': {'content_md5sum': 'content md5sum conflicts with content md5sum of existing file(s): ENCFF594AYI'}
+    }
+
+
+def test_main_bam(mocker):
+    file_path = 'src/tests/data/ENCFF206HGF.bam'
+    bucket_name = 'igvf-file-validation_test_files'
+    blob_name = 'ENCFF206HGF.bam'
+    uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
+    md5sum = '2d3b7df013d257c7052c084d93ff9026'
+    file_format = 'bam'
+    file_size = 118126
+    number_of_reads = 1709
+    read_length = 58
+    mocker.patch('checkfiles.checkfiles.get_local_file_path',
+                 return_value=file_path)
+    mock_response = mocker.Mock()
+    mock_response.json.return_value = {
+        '@graph': []
+    }
+    mocker.patch('checkfiles.checkfiles.requests.Session.get',
+                 return_value=mock_response)
+    result = file_validation(bucket_name, blob_name, uuid, md5sum,
+                             file_format, file_size, number_of_reads, read_length)
+    assert result == {
+        'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
+        'validation_result': 'pass'
+    }
+
+
+def test_get_local_file_path():
+    blob_name = 'ENCFF594AYI.fastq.gz'
+    file_path = get_local_file_path(blob_name)
+    assert file_path == '/mnt/ENCFF594AYI.fastq.gz'

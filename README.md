@@ -34,3 +34,19 @@ docker run --platform linux/amd64  -it  --privileged \
     -v /Users/mingjie/git/igvf/gcsfuse/key.json:/checkfiles/key.json:ro \
     checkfiles bash
 ```
+
+## Local test
+
+To run the tests, use the pytest command.
+
+`pytest`
+
+To measure the code coverage of your tests, use the coverage command to run pytest instead of running it directly.
+
+`coverage run -m pytest`
+
+An HTML report allows you to see which lines were covered in each file:
+
+`coverage html`
+
+This generates files in the htmlcov directory. Open htmlcov/index.html in your browser to see the report.

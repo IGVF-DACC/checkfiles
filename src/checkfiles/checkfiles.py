@@ -15,13 +15,13 @@ from google.cloud import storage
 
 # some files for test: ENCFF594AYI.fastq.gz, ENCFF206HGF.bam, ENCFF080HPN.tsv
 BUCKET_NAME = os.getenv('BUCKET_NAME', 'igvf-file-validation_test_files')
-BLOB_NAME = os.getenv('BLOB_NAME', 'ENCFF206HGF.bam')
-MD5SUM = os.getenv('MD5SUM', 'e4aec322d041c6f987e17dbcf93a3465')
-FILE_FORMAT = os.getenv('FILE_FORMAT', 'bam')
+BLOB_NAME = os.getenv('BLOB_NAME', 'ENCFF594AYI.fastq.gz')
+MD5SUM = os.getenv('MD5SUM', '3e814f4af7a4c13460584b26fbe32dc4')
+FILE_FORMAT = os.getenv('FILE_FORMAT', 'fastq')
 UUID = os.getenv('UUID', '462bd56-9278-48aa-bc55-9eff587ba2c7')
 FILE_SIZE = os.getenv('FILE_SIZE', 1371)
-NUMBER_OF_READS = os.getenv('NUMBER_OF_READS', 24)
-READ_LENGTH = os.getenv('READ_LENGTH', 57)
+NUMBER_OF_READS = os.getenv('NUMBER_OF_READS', 25)
+READ_LENGTH = os.getenv('READ_LENGTH', 58)
 
 ZIP_FILE_FORMAT = [
     'bam',
@@ -43,12 +43,24 @@ logging.basicConfig(
     format='%(asctime)s | %(levelname)s: %(message)s', level=logging.INFO)
 
 
-def main(bucket_name, blob_name, uuid, md5sum, file_format, file_size, number_of_reads, read_length):
+def main():
+    try:
+        response = file_validation(BUCKET_NAME, BLOB_NAME, UUID,
+                                   MD5SUM, FILE_FORMAT, FILE_SIZE, NUMBER_OF_READS, READ_LENGTH)
+        logging.info(json.dumps(response))
+    except Exception as err:
+        message = f'exception occurred when checking file uuid #{UUID}: {str(err)}'
+
+        logging.info(json.dumps({'exception': message}))
+        sys.exit(1)  # Retry Job Task by exiting the process
+
+
+def file_validation(bucket_name, blob_name, uuid, md5sum, file_format, file_size, number_of_reads, read_length):
     logging.info(f'Checking file uuid {uuid}...')
     storage_client = storage.Client(project='igvf-file-validation')
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.get_blob(blob_name)
-    file_path = '/mnt/' + blob_name
+    file_path = get_local_file_path(blob_name)
 
     errors = {}
     results = {}
@@ -83,6 +95,11 @@ def main(bucket_name, blob_name, uuid, md5sum, file_format, file_size, number_of
             'uuid': uuid,
             'validation_result': 'pass'
         }
+
+
+def get_local_file_path(blob_name):
+    file_path = '/mnt/' + blob_name
+    return file_path
 
 
 def is_file_gzipped(file_path):
@@ -163,16 +180,11 @@ def fastq_check(errors, file_path, number_of_reads, read_length):
         errors['fastq_number_of_reads'] = f'sumbitted number of reads {number_of_reads} does not match number of reads {count} in cloud storage'
     if avg_len != read_length:
         errors['fastq_read_length'] = f'sumbitted read length {read_length} does not match read length {avg_len} in cloud storage'
+    fxi_file_path = file_path + '.fxi'
+    if os.path.exists(fxi_file_path):
+        os.remove(fxi_file_path)
 
 
 # Start script
 if __name__ == '__main__':
-    try:
-        response = main(BUCKET_NAME, BLOB_NAME, UUID,
-                        MD5SUM, FILE_FORMAT, FILE_SIZE, NUMBER_OF_READS, READ_LENGTH)
-        logging.info(json.dumps(response))
-    except Exception as err:
-        message = f'exception occurred when checking file uuid #{UUID}: {str(err)}'
-
-        logging.info(json.dumps({'exception': message}))
-        sys.exit(1)  # Retry Job Task by exiting the process
+    main()
