@@ -16,23 +16,15 @@ Checkfiles is used to check new or updated files in google cloud to see if the s
 
 - Build the image
 
-`docker image build --platform=amd64 -t checkfiles .`
+`docker image build -t checkfiles .`
 
 - Run the build
 
 ```bash
-docker run --platform linux/amd64  -it  --privileged \
+docker run -it --privileged \
+    -e AWS_ACCESS_KEY_ID=xxxxxxxxx -e AWS_SECRET_ACCESS_KEY=xxxxxxx\
     -v /Users/mingjie/git/igvf/gcsfuse/key.json:/checkfiles/key.json:ro \
-    -e ENCODE_ACCESS_KEY={xxxxxxx} -e ENCODE_CECRET_KEY={xxxxxxxxx} \
     checkfiles
-```
-
-- if you want to just run bash command in docker
-
-```bash
-docker run --platform linux/amd64  -it  --privileged \
-    -v /Users/mingjie/git/igvf/gcsfuse/key.json:/checkfiles/key.json:ro \
-    checkfiles bash
 ```
 
 ## Local test
