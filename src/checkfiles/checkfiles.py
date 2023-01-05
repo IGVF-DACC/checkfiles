@@ -38,9 +38,6 @@ EXCLUDE_FORMAT = [
 
 CONTENT_MD5SUM_URL = 'https://www.encodeproject.org/search/?type=File&format=json&content_md5sum='
 
-
-# metadata for all file: derived_from
-# metadata for fastq need to have: read_name_details, platform, fastq_signature
 logging.basicConfig(
     format='%(asctime)s | %(levelname)s: %(message)s', level=logging.INFO)
 

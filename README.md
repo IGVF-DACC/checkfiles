@@ -5,6 +5,25 @@
 
 Checkfiles is used to check new or updated files in AWS S3 bucket to see if the size and MD5 sum (both for gzipped and ungzipped) are identical to the submitted metadata. It also checks some other properties for specific file type.
 
+Checks for all files:
+
+- File size
+- MD5 sum
+- Should the file be zipped
+- Content MD5 sum if the file is zipped
+
+Additional checks for BAM file:
+
+- Is the file a valid BAM file by SamtoolsError
+- Is the file sorted
+- The number of reads
+- Generate index file for this BAM file
+
+Additional checks for FASTQ file:
+
+- The number of reads
+- Read length
+
 ## File types for validation
 
 - FASTQ
