@@ -7,21 +7,23 @@ import pyfastx
 import json
 import os
 import sys
-import time
 import logging
-import base64
-import binascii
-from google.cloud import storage
+import boto3
+import shutil
 
 # some files for test: ENCFF594AYI.fastq.gz, ENCFF206HGF.bam, ENCFF080HPN.tsv
-BUCKET_NAME = os.getenv('BUCKET_NAME', 'igvf-file-validation_test_files')
-BLOB_NAME = os.getenv('BLOB_NAME', 'ENCFF594AYI.fastq.gz')
+BUCKET_NAME = os.getenv('BUCKET_NAME', 'checkfile-mingjie')
+KEY = os.getenv(
+    'KEY', '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF206HGF.bam')
 MD5SUM = os.getenv('MD5SUM', '3e814f4af7a4c13460584b26fbe32dc4')
-FILE_FORMAT = os.getenv('FILE_FORMAT', 'fastq')
+FILE_FORMAT = os.getenv('FILE_FORMAT', 'bam')
 UUID = os.getenv('UUID', '462bd56-9278-48aa-bc55-9eff587ba2c7')
 FILE_SIZE = os.getenv('FILE_SIZE', 1371)
 NUMBER_OF_READS = os.getenv('NUMBER_OF_READS', 25)
 READ_LENGTH = os.getenv('READ_LENGTH', 58)
+DATA_DIR = '/s3/'
+CHUNK_SIZE = 128*6400
+
 
 ZIP_FILE_FORMAT = [
     'bam',
@@ -45,7 +47,7 @@ logging.basicConfig(
 
 def main():
     try:
-        response = file_validation(BUCKET_NAME, BLOB_NAME, UUID,
+        response = file_validation(BUCKET_NAME, KEY, UUID,
                                    MD5SUM, FILE_FORMAT, FILE_SIZE, NUMBER_OF_READS, READ_LENGTH)
         logging.info(json.dumps(response))
     except Exception as err:
@@ -55,12 +57,10 @@ def main():
         sys.exit(1)  # Retry Job Task by exiting the process
 
 
-def file_validation(bucket_name, blob_name, uuid, md5sum, file_format, file_size, number_of_reads, read_length):
+def file_validation(bucket_name, key, uuid, md5sum, file_format, file_size, number_of_reads, read_length):
     logging.info(f'Checking file uuid {uuid}...')
-    storage_client = storage.Client(project='igvf-file-validation')
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.get_blob(blob_name)
-    file_path = get_local_file_path(blob_name)
+    response = boto3.client('s3').get_object(Bucket=bucket_name, Key=key)
+    file_path = get_local_file_path(key)
 
     errors = {}
     results = {}
@@ -68,9 +68,9 @@ def file_validation(bucket_name, blob_name, uuid, md5sum, file_format, file_size
     is_gzipped = is_file_gzipped(file_path)
     logging.info(f'is file gziped: {is_gzipped}')
     check_valid_gzipped_file_format(errors, is_gzipped, file_format)
-    results['file_size'] = blob.size
-    check_file_size(errors, file_size, blob.size)
-    check_md5sum(errors, md5sum, blob.md5_hash)
+    results['file_size'] = response.get('ContentLength')
+    check_file_size(errors, file_size, results['file_size'])
+    check_md5sum(errors, md5sum, response.get('ETag').strip('"'), file_path)
 
     if is_gzipped:
         check_content_md5sum(errors, file_path)
@@ -98,7 +98,7 @@ def file_validation(bucket_name, blob_name, uuid, md5sum, file_format, file_size
 
 
 def get_local_file_path(blob_name):
-    file_path = '/mnt/' + blob_name
+    file_path = DATA_DIR + blob_name
     return file_path
 
 
@@ -122,12 +122,17 @@ def check_file_size(errors, file_size, size_in_cloud_storage):
         errors['file_size'] = f'submitted file zise {str(file_size)} does not mactch file zise {str(size_in_cloud_storage)} in cloud storage'
 
 
-def check_md5sum(errors, md5sum, md5_base64):
-    blob_md5sum = str(binascii.hexlify(
-        base64.urlsafe_b64decode(md5_base64)), 'utf-8')
-    logging.info(f'the md5sum is {blob_md5sum}')
-    if md5sum != blob_md5sum:
-        errors['md5sum'] = f'submitted file md5sum {(md5sum)} does not mactch file md5sum {blob_md5sum} in cloud storage'
+def check_md5sum(errors, md5sum, etag, file_path, chunk_size=CHUNK_SIZE):
+    logging.info(f'the eTag is {etag}')
+    if etag != md5sum:
+        md5 = hashlib.md5()
+        with open(file_path, 'rb') as local_file:
+            while chunk := local_file.read(chunk_size):
+                md5.update(chunk)
+        calculated_md5sum = md5.hexdigest()
+
+        if md5sum != calculated_md5sum:
+            errors['md5sum'] = f'submitted file md5sum {(md5sum)} does not mactch file md5sum {calculated_md5sum} in cloud storage'
 
 
 def check_content_md5sum(errors, file_path, chunk_size=128*6400000):
@@ -173,14 +178,19 @@ def bam_generate_bai_file(file_path):
 
 
 def fastq_check(errors, file_path, number_of_reads, read_length):
-    fq = pyfastx.Fastq(file_path)
+    tmp_file_path = 'temp.fasq.gz'
+    shutil.copyfile(file_path, tmp_file_path)
+    fq = pyfastx.Fastq(tmp_file_path)
     count = len(fq)
     avg_len = int(fq.avglen)
+    logging.info(f'number of reads is {count}')
+    logging.info(f'read length is {avg_len}')
     if count != number_of_reads:
         errors['fastq_number_of_reads'] = f'sumbitted number of reads {number_of_reads} does not match number of reads {count} in cloud storage'
     if avg_len != read_length:
         errors['fastq_read_length'] = f'sumbitted read length {read_length} does not match read length {avg_len} in cloud storage'
-    fxi_file_path = file_path + '.fxi'
+    fxi_file_path = tmp_file_path + '.fxi'
+    os.remove(tmp_file_path)
     if os.path.exists(fxi_file_path):
         os.remove(fxi_file_path)
 

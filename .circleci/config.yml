@@ -19,33 +19,20 @@ jobs:
       - run: pre-commit run --all-files
   build-and-test:
     docker:
-      - image: google/cloud-sdk
+      - image: circleci/python:3.9
     working_directory: ~/checkfiles
     steps:
       - checkout
       - run:
-          name: Authorize Google Cloud SDK
-          command: |
-            echo ${GCLOUD_SERVICE_KEY} > /tmp/sa_key.json
-            gcloud auth activate-service-account --key-file=/tmp/sa_key.json
-            gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
-      - run:
           name: Install dependencies
           command: |
             apt-get update
-            apt-get install python3.9
             pip install -r requirements.txt
             pip install coveralls
       - run:
           name: Tests
-          environment:
-            GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa_key.json
           command: pytest --cov=checkfiles
       - run:
           name: Upload coverage report
           command:
             coveralls
-      - run:
-          name: remove sa_key.json
-          command:
-            rm /tmp/sa_key.json

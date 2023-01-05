@@ -1,7 +1,7 @@
 # Checkfiles
 
-[![CircleCI](https://circleci.com/gh/IGVF-DACC/checkfiles/tree/CHECK-15-igvf-checkfiles.svg?style=svg)](https://circleci.com/gh/IGVF-DACC/checkfiles/tree/CHECK-15-igvf-checkfiles)
-[![Coverage Status](https://coveralls.io/repos/github/IGVF-DACC/checkfiles/badge.svg?branch=CHECK-15-igvf-checkfiles&kill_cache=1)](https://coveralls.io/github/IGVF-DACC/checkfiles?branch=CHECK-15-igvf-checkfiles)
+[![CircleCI](https://circleci.com/gh/IGVF-DACC/checkfiles/tree/CHECK-19-aws-goofys.svg?style=svg)](https://circleci.com/gh/IGVF-DACC/checkfiles/tree/CHECK-19-aws-goofys)
+[![Coverage Status](https://coveralls.io/repos/github/IGVF-DACC/checkfiles/badge.svg?branch=CHECK-19-aws-goofys&kill_cache=1)](https://coveralls.io/github/IGVF-DACC/checkfiles?branch=CHECK-19-aws-goofys)
 
 Checkfiles is used to check new or updated files in google cloud to see if the size and MD5 sum (both for gzipped and ungzipped) are identical to the submitted metadata. It also checks some other properties for specific file type.
 
@@ -22,8 +22,8 @@ Checkfiles is used to check new or updated files in google cloud to see if the s
 
 ```bash
 docker run -it --privileged \
-    -e AWS_ACCESS_KEY_ID=xxxxxxxxx -e AWS_SECRET_ACCESS_KEY=xxxxxxx\
-    -v /Users/mingjie/git/igvf/gcsfuse/key.json:/checkfiles/key.json:ro \
+    -e AWS_ACCESS_KEY_ID=xxxxxxxx -e AWS_SECRET_ACCESS_KEY=xxxxxxxx\
+    -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_CECRET_KEY=xxxxxxxx\
     checkfiles
 ```
 
