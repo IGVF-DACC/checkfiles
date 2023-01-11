@@ -10,17 +10,20 @@ import sys
 import logging
 import boto3
 import shutil
+import tempfile
 
 # some files for test: ENCFF594AYI.fastq.gz, ENCFF206HGF.bam, ENCFF080HPN.tsv
 BUCKET_NAME = os.getenv('BUCKET_NAME', 'checkfile-mingjie')
 KEY = os.getenv(
-    'KEY', '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF206HGF.bam')
-MD5SUM = os.getenv('MD5SUM', '3e814f4af7a4c13460584b26fbe32dc4')
-FILE_FORMAT = os.getenv('FILE_FORMAT', 'bam')
+    'KEY', '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF594AYI.fastq.gz')
+MD5SUM = os.getenv('MD5SUM', '3e814f4af7a4c13460584b26fbe32dc')
+FILE_FORMAT = os.getenv('FILE_FORMAT', 'fastq')
 UUID = os.getenv('UUID', '462bd56-9278-48aa-bc55-9eff587ba2c7')
-FILE_SIZE = os.getenv('FILE_SIZE', 1371)
-NUMBER_OF_READS = os.getenv('NUMBER_OF_READS', 25)
-READ_LENGTH = os.getenv('READ_LENGTH', 58)
+FILE_SIZE = os.getenv('FILE_SIZE', 137)
+NUMBER_OF_READS = os.getenv('NUMBER_OF_READS', 2)
+READ_LENGTH = os.getenv('READ_LENGTH', 5)
+ENCODE_ACCESS_KEY = os.getenv('ENCODE_ACCESS_KEY')
+ENCODE_CECRET_KEY = os.getenv('ENCODE_CECRET_KEY')
 DATA_DIR = '/s3/'
 CHUNK_SIZE = 128*6400
 
@@ -64,20 +67,26 @@ def file_validation(bucket_name, key, uuid, md5sum, file_format, file_size, numb
 
     is_gzipped = is_file_gzipped(file_path)
     logging.info(f'is file gziped: {is_gzipped}')
-    check_valid_gzipped_file_format(errors, is_gzipped, file_format)
+    error = check_valid_gzipped_file_format(is_gzipped, file_format)
+    errors.update(error)
     results['file_size'] = response.get('ContentLength')
-    check_file_size(errors, file_size, results['file_size'])
-    check_md5sum(errors, md5sum, response.get('ETag').strip('"'), file_path)
+    error = check_file_size(file_size, results['file_size'])
+    errors.update(error)
+    error = check_md5sum(md5sum, response.get('ETag').strip('"'), file_path)
+    errors.update(error)
 
     if is_gzipped:
-        check_content_md5sum(errors, file_path)
+        error = check_content_md5sum(file_path)
+        errors.update(error)
 
     if file_format == 'bam':
-        bam_pysam_check(errors, file_path, number_of_reads)
+        error = bam_pysam_check(file_path, number_of_reads)
+        errors.update(error)
         if 'bam_error' not in errors:
             bam_generate_bai_file(file_path)
     elif file_format == 'fastq':
-        fastq_check(errors, file_path, number_of_reads, read_length)
+        error = fastq_check(file_path, number_of_reads, read_length)
+        errors.update(error)
 
     logging.info(f'Completed file validation for file uuid {uuid}.')
 
@@ -107,19 +116,25 @@ def is_file_gzipped(file_path):
         return False
 
 
-def check_valid_gzipped_file_format(errors, is_gzipped, file_format, zip_file_format=ZIP_FILE_FORMAT):
+def check_valid_gzipped_file_format(is_gzipped, file_format, zip_file_format=ZIP_FILE_FORMAT):
+    error = {}
     if file_format in zip_file_format and not is_gzipped:
-        errors['gzip'] = f'{file_format} file should be gzipped'
+        error = {'gzip': f'{file_format} file should be gzipped'}
     elif file_format not in zip_file_format and is_gzipped:
-        errors['gzip'] = f'{file_format} file should not be gzipped'
+        error = {'gzip': f'{file_format} file should not be gzipped'}
+    return error
 
 
-def check_file_size(errors, file_size, size_in_cloud_storage):
+def check_file_size(file_size, size_in_cloud_storage):
+    error = {}
     if size_in_cloud_storage != file_size:
-        errors['file_size'] = f'submitted file zise {str(file_size)} does not mactch file zise {str(size_in_cloud_storage)} in cloud storage'
+        error = {
+            'file_size': f'submitted file zise {str(file_size)} does not mactch file zise {str(size_in_cloud_storage)} in cloud storage'}
+    return error
 
 
-def check_md5sum(errors, md5sum, etag, file_path, chunk_size=CHUNK_SIZE):
+def check_md5sum(md5sum, etag, file_path, chunk_size=CHUNK_SIZE):
+    error = {}
     logging.info(f'the eTag is {etag}')
     if etag != md5sum:
         md5 = hashlib.md5()
@@ -129,10 +144,13 @@ def check_md5sum(errors, md5sum, etag, file_path, chunk_size=CHUNK_SIZE):
         calculated_md5sum = md5.hexdigest()
 
         if md5sum != calculated_md5sum:
-            errors['md5sum'] = f'submitted file md5sum {(md5sum)} does not mactch file md5sum {calculated_md5sum} in cloud storage'
+            error = {
+                'md5sum': f'submitted file md5sum {md5sum} does not mactch file md5sum {calculated_md5sum} in cloud storage'}
+    return error
 
 
-def check_content_md5sum(errors, file_path, chunk_size=CHUNK_SIZE, base_url=CONTENT_MD5SUM_URL):
+def check_content_md5sum(file_path, chunk_size=CHUNK_SIZE, base_url=CONTENT_MD5SUM_URL, username=ENCODE_ACCESS_KEY, password=ENCODE_CECRET_KEY):
+    error = {}
     md5 = hashlib.md5()
     with gzip.open(file_path) as f:
         while chunk := f.read(chunk_size):
@@ -141,55 +159,59 @@ def check_content_md5sum(errors, file_path, chunk_size=CHUNK_SIZE, base_url=CONT
     logging.info(f'content md5sum is {content_md5sum}')
     url = base_url + content_md5sum
     session = requests.Session()
-    username = os.getenv('ENCODE_ACCESS_KEY')
-    password = os.getenv('ENCODE_CECRET_KEY')
     session.auth = (username, password)
     conflict_files = session.get(url).json()['@graph']
     if conflict_files:
         accessions = []
         for file in conflict_files:
             accessions.append(file['accession'])
-        errors[
-            'content_md5sum'] = f"content md5sum conflicts with content md5sum of existing file(s): {', '.join(accessions)}"
+        error = {
+            'content_md5sum': f"content md5sum {content_md5sum} conflicts with content md5sum of existing file(s): {', '.join(accessions)}"}
+    return error
 
 
-def bam_pysam_check(errors, file_path, number_of_reads):
+def bam_pysam_check(file_path, number_of_reads):
+    error = {}
     try:
         pysam.quickcheck(file_path)
         result = pysam.stats(file_path)
         if 'SN\tis sorted:\t0' in result:
-            errors['bam_error'] = 'the bam file is not sorted'
+            error = {'bam_error': 'the bam file is not sorted'}
         else:
             samfile = pysam.AlignmentFile(file_path, 'rb')
             count = samfile.count(until_eof=True)
             logging.info(f'the number of reads: {count}')
             if count != number_of_reads:
-                errors['bam_error'] = f'sumbitted number of reads {number_of_reads} does not match number of reads {count} in cloud storage'
+                error = {
+                    'bam_error': f'sumbitted number of reads {number_of_reads} does not match number of reads {count} in cloud storage'}
             samfile.close()
     except pysam.utils.SamtoolsError as e:
-        errors['bam_error'] = f'file is not valid bam file by SamtoolsError: {str(e)}'
+        error = {
+            'bam_error': f'file is not valid bam file by SamtoolsError: {str(e)}'}
+    return error
 
 
 def bam_generate_bai_file(file_path):
     pysam.index(file_path)
 
 
-def fastq_check(errors, file_path, number_of_reads, read_length):
-    tmp_file_path = 'temp.fasq.gz'
-    shutil.copyfile(file_path, tmp_file_path)
-    fq = pyfastx.Fastq(tmp_file_path)
+def fastq_check(file_path, number_of_reads, read_length):
+    error = {}
+    temp_file = tempfile.NamedTemporaryFile()
+    shutil.copyfile(file_path, temp_file.name)
+    fq = pyfastx.Fastq(temp_file.name)
     count = len(fq)
     avg_len = int(fq.avglen)
     logging.info(f'number of reads is {count}')
     logging.info(f'read length is {avg_len}')
     if count != number_of_reads:
-        errors['fastq_number_of_reads'] = f'sumbitted number of reads {number_of_reads} does not match number of reads {count} in cloud storage'
+        error['fastq_number_of_reads'] = f'sumbitted number of reads {number_of_reads} does not match number of reads {count} in cloud storage'
     if avg_len != read_length:
-        errors['fastq_read_length'] = f'sumbitted read length {read_length} does not match read length {avg_len} in cloud storage'
-    fxi_file_path = tmp_file_path + '.fxi'
-    os.remove(tmp_file_path)
+        error['fastq_read_length'] = f'sumbitted read length {read_length} does not match read length {avg_len} in cloud storage'
+    fxi_file_path = temp_file.name + '.fxi'
     if os.path.exists(fxi_file_path):
         os.remove(fxi_file_path)
+    return error
 
 
 # Start script
