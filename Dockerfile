@@ -3,7 +3,9 @@ FROM ubuntu:20.04
 
 WORKDIR /checkfiles
 RUN mkdir -p /s3
-ENV AWS_BUCKET_NAME checkfile-mingjie
+# default aws buckdet is the test folder: checkfile-mingjie
+ARG AWS_BUCKET_NAME
+ENV AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-checkfile-mingjie}
 ENV AWS_DATA_DIR /s3
 RUN apt-get update && apt-get install -y \
     python3-pip \

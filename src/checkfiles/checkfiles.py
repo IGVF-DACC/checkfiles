@@ -107,10 +107,10 @@ def is_file_gzipped(file_path):
         return False
 
 
-def check_valid_gzipped_file_format(errors, is_gzipped, file_format):
-    if file_format in ZIP_FILE_FORMAT and not is_gzipped:
+def check_valid_gzipped_file_format(errors, is_gzipped, file_format, zip_file_format=ZIP_FILE_FORMAT):
+    if file_format in zip_file_format and not is_gzipped:
         errors['gzip'] = f'{file_format} file should be gzipped'
-    elif file_format not in ZIP_FILE_FORMAT and is_gzipped:
+    elif file_format not in zip_file_format and is_gzipped:
         errors['gzip'] = f'{file_format} file should not be gzipped'
 
 
@@ -132,14 +132,14 @@ def check_md5sum(errors, md5sum, etag, file_path, chunk_size=CHUNK_SIZE):
             errors['md5sum'] = f'submitted file md5sum {(md5sum)} does not mactch file md5sum {calculated_md5sum} in cloud storage'
 
 
-def check_content_md5sum(errors, file_path, chunk_size=128*6400000):
+def check_content_md5sum(errors, file_path, chunk_size=CHUNK_SIZE, base_url=CONTENT_MD5SUM_URL):
     md5 = hashlib.md5()
     with gzip.open(file_path) as f:
         while chunk := f.read(chunk_size):
             md5.update(chunk)
     content_md5sum = md5.hexdigest()
     logging.info(f'content md5sum is {content_md5sum}')
-    url = CONTENT_MD5SUM_URL + content_md5sum
+    url = base_url + content_md5sum
     session = requests.Session()
     username = os.getenv('ENCODE_ACCESS_KEY')
     password = os.getenv('ENCODE_CECRET_KEY')
