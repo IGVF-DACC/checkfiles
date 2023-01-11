@@ -63,14 +63,11 @@ def file_validation(bucket_name, key, uuid, md5sum, file_format, file_size, numb
     file_path = get_local_file_path(key)
 
     errors = {}
-    results = {}
-
     is_gzipped = is_file_gzipped(file_path)
     logging.info(f'is file gziped: {is_gzipped}')
     error = check_valid_gzipped_file_format(is_gzipped, file_format)
     errors.update(error)
-    results['file_size'] = response.get('ContentLength')
-    error = check_file_size(file_size, results['file_size'])
+    error = check_file_size(file_size, response.get('ContentLength'))
     errors.update(error)
     error = check_md5sum(md5sum, response.get('ETag').strip('"'), file_path)
     errors.update(error)
