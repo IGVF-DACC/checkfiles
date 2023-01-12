@@ -1,148 +1,63 @@
 # Checkfiles
 
-An AWS Lambda function to be put in an outbound whisper flow in an Amazon Connect instance, that allows one to use different caller ID based on destination country.
+[![CircleCI](https://circleci.com/gh/IGVF-DACC/checkfiles/tree/main.svg?style=svg)](https://circleci.com/gh/IGVF-DACC/checkfiles/tree/main)
+[![Coverage Status](https://coveralls.io/repos/github/IGVF-DACC/checkfiles/badge.svg?branch=main&kill_cache=1)](https://coveralls.io/github/IGVF-DACC/checkfiles?branch=main)
 
-## External Dependencies
+Checkfiles is used to check new or updated files in AWS S3 bucket to see if the size and MD5 sum (both for gzipped and ungzipped) are identical to the submitted metadata. It also checks some other properties for specific file type.
 
-- [`requests`](https://pypi.org/project/requests/)
+Checks for all files:
 
-### How to install external dependencies?
+- File size
+- MD5 sum
+- Should the file be zipped
+- Content MD5 sum if the file is zipped
 
-- Creating a function deployment package by following the documentation [here](https://docs.aws.amazon.com/lambda/latest/dg/python-package.html#python-package-dependencies).
-- Creating a Lambda layer by following the documentation [here](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html#configuration-layers-path).
+Additional checks for BAM file:
 
-## Internal Dependencies
+- Is the file a valid BAM file by SamtoolsError
+- Is the file sorted
+- The number of reads
+- Generate index file for this BAM file
 
-The following libraries are included in AWS Lambda Python runtimes:
-- `json`
-- `os`
-- `logging`
-- `boto3`
-- `botocore`
-- `re`
+Additional checks for FASTQ file:
 
-## Example Lambda Event
+- The number of reads
+- Read length
 
-Amazon Connect sends the following payload to Lambda function inside a contact flow:
+## File types for validation
 
-```
-{
-    "Details": {
-        "ContactData": {
-            "Attributes": {},
-            "Channel": "VOICE",
-            "ContactId": "4a573372-1f28-4e26-b97b-XXXXXXXXXXX",
-            "CustomerEndpoint": {
-                "Address": "+1234567890",
-                "Type": "TELEPHONE_NUMBER"
-            },
-            "InitialContactId": "4a573372-1f28-4e26-b97b-XXXXXXXXXXX",
-            "InitiationMethod": "INBOUND | OUTBOUND | TRANSFER | CALLBACK",
-            "InstanceARN": "arn:aws:connect:aws-region:1234567890:instance/c8c0e68d-2200-4265-82c0-XXXXXXXXXX",
-            "PreviousContactId": "4a573372-1f28-4e26-b97b-XXXXXXXXXXX",
-            "Queue": "QueueName",
-            "SystemEndpoint": {
-                "Address": "+1234567890",
-                "Type": "TELEPHONE_NUMBER"
-            }
-        },
-        "Parameters": {
-            "sentAttributeKey": "sentAttributeValue"
-        }
-    },
-    "Name": "ContactFlowEvent"
-}
+- FASTQ
+- BAM
+- TXT
+- TSV
+
+## Run checkfiles in docker
+
+- Build the image
+
+`docker image build -t checkfiles .`
+
+- Run the build
+
+```bash
+docker run -it --privileged \
+    -e AWS_ACCESS_KEY_ID=xxxxxxxx -e AWS_SECRET_ACCESS_KEY=xxxxxxxx\
+    -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_CECRET_KEY=xxxxxxxx\
+    checkfiles
 ```
 
-This can also be referenced [here](https://docs.aws.amazon.com/connect/latest/adminguide/connect-lambda-functions.html#function-contact-flow).
+## Local test
 
-## Environment Variables
+To run the tests, use the pytest command.
 
-This Lambda function requires two environment variables:
+`pytest`
 
-- `BUCKET_NAME`: The S3 bucket name where the routing profile is stored.
-- `COUNTRY_ROUTING_LIST_KEY`: The path of the routing profile object.
+To measure the code coverage of your tests, use the coverage command to run pytest instead of running it directly.
 
-## Routing file
+`coverage run -m pytest`
 
-A list of ISO 3166 country code against the phone number in E164 format.
+An HTML report allows you to see which lines were covered in each file:
 
-### Example
+`coverage html`
 
-```
-{
-    "US": "+12345678901",
-    "GB": "+441234567890",
-    "Default": "+19876543210"
-}
-```
-
-In this example, when calling a customer who has a United States phone number, Amazon Connect uses the phone number +12345678901 for the outbound caller ID. When calling a customer who has a United Kingdom phone number, the phone number +441234567890 is used. When calling a customer in a country that is not listed in the JSON file, the default phone number +19876543210 is used.
-
-Note: During call routing, if the Lambda function fails to invoke for any reason, Amazon Connect uses the queue’s default outbound phone number for the caller instead. This is the number configured in the queue settings in your Amazon Connect instance.
-
-## Example Lambda Response
-
-```
-{
-    "customer_number": "<Customer's phone number that you're calling>",
-    "customer_country": "<Country of the customer's phone number>",
-    "outbound_number": "<Outbound phone number that Lambda loads from Amazon S3 and sends to Amazon Connect>",
-    "outbound_country": "<Country of the outbound phone number that Lambda sends to Amazon Connect>",
-    "default_queue_outbound_number": "<Default outbound phone number set up for the queue>",
-    "default_queue_outbound_country": "<Country of the default outbound phone number>"
-}
-```
-
-## Outbound Whisper Flow
-
-After invoking the Lambda function in an outbound whisper flow, a “[Call Phone Number](https://docs.aws.amazon.com/connect/latest/adminguide/call-phone-number.html)” block needs to be placed. Tick the box of “Caller ID number to display (optional)”, and pick “Use attribute” from the radio buttons. For “Type”, select “External”. For “Attribute”, type in “`outbound_number`“, which is one of the key Lambda responses.
-
-## IAM Permissions
-
-This Lambda function require at least a read access to the routing file stored in S3. The value in square brackets needs to be replaced with genuine value.
-
-### Example
-
-```
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "AllowGetRoutingProfile",
-            "Effect": "Allow",
-            "Action": "s3:GetObject",
-            "Resource": [
-                "arn:aws:s3:::<BUCKET_NAME>/<COUNTRY_ROUTING_LIST_KEY>"
-            ]
-        }
-    ]
-}
-```
-
-## Logging
-
-If the Lambda function has the following permission (provided that the value in square brackets are placed with genuine value), it will send diagnostic logs to CloudWatch log:
-
-```
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": "logs:CreateLogGroup",
-            "Resource": "arn:aws:logs:<region>:<account-id>:*"
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "logs:CreateLogStream",
-                "logs:PutLogEvents"
-            ],
-            "Resource": [
-                "arn:aws:logs:<region>:<account-id>:log-group:/aws/lambda/<lambda-function-name>:*"
-            ]
-        }
-    ]
-}
-```
+This generates files in the htmlcov directory. Open htmlcov/index.html in your browser to see the report.
