@@ -1,7 +1,7 @@
 # Checkfiles
 
-[![CircleCI](https://circleci.com/gh/IGVF-DACC/checkfiles/tree/CHECK-19-aws-goofys.svg?style=svg)](https://circleci.com/gh/IGVF-DACC/checkfiles/tree/CHECK-19-aws-goofys)
-[![Coverage Status](https://coveralls.io/repos/github/IGVF-DACC/checkfiles/badge.svg?branch=CHECK-19-aws-goofys&kill_cache=1)](https://coveralls.io/github/IGVF-DACC/checkfiles?branch=CHECK-19-aws-goofys)
+[![CircleCI](https://circleci.com/gh/IGVF-DACC/checkfiles/tree/main.svg?style=svg)](https://circleci.com/gh/IGVF-DACC/checkfiles/tree/main)
+[![Coverage Status](https://coveralls.io/repos/github/IGVF-DACC/checkfiles/badge.svg?branch=main&kill_cache=1)](https://coveralls.io/github/IGVF-DACC/checkfiles?branch=main)
 
 Checkfiles is used to check new or updated files in AWS S3 bucket to see if the size and MD5 sum (both for gzipped and ungzipped) are identical to the submitted metadata. It also checks some other properties for specific file type.
 
