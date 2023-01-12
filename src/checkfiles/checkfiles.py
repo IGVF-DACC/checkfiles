@@ -13,7 +13,7 @@ import shutil
 import tempfile
 
 # some files for test: ENCFF594AYI.fastq.gz, ENCFF206HGF.bam, ENCFF080HPN.tsv
-BUCKET_NAME = os.getenv('BUCKET_NAME', 'checkfile-mingjie')
+BUCKET_NAME = os.getenv('BUCKET_NAME', 'checkfiles-mingjie')
 KEY = os.getenv(
     'KEY', '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF594AYI.fastq.gz')
 MD5SUM = os.getenv('MD5SUM', '3e814f4af7a4c13460584b26fbe32dc')
