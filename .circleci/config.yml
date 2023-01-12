@@ -1,0 +1,38 @@
+version: 2.1
+
+workflows:
+  lint_build_and_test:
+    jobs:
+      - lint
+      - build-and-test:
+          requires:
+            - lint
+
+jobs:
+  lint:
+    docker:
+      - image: circleci/python:3.9
+    working_directory: ~/checkfiles
+    steps:
+      - checkout
+      - run: pip install pre-commit==2.17.0
+      - run: pre-commit run --all-files
+  build-and-test:
+    docker:
+      - image: circleci/python:3.9
+    working_directory: ~/checkfiles
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            sudo apt-get update
+            pip install -r requirements.txt
+            pip install coveralls
+      - run:
+          name: Tests
+          command: pytest --cov=checkfiles
+      - run:
+          name: Upload coverage report
+          command:
+            coveralls
