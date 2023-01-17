@@ -30,7 +30,6 @@ ENCODE_CECRET_KEY = os.getenv('ENCODE_CECRET_KEY')
 DATA_DIR = '/s3/'
 CHUNK_SIZE = 128*6400
 MAX_NUM_ERROR_FOR_TABULAR_FILE = 10
-system.trusted = True
 
 ZIP_FILE_FORMAT = [
     'bam',
@@ -227,6 +226,7 @@ def fastq_check(file_path, number_of_reads, read_length):
 
 
 def tabular_file_check(output_type, file_path, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE):
+    system.trusted = True
     error = {}
     schema_path = schemas.get(output_type)
     report = validate(file_path, schema=schema_path)
