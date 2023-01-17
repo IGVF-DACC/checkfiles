@@ -19,7 +19,7 @@ RUN pip3 install awscli
 RUN curl -sS -L -o /usr/local/bin/goofys https://github.com/kahing/goofys/releases/download/v0.24.0/goofys \
     && chmod +x /usr/local/bin/goofys
 
-COPY src/ .
+COPY src/ src/
 
 # Collect pip requirements
 COPY requirements.txt .

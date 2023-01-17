@@ -25,8 +25,8 @@ UUID = os.getenv('UUID', '462bd56-9278-48aa-bc55-9eff587ba2c7')
 FILE_SIZE = os.getenv('FILE_SIZE', 137)
 NUMBER_OF_READS = os.getenv('NUMBER_OF_READS', 2)
 READ_LENGTH = os.getenv('READ_LENGTH', 5)
-ENCODE_ACCESS_KEY = os.getenv('ENCODE_ACCESS_KEY')
-ENCODE_CECRET_KEY = os.getenv('ENCODE_CECRET_KEY')
+ENCODE_ACCESS_KEY = os.getenv('ENCODE_ACCESS_KEY', '')
+ENCODE_CECRET_KEY = os.getenv('ENCODE_CECRET_KEY', '')
 DATA_DIR = '/s3/'
 CHUNK_SIZE = 128*6400
 MAX_NUM_ERROR_FOR_TABULAR_FILE = 10
@@ -48,7 +48,7 @@ EXCLUDE_FORMAT = [
 ]
 
 TABULAR_FILE_SCHEMAS = {
-    'element quantifications': 'schemas/table_schemas/element_quant.json'
+    'element quantifications': 'src/schemas/table_schemas/element_quant.json'
 }
 
 CONTENT_MD5SUM_URL = 'https://www.encodeproject.org/search/?type=File&format=json&content_md5sum='
