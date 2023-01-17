@@ -99,6 +99,7 @@ def test_main_fastq(mocker):
     uuid = 'a3b754b6-0213-4ed4-a5f3-124f90273561'
     md5sum = '3e814f4af7a4c13460584b26fbe32dc4'
     file_format = 'fastq'
+    output_type = 'reads'
     file_size = 1371
     number_of_reads = 25
     read_length = 58
@@ -110,7 +111,7 @@ def test_main_fastq(mocker):
                      'ContentLength': 1371
                  })
     result = file_validation(bucket_name, key, uuid, md5sum,
-                             file_format, file_size, number_of_reads, read_length)
+                             file_format, output_type, file_size, number_of_reads, read_length)
     assert result == {
         'uuid': 'a3b754b6-0213-4ed4-a5f3-124f90273561',
         'validation_result': 'failed',
@@ -125,6 +126,7 @@ def test_main_bam(mocker):
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
     md5sum = '2d3b7df013d257c7052c084d93ff9026'
     file_format = 'bam'
+    output_type = 'alignments'
     file_size = 118126
     number_of_reads = 1709
     read_length = 58
@@ -146,7 +148,7 @@ def test_main_bam(mocker):
                  })
 
     result = file_validation(bucket_name, key, uuid, md5sum,
-                             file_format, file_size, number_of_reads, read_length)
+                             file_format, output_type, file_size, number_of_reads, read_length)
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
         'validation_result': 'pass'
