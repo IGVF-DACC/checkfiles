@@ -99,6 +99,7 @@ def test_main_fastq(mocker):
     uuid = 'a3b754b6-0213-4ed4-a5f3-124f90273561'
     md5sum = '3e814f4af7a4c13460584b26fbe32dc4'
     file_format = 'fastq'
+    output_type = 'reads'
     file_size = 1371
     number_of_reads = 25
     read_length = 58
@@ -110,7 +111,7 @@ def test_main_fastq(mocker):
                      'ContentLength': 1371
                  })
     result = file_validation(bucket_name, key, uuid, md5sum,
-                             file_format, file_size, number_of_reads, read_length)
+                             file_format, output_type, file_size, number_of_reads, read_length)
     assert result == {
         'uuid': 'a3b754b6-0213-4ed4-a5f3-124f90273561',
         'validation_result': 'failed',
@@ -125,6 +126,43 @@ def test_main_bam(mocker):
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
     md5sum = '2d3b7df013d257c7052c084d93ff9026'
     file_format = 'bam'
+    output_type = 'alignments'
+    file_size = 118126
+    number_of_reads = 1709
+    read_length = 58
+
+    mocker.patch('checkfiles.checkfiles.get_local_file_path',
+                 return_value=file_path)
+
+    mock_response_session = mocker.Mock()
+    mock_response_session.json.return_value = {
+        '@graph': []
+    }
+    mocker.patch('checkfiles.checkfiles.requests.Session.get',
+                 return_value=mock_response_session)
+
+    mocker.patch('botocore.client.BaseClient._make_api_call',
+                 return_value={
+                     'ETag': '"2d3b7df013d257c7052c084d93ff9026"',
+                     'ContentLength': 118126
+                 })
+
+    result = file_validation(bucket_name, key, uuid, md5sum,
+                             file_format, output_type, file_size, number_of_reads, read_length)
+    assert result == {
+        'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
+        'validation_result': 'pass'
+    }
+
+
+def test_main_tabular(mocker):
+    file_path = 'src/tests/data/ENCFF500IBL.tsv'
+    bucket_name = 'checkfile-mingjie'
+    key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF500IBL.tsv'
+    uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
+    md5sum = '4b0b3c68fafc5a26d0fc6150baadaa5b'
+    file_format = 'tsv'
+    output_type = 'element quantifications'
     file_size = 118126
     number_of_reads = 1709
     read_length = 58
@@ -141,15 +179,19 @@ def test_main_bam(mocker):
 
     mocker.patch('botocore.client.BaseClient._make_api_call',
                  return_value={
-                     'ETag': '"2d3b7df013d257c7052c084d93ff9026"',
+                     'ETag': '"4b0b3c68fafc5a26d0fc6150baadaa5b"',
                      'ContentLength': 118126
                  })
 
     result = file_validation(bucket_name, key, uuid, md5sum,
-                             file_format, file_size, number_of_reads, read_length)
+                             file_format, output_type, file_size, number_of_reads, read_length)
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
-        'validation_result': 'pass'
+        'validation_result': 'failed',
+        'errors': {
+            'gzip': 'tsv file should be gzipped',
+            'tabular_file_error': [[None, 1, 'incorrect-label', ''], [None, 2, 'incorrect-label', ''], [None, 3, 'incorrect-label', ''], [60, 24, 'type-error', "type is \"boolean/default\""], [61, 24, 'type-error', "type is \"boolean/default\""]]
+        }
     }
 
 

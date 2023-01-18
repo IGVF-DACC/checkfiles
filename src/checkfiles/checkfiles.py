@@ -11,22 +11,25 @@ import logging
 import boto3
 import shutil
 import tempfile
+from frictionless import validate
+from frictionless import system
 
-# some files for test: ENCFF594AYI.fastq.gz, ENCFF206HGF.bam, ENCFF080HPN.tsv
+# some files for test: ENCFF594AYI.fastq.gz, ENCFF206HGF.bam, ENCFF080HPN.tsv, ENCFF500IBL.tsv
 BUCKET_NAME = os.getenv('BUCKET_NAME', 'checkfiles-test')
 KEY = os.getenv(
-    'KEY', '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF594AYI.fastq.gz')
+    'KEY', '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF500IBL.tsv')
 MD5SUM = os.getenv('MD5SUM', '3e814f4af7a4c13460584b26fbe32dc')
-FILE_FORMAT = os.getenv('FILE_FORMAT', 'fastq')
+FILE_FORMAT = os.getenv('FILE_FORMAT', 'tsv')
+OUTPUT_TYPE = os.getenv('OUTPUT_TYPE', 'element quantifications')
 UUID = os.getenv('UUID', '462bd56-9278-48aa-bc55-9eff587ba2c7')
 FILE_SIZE = os.getenv('FILE_SIZE', 137)
 NUMBER_OF_READS = os.getenv('NUMBER_OF_READS', 2)
 READ_LENGTH = os.getenv('READ_LENGTH', 5)
-ENCODE_ACCESS_KEY = os.getenv('ENCODE_ACCESS_KEY')
-ENCODE_CECRET_KEY = os.getenv('ENCODE_CECRET_KEY')
+ENCODE_ACCESS_KEY = os.getenv('ENCODE_ACCESS_KEY', '')
+ENCODE_SECRET_KEY = os.getenv('ENCODE_SECRET_KEY', '')
 DATA_DIR = '/s3/'
 CHUNK_SIZE = 128*6400
-
+MAX_NUM_ERROR_FOR_TABULAR_FILE = 10
 
 ZIP_FILE_FORMAT = [
     'bam',
@@ -35,9 +38,18 @@ ZIP_FILE_FORMAT = [
     'tsv',
 ]
 
+TABULAR_FORMAT = [
+    'txt',
+    'tsv',
+]
+
 EXCLUDE_FORMAT = [
     'bai',
 ]
+
+TABULAR_FILE_SCHEMAS = {
+    'element quantifications': 'src/schemas/table_schemas/element_quant.json'
+}
 
 CONTENT_MD5SUM_URL = 'https://www.encodeproject.org/search/?type=File&format=json&content_md5sum='
 
@@ -48,7 +60,7 @@ logging.basicConfig(
 def main():
     try:
         response = file_validation(BUCKET_NAME, KEY, UUID,
-                                   MD5SUM, FILE_FORMAT, FILE_SIZE, NUMBER_OF_READS, READ_LENGTH)
+                                   MD5SUM, FILE_FORMAT, OUTPUT_TYPE, FILE_SIZE, NUMBER_OF_READS, READ_LENGTH)
         logging.info(json.dumps(response))
     except Exception as err:
         message = f'exception occurred when checking file uuid #{UUID}: {str(err)}'
@@ -57,7 +69,7 @@ def main():
         sys.exit(1)  # Retry Job Task by exiting the process
 
 
-def file_validation(bucket_name, key, uuid, md5sum, file_format, file_size, number_of_reads, read_length):
+def file_validation(bucket_name, key, uuid, md5sum, file_format, output_type, file_size, number_of_reads, read_length):
     logging.info(f'Checking file uuid {uuid}...')
     response = boto3.client('s3').get_object(Bucket=bucket_name, Key=key)
     file_path = get_local_file_path(key)
@@ -84,7 +96,9 @@ def file_validation(bucket_name, key, uuid, md5sum, file_format, file_size, numb
     elif file_format == 'fastq':
         error = fastq_check(file_path, number_of_reads, read_length)
         errors.update(error)
-
+    elif file_format in TABULAR_FORMAT:
+        error = tabular_file_check(output_type, file_path)
+        errors.update(error)
     logging.info(f'Completed file validation for file uuid {uuid}.')
 
     if errors:
@@ -100,8 +114,8 @@ def file_validation(bucket_name, key, uuid, md5sum, file_format, file_size, numb
         }
 
 
-def get_local_file_path(blob_name):
-    file_path = DATA_DIR + blob_name
+def get_local_file_path(key):
+    file_path = DATA_DIR + key
     return file_path
 
 
@@ -146,7 +160,7 @@ def check_md5sum(md5sum, etag, file_path, chunk_size=CHUNK_SIZE):
     return error
 
 
-def check_content_md5sum(file_path, chunk_size=CHUNK_SIZE, base_url=CONTENT_MD5SUM_URL, username=ENCODE_ACCESS_KEY, password=ENCODE_CECRET_KEY):
+def check_content_md5sum(file_path, chunk_size=CHUNK_SIZE, base_url=CONTENT_MD5SUM_URL, username=ENCODE_ACCESS_KEY, password=ENCODE_SECRET_KEY):
     error = {}
     md5 = hashlib.md5()
     with gzip.open(file_path) as f:
@@ -208,6 +222,21 @@ def fastq_check(file_path, number_of_reads, read_length):
     fxi_file_path = temp_file.name + '.fxi'
     if os.path.exists(fxi_file_path):
         os.remove(fxi_file_path)
+    return error
+
+
+def tabular_file_check(output_type, file_path, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE):
+    system.trusted = True
+    error = {}
+    schema_path = schemas.get(output_type)
+    report = validate(file_path, schema=schema_path)
+    if not report.valid:
+        report = report.flatten(['rowNumber', 'fieldNumber', 'type', 'note'])
+        if len(report) > max_error:
+            report = report[0:max_error]
+        error = {
+            'tabular_file_error': report
+        }
     return error
 
 
