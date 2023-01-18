@@ -14,9 +14,6 @@ import logging
 import boto3
 import shutil
 import tempfile
-<< << << < HEAD
-== == == =
->>>>>> > 2f2c8ba(add validateFiles in docker image)
 
 # some files for test: ENCFF594AYI.fastq.gz, ENCFF206HGF.bam, ENCFF080HPN.tsv, ENCFF500IBL.tsv
 BUCKET_NAME = os.getenv('BUCKET_NAME', 'checkfiles-test')
