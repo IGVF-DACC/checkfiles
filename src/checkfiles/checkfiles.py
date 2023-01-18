@@ -1,3 +1,6 @@
+import subprocess
+from frictionless import system
+from frictionless import validate
 import json
 import requests
 import hashlib
@@ -11,8 +14,9 @@ import logging
 import boto3
 import shutil
 import tempfile
-from frictionless import validate
-from frictionless import system
+<< << << < HEAD
+== == == =
+>>>>>> > 2f2c8ba(add validateFiles in docker image)
 
 # some files for test: ENCFF594AYI.fastq.gz, ENCFF206HGF.bam, ENCFF080HPN.tsv, ENCFF500IBL.tsv
 BUCKET_NAME = os.getenv('BUCKET_NAME', 'checkfiles-test')
@@ -238,6 +242,24 @@ def tabular_file_check(output_type, file_path, schemas=TABULAR_FILE_SCHEMAS, max
             'tabular_file_error': report
         }
     return error
+
+
+def bed_check(output_type, file_path, file_format, file_format_type, assembly, genome_annotation):
+    error = {}
+    validate_args = get_validate_files_args(
+        file_format, file_format_type, output_type, assembly, genome_annotation)
+    try:
+        output = subprocess.check_output(
+            ['validateFiles'] + validate_args + [file_path], stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        error['validate_files'] = e.output.decode(
+            errors='replace').rstrip('\n')
+    return error
+
+
+def get_validate_files_args(file_format, file_format_type, output_type, assembly, genome_annotation):
+    args = ''
+    return args
 
 
 # Start script
