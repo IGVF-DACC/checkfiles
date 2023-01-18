@@ -26,7 +26,7 @@ FILE_SIZE = os.getenv('FILE_SIZE', 137)
 NUMBER_OF_READS = os.getenv('NUMBER_OF_READS', 2)
 READ_LENGTH = os.getenv('READ_LENGTH', 5)
 ENCODE_ACCESS_KEY = os.getenv('ENCODE_ACCESS_KEY', '')
-ENCODE_CECRET_KEY = os.getenv('ENCODE_CECRET_KEY', '')
+ENCODE_SECRET_KEY = os.getenv('ENCODE_SECRET_KEY', '')
 DATA_DIR = '/s3/'
 CHUNK_SIZE = 128*6400
 MAX_NUM_ERROR_FOR_TABULAR_FILE = 10
@@ -38,7 +38,7 @@ ZIP_FILE_FORMAT = [
     'tsv',
 ]
 
-TUBULAR_FORMAT = [
+TABULAR_FORMAT = [
     'txt',
     'tsv',
 ]
@@ -96,7 +96,7 @@ def file_validation(bucket_name, key, uuid, md5sum, file_format, output_type, fi
     elif file_format == 'fastq':
         error = fastq_check(file_path, number_of_reads, read_length)
         errors.update(error)
-    elif file_format in TUBULAR_FORMAT:
+    elif file_format in TABULAR_FORMAT:
         error = tabular_file_check(output_type, file_path)
         errors.update(error)
     logging.info(f'Completed file validation for file uuid {uuid}.')
@@ -160,7 +160,7 @@ def check_md5sum(md5sum, etag, file_path, chunk_size=CHUNK_SIZE):
     return error
 
 
-def check_content_md5sum(file_path, chunk_size=CHUNK_SIZE, base_url=CONTENT_MD5SUM_URL, username=ENCODE_ACCESS_KEY, password=ENCODE_CECRET_KEY):
+def check_content_md5sum(file_path, chunk_size=CHUNK_SIZE, base_url=CONTENT_MD5SUM_URL, username=ENCODE_ACCESS_KEY, password=ENCODE_SECRET_KEY):
     error = {}
     md5 = hashlib.md5()
     with gzip.open(file_path) as f:
