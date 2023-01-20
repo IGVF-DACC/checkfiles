@@ -15,7 +15,7 @@ import boto3
 import shutil
 import tempfile
 
-# some files for test: ENCFF594AYI.fastq.gz, ENCFF206HGF.bam, ENCFF080HPN.tsv, ENCFF500IBL.tsv, ENCFF259EZO.bed.gz, ENCFF337VVS.bed.gz, ENCFF597JNC.bed.gz
+
 BUCKET_NAME = os.getenv('BUCKET_NAME')
 KEY = os.getenv('KEY')
 MD5SUM = os.getenv('MD5SUM')
