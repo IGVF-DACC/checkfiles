@@ -1,5 +1,6 @@
 from checkfiles.checkfiles import is_file_gzipped, check_valid_gzipped_file_format, check_file_size
 from checkfiles.checkfiles import check_md5sum, check_content_md5sum, bam_pysam_check, fastq_check, file_validation, get_local_file_path
+from checkfiles.checkfiles import get_chrom_info_file, get_validate_files_args, validate_files_check
 
 
 def test_is_file_gzipped_gzipped():
@@ -90,6 +91,36 @@ def test_fastq_check_number_fail():
         'fastq_number_of_reads': 'sumbitted number of reads 1 does not match number of reads 25 in cloud storage',
         'fastq_read_length': 'sumbitted read length 1 does not match read length 58 in cloud storage'
     }
+
+
+def test_get_chrom_info_file_human():
+    file = get_chrom_info_file('GRCh38')
+    assert file == 'src/schemas/genome_builds/human/GRCh38/chrom.sizes'
+
+
+def test_get_chrom_info_file_rodent():
+    file = get_chrom_info_file('GRCm39')
+    assert file == 'src/schemas/genome_builds/rodent/GRCm39/chrom.sizes'
+
+
+def test_get_validate_files_args():
+    args = get_validate_files_args(
+        'bed', 'bed3+', 'src/schemas/genome_builds/human/GRCh38/chrom.sizes')
+    assert args == [
+        '-tab',
+        '-type=bed3+',
+        'chromInfo=src/schemas/genome_builds/human/GRCh38/chrom.sizes',
+    ]
+
+
+def test_validate_files_check_pass():
+    file_path = 'src/tests/data/ENCFF597JNC.bed.gz'
+    file_format = 'bed'
+    file_format_type = 'bed3'
+    assembly = 'GRCh38'
+    error = validate_files_check(
+        file_path, file_format, file_format_type, assembly)
+    assert error == {}
 
 
 def test_main_fastq(mocker):

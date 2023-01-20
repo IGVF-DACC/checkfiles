@@ -280,7 +280,7 @@ def get_chrom_info_file(assembly, chrom_info_dir=CHROM_INFO_DIR):
     if assembly in HUMAN_ASSEMBLIES:
         organism = 'human'
     elif assembly in RODENT_ASSEMBLIES:
-        organism - 'rodent'
+        organism = 'rodent'
 
     return f'{chrom_info_dir}/{organism}/{assembly}/chrom.sizes'
 

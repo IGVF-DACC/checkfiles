@@ -47,26 +47,22 @@ docker run -it --privileged --platform linux/amd64 \
     checkfiles
 ```
 
-## Local test
+## Testing
 
 Set up python virtual environment and activate it. Then install the dependencies.
 
 ```bash
-python3 -m venv
-source venv/bin/activate
-pip install -r requirements.txt
+docker run -it --privileged --platform linux/amd64 \
+    -e AWS_ACCESS_KEY_ID=xxxxxxxx -e AWS_SECRET_ACCESS_KEY=xxxxxxxx\
+    -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_CECRET_KEY=xxxxxxxx\
+    checkfiles pytest
 ```
-
-To run the tests, use the pytest command.
-
-`pytest`
 
 To measure the code coverage of your tests, use the coverage command to run pytest instead of running it directly.
 
-`coverage run -m pytest`
-
-An HTML report allows you to see which lines were covered in each file:
-
-`coverage html`
-
-This generates files in the htmlcov directory. Open htmlcov/index.html in your browser to see the report.
+```bash
+docker run -it --privileged --platform linux/amd64 \
+    -e AWS_ACCESS_KEY_ID=xxxxxxxx -e AWS_SECRET_ACCESS_KEY=xxxxxxxx\
+    -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_CECRET_KEY=xxxxxxxx\
+    checkfiles coverage run -m pytest && coverage report
+```
