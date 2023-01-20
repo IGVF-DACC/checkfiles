@@ -37,16 +37,25 @@ Additional checks for FASTQ file:
 
 `docker image build -t checkfiles .`
 
-- Run the build
+- There are some test file examples in file_examples folder. You can use one of them to run the build
 
 ```bash
-docker run -it --privileged \
+docker run -it --privileged --platform linux/amd64 \
+    -env-file src/file_examples/bed_bed3+_env.txt \
     -e AWS_ACCESS_KEY_ID=xxxxxxxx -e AWS_SECRET_ACCESS_KEY=xxxxxxxx\
     -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_CECRET_KEY=xxxxxxxx\
     checkfiles
 ```
 
 ## Local test
+
+Set up python virtual environment and activate it. Then install the dependencies.
+
+```bash
+python3 -m venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
 
 To run the tests, use the pytest command.
 

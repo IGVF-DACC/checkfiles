@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM --platform=linux/amd64 ubuntu:20.04
 
 
 WORKDIR /checkfiles
@@ -22,14 +22,11 @@ RUN curl -sS -L -o /usr/local/bin/goofys https://github.com/kahing/goofys/releas
 RUN curl -sS -L -o /usr/local/bin/validateFiles http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/validateFiles \
     && chmod +x /usr/local/bin/validateFiles
 
-COPY src/ src/
-
-# Collect pip requirements
 COPY requirements.txt .
 COPY entrypoint.sh /
-# Install pip requirements
-
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
+
+COPY src/ src/
 
 CMD ["sh", "/entrypoint.sh"]
