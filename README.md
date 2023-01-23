@@ -49,7 +49,7 @@ docker run -it --privileged --platform linux/amd64 \
 
 ## Testing
 
-Set up python virtual environment and activate it. Then install the dependencies.
+Use the docker image to run test.
 
 ```bash
 docker run -it --privileged --platform linux/amd64 \
