@@ -73,10 +73,14 @@ logging.basicConfig(
 
 
 def main():
-
-    response = file_validation(BUCKET_NAME, KEY, UUID,
-                               MD5SUM, FILE_FORMAT, OUTPUT_TYPE, FILE_SIZE, NUMBER_OF_READS, READ_LENGTH, FILE_FORMAT_TYPE, ASSEMBLY)
-    logging.info(json.dumps(response))
+    try:
+        response = file_validation(BUCKET_NAME, KEY, UUID,
+                                   MD5SUM, FILE_FORMAT, OUTPUT_TYPE, FILE_SIZE, NUMBER_OF_READS, READ_LENGTH, FILE_FORMAT_TYPE, ASSEMBLY)
+        logging.info(json.dumps(response))
+    except Exception as err:
+        message = f'exception occurred when checking file uuid #{UUID}: {str(err)}'
+        logging.info(json.dumps({'exception': message}))
+        sys.exit(1)  # Retry Job Task by exiting the process
 
 
 def file_validation(bucket_name, key, uuid, md5sum, file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly):
