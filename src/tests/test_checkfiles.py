@@ -236,3 +236,33 @@ def test_get_local_file_path():
     blob_name = 'ENCFF594AYI.fastq.gz'
     file_path = get_local_file_path(blob_name)
     assert file_path == '/s3/ENCFF594AYI.fastq.gz'
+
+
+def test_main_bed(mocker):
+    file_path = 'src/tests/data/ENCFF597JNC.bed.gz'
+    bucket_name = 'checkfile-mingjie'
+    key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF597JNC.bed.gz'
+    uuid = 'a3c64b51-5838-4ad2-a6c3-dc289786f626'
+    md5sum = 'd1bae8af8fec54424cff157134652d26'
+    file_format = 'bed'
+    output_type = 'exclusion list regions'
+    file_format_type = 'bed3'
+    assembly = 'GRCh38'
+    file_size = 5751
+    number_of_reads = None
+    read_length = None
+
+    mocker.patch('checkfiles.checkfiles.get_local_file_path',
+                 return_value=file_path)
+    mocker.patch('botocore.client.BaseClient._make_api_call',
+                 return_value={
+                     'ETag': '"d1bae8af8fec54424cff157134652d26"',
+                     'ContentLength': 5751
+                 })
+    result = file_validation(bucket_name, key, uuid, md5sum,
+                             file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly)
+    assert result == {
+        'uuid': 'a3c64b51-5838-4ad2-a6c3-dc289786f626',
+        'validation_result': 'failed',
+        'errors': {'content_md5sum': 'content md5sum 16a792c57f2de7877b1a09e5bef7cb5c conflicts with content md5sum of existing file(s): ENCFF597JNC'}
+    }
