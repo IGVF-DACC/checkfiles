@@ -19,7 +19,7 @@ RUN pip3 install awscli
 RUN curl -sS -L -o /usr/local/bin/goofys https://github.com/kahing/goofys/releases/download/v0.24.0/goofys \
     && chmod +x /usr/local/bin/goofys
 
-RUN curl -sS -L -o /usr/local/bin/validateFiles http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/validateFiles \
+RUN curl -sS -L -o /usr/local/bin/validateFiles https://raw.githubusercontent.com/IGVF-DACC/validateFiles/main/validateFiles \
     && chmod +x /usr/local/bin/validateFiles
 
 COPY requirements.txt .
