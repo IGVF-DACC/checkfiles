@@ -14,6 +14,10 @@ import logging
 import boto3
 import shutil
 import tempfile
+from frictionless import validate
+from frictionless import system
+from FastaValidator import fasta_validator
+
 
 
 BUCKET_NAME = os.getenv('BUCKET_NAME')
@@ -42,6 +46,7 @@ ZIP_FILE_FORMAT = [
     'tsv',
     'bed',
     'bedpe',
+    'fasta',
 ]
 
 TABULAR_FORMAT = [
@@ -75,6 +80,13 @@ HUMAN_ASSEMBLIES = ['GRCh38', 'hg19']
 RODENT_ASSEMBLIES = ['GRCm39', 'GRCm38', 'MGSCv37']
 
 CONTENT_MD5SUM_URL = 'https://www.encodeproject.org/search/?type=File&format=json&content_md5sum='
+
+FASTA_VALIDATION_INFO = {
+    0: 'this is a valid fasta file',
+    1: 'the first line does not start with a > (rule 1 violated).',
+    2: 'there are duplicate sequence identifiers in the file (rule 7 violated)',
+    4: 'there are characters in a sequence line other than [A-Za-z]'
+}
 
 logging.basicConfig(
     format='%(asctime)s | %(levelname)s: %(message)s', level=logging.INFO)
@@ -121,6 +133,9 @@ def file_validation(bucket_name, key, uuid, md5sum, file_format, output_type, fi
     elif file_format in ['bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe']:
         error = validate_files_check(
             file_path, file_format, file_format_type, assembly)
+        errors.update(error)
+    elif file_format == 'fasta':
+        error = fasta_check(file_path)
         errors.update(error)
     elif file_format in TABULAR_FORMAT:
         error = tabular_file_check(output_type, file_path)
@@ -248,6 +263,18 @@ def fastq_check(file_path, number_of_reads, read_length):
     fxi_file_path = temp_file.name + '.fxi'
     if os.path.exists(fxi_file_path):
         os.remove(fxi_file_path)
+    return error
+
+
+def fasta_check(file_path, info=FASTA_VALIDATION_INFO):
+    error = {}
+    try:
+        code = fasta_validator(file_path)
+        if code != 0:
+            error['fasta_error'] = info[code]
+    except Exception as e:
+        error['fasta_error'] = str(e)
+
     return error
 
 
