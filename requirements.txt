@@ -6,3 +6,4 @@ pysam==0.19.1
 pyfastx==0.9.1
 boto3==1.26.0
 frictionless==5.0.0b23
+py-fasta-validator==0.5
