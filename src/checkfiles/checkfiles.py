@@ -40,7 +40,8 @@ ZIP_FILE_FORMAT = [
     'fastq',
     'txt',
     'tsv',
-    'bed'
+    'bed',
+    'bedpe',
 ]
 
 TABULAR_FORMAT = [
