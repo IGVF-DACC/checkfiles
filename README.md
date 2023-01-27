@@ -43,7 +43,7 @@ Additional checks for FASTQ file:
 docker run -it --privileged --platform linux/amd64 \
     -env-file src/file_examples/bed_bed3+_env.txt \
     -e AWS_ACCESS_KEY_ID=xxxxxxxx -e AWS_SECRET_ACCESS_KEY=xxxxxxxx\
-    -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_CECRET_KEY=xxxxxxxx\
+    -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_SECRET_KEY=xxxxxxxx\
     checkfiles
 ```
 
@@ -54,7 +54,7 @@ Use the docker image to run test.
 ```bash
 docker run -it --privileged --platform linux/amd64 \
     -e AWS_ACCESS_KEY_ID=xxxxxxxx -e AWS_SECRET_ACCESS_KEY=xxxxxxxx\
-    -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_CECRET_KEY=xxxxxxxx\
+    -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_SECRET_KEY=xxxxxxxx\
     checkfiles pytest
 ```
 
@@ -63,6 +63,6 @@ To measure the code coverage of your tests, use the coverage command to run pyte
 ```bash
 docker run -it --privileged --platform linux/amd64 \
     -e AWS_ACCESS_KEY_ID=xxxxxxxx -e AWS_SECRET_ACCESS_KEY=xxxxxxxx\
-    -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_CECRET_KEY=xxxxxxxx\
+    -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_SECRET_KEY=xxxxxxxx\
     checkfiles coverage run -m pytest && coverage report
 ```
