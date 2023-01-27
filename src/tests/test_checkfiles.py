@@ -123,6 +123,28 @@ def test_validate_files_check_pass():
     assert error == {}
 
 
+def test_validate_files_check_invalid_chrom():
+    file_path = 'src/tests/data/invalid_chrom.bed'
+    file_format = 'bed'
+    file_format_type = 'bed3'
+    assembly = 'GRCh38'
+    error = validate_files_check(
+        file_path, file_format, file_format_type, assembly)
+    assert error == {
+        'validate_files': 'Error [file=src/tests/data/invalid_chrom.bed, line=1]: chrom chr1xxx not found [chr1xxx\t0\t10000]\nAborting ... found error.'}
+
+
+def test_validate_files_check_invalid_size():
+    file_path = 'src/tests/data/invalid_size.bed'
+    file_format = 'bed'
+    file_format_type = 'bed3'
+    assembly = 'GRCh38'
+    error = validate_files_check(
+        file_path, file_format, file_format_type, assembly)
+    assert error == {
+        'validate_files': 'Error [file=src/tests/data/invalid_size.bed, line=1]: bed->chromEnd[348956422] > chromSize[248956422] [chr1\t0\t348956422]'}
+
+
 def test_main_fastq(mocker):
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
     bucket_name = 'checkfile-mingjie'

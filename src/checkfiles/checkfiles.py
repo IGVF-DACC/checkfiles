@@ -61,6 +61,12 @@ VALIDATE_FILES_ARGS = {
     ('bed', 'bed3'): ['-type=bed3'],
     ('bed', 'CRISPR element quantifications'): ['-type=bed3+22', '-as=src/schemas/file_formats/as/element_quant_format.as'],
     ('bed', 'bed3+'): ['-tab', '-type=bed3+'],
+    ('bed', 'bedGraph'): ['-type=bedGraph'],
+    ('bigBed', 'bed3'): ['-type=bigBed3'],
+    ('bigBed', 'bed3+'): ['-tab', '-type=bigBed3+'],
+    ('bigWig', None): ['-type=bigWig'],
+    ('bigInteract', None): ['-type=bigBed5+13', '-as=src/schemas/file_formats/as/interact.as'],
+
 }
 
 HUMAN_ASSEMBLIES = ['GRCh38', 'hg19']
@@ -111,7 +117,7 @@ def file_validation(bucket_name, key, uuid, md5sum, file_format, output_type, fi
     elif file_format == 'fastq':
         error = fastq_check(file_path, number_of_reads, read_length)
         errors.update(error)
-    elif file_format in ['bed', 'bigWig', 'bigInteract', 'bigBed', 'bedGraph', 'bedpe']:
+    elif file_format in ['bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe']:
         error = validate_files_check(
             file_path, file_format, file_format_type, assembly)
         errors.update(error)
