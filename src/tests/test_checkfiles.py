@@ -1,4 +1,4 @@
-from checkfiles.checkfiles import is_file_gzipped, check_valid_gzipped_file_format, check_file_size
+from checkfiles.checkfiles import is_file_gzipped, check_valid_gzipped_file_format, check_file_size, fasta_check
 from checkfiles.checkfiles import check_md5sum, check_content_md5sum, bam_pysam_check, fastq_check, file_validation, get_local_file_path
 from checkfiles.checkfiles import get_chrom_info_file, get_validate_files_args, validate_files_check
 
@@ -93,6 +93,7 @@ def test_fastq_check_number_fail():
     }
 
 
+
 def test_get_chrom_info_file_human():
     file = get_chrom_info_file('GRCh38')
     assert file == 'src/schemas/genome_builds/human/GRCh38/chrom.sizes'
@@ -143,6 +144,12 @@ def test_validate_files_check_invalid_size():
         file_path, file_format, file_format_type, assembly)
     assert error == {
         'validate_files': 'Error [file=src/tests/data/invalid_size.bed, line=1]: bed->chromEnd[348956422] > chromSize[248956422] [chr1\t0\t348956422]'}
+
+def test_fasta_check():
+    file_path = ''
+    error = fasta_check(file_path)
+    pass
+
 
 
 def test_main_fastq(mocker):
