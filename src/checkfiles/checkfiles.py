@@ -97,7 +97,7 @@ def file_validation(bucket_name, key, uuid, md5sum, file_format, output_type, fi
 
     errors = {}
     is_gzipped = is_file_gzipped(file_path)
-    logging.info(f'is file gziped: {is_gzipped}')
+    logging.info(f'is file gzipped: {is_gzipped}')
     error = check_valid_gzipped_file_format(is_gzipped, file_format)
     errors.update(error)
     error = check_file_size(file_size, response.get('ContentLength'))

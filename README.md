@@ -41,7 +41,7 @@ Additional checks for FASTQ file:
 
 ```bash
 docker run -it --privileged --platform linux/amd64 \
-    -env-file src/file_examples/bed_bed3+_env.txt \
+    --env-file src/file_examples/bed_bed3+_env.txt \
     -e AWS_ACCESS_KEY_ID=xxxxxxxx -e AWS_SECRET_ACCESS_KEY=xxxxxxxx\
     -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_SECRET_KEY=xxxxxxxx\
     checkfiles
