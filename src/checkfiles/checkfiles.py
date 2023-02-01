@@ -62,6 +62,7 @@ VALIDATE_FILES_ARGS = {
     ('bed', 'CRISPR element quantifications'): ['-type=bed3+22', '-as=src/schemas/file_formats/as/element_quant_format.as'],
     ('bed', 'bed3+'): ['-tab', '-type=bed3+'],
     ('bed', 'bedGraph'): ['-type=bedGraph'],
+    ('bedpe', None): ['-type=bed3+'],
     ('bigBed', 'bed3'): ['-type=bigBed3'],
     ('bigBed', 'bed3+'): ['-tab', '-type=bigBed3+'],
     ('bigWig', None): ['-type=bigWig'],
