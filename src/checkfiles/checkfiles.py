@@ -1,3 +1,6 @@
+import subprocess
+from frictionless import system
+from frictionless import validate
 import json
 import requests
 import hashlib
@@ -11,23 +14,24 @@ import logging
 import boto3
 import shutil
 import tempfile
-from frictionless import validate
-from frictionless import system
 
-# some files for test: ENCFF594AYI.fastq.gz, ENCFF206HGF.bam, ENCFF080HPN.tsv, ENCFF500IBL.tsv
-BUCKET_NAME = os.getenv('BUCKET_NAME', 'checkfiles-test')
-KEY = os.getenv(
-    'KEY', '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF500IBL.tsv')
-MD5SUM = os.getenv('MD5SUM', '3e814f4af7a4c13460584b26fbe32dc')
-FILE_FORMAT = os.getenv('FILE_FORMAT', 'tsv')
-OUTPUT_TYPE = os.getenv('OUTPUT_TYPE', 'element quantifications')
-UUID = os.getenv('UUID', '462bd56-9278-48aa-bc55-9eff587ba2c7')
-FILE_SIZE = os.getenv('FILE_SIZE', 137)
-NUMBER_OF_READS = os.getenv('NUMBER_OF_READS', 2)
-READ_LENGTH = os.getenv('READ_LENGTH', 5)
+
+BUCKET_NAME = os.getenv('BUCKET_NAME')
+KEY = os.getenv('KEY')
+MD5SUM = os.getenv('MD5SUM')
+FILE_FORMAT = os.getenv('FILE_FORMAT')
+FILE_FORMAT_TYPE = os.getenv('FILE_FORMAT_TYPE')
+OUTPUT_TYPE = os.getenv('OUTPUT_TYPE')
+UUID = os.getenv('UUID')
+FILE_SIZE = int(os.getenv('FILE_SIZE', 0))
+ASSEMBLY = os.getenv('ASSEMBLY')
+NUMBER_OF_READS = int(os.getenv('NUMBER_OF_READS', 0))
+READ_LENGTH = int(os.getenv('READ_LENGTH', 0))
 ENCODE_ACCESS_KEY = os.getenv('ENCODE_ACCESS_KEY', '')
 ENCODE_SECRET_KEY = os.getenv('ENCODE_SECRET_KEY', '')
 DATA_DIR = '/s3/'
+SCHEMA_DIR = 'src/schemas/'
+CHROM_INFO_DIR = SCHEMA_DIR + 'genome_builds'
 CHUNK_SIZE = 128*6400
 MAX_NUM_ERROR_FOR_TABULAR_FILE = 10
 
@@ -36,6 +40,8 @@ ZIP_FILE_FORMAT = [
     'fastq',
     'txt',
     'tsv',
+    'bed',
+    'bedpe',
 ]
 
 TABULAR_FORMAT = [
@@ -51,6 +57,23 @@ TABULAR_FILE_SCHEMAS = {
     'element quantifications': 'src/schemas/table_schemas/element_quant.json'
 }
 
+VALIDATE_FILES_ARGS = {
+    ('bed', 'bed3'): ['-type=bed3'],
+    ('bed', 'CRISPR element quantifications'): ['-type=bed3+22', '-as=src/schemas/file_formats/as/element_quant_format.as'],
+    ('bed', 'bed3+'): ['-tab', '-type=bed3+'],
+    ('bed', 'bedGraph'): ['-type=bedGraph'],
+    ('bedpe', None): ['-type=bed3+'],
+    ('bigBed', 'bed3'): ['-type=bigBed3'],
+    ('bigBed', 'bed3+'): ['-tab', '-type=bigBed3+'],
+    ('bigWig', None): ['-type=bigWig'],
+    ('bigInteract', None): ['-type=bigBed5+13', '-as=src/schemas/file_formats/as/interact.as'],
+
+}
+
+HUMAN_ASSEMBLIES = ['GRCh38', 'hg19']
+
+RODENT_ASSEMBLIES = ['GRCm39', 'GRCm38', 'MGSCv37']
+
 CONTENT_MD5SUM_URL = 'https://www.encodeproject.org/search/?type=File&format=json&content_md5sum='
 
 logging.basicConfig(
@@ -60,23 +83,22 @@ logging.basicConfig(
 def main():
     try:
         response = file_validation(BUCKET_NAME, KEY, UUID,
-                                   MD5SUM, FILE_FORMAT, OUTPUT_TYPE, FILE_SIZE, NUMBER_OF_READS, READ_LENGTH)
+                                   MD5SUM, FILE_FORMAT, OUTPUT_TYPE, FILE_SIZE, NUMBER_OF_READS, READ_LENGTH, FILE_FORMAT_TYPE, ASSEMBLY)
         logging.info(json.dumps(response))
     except Exception as err:
         message = f'exception occurred when checking file uuid #{UUID}: {str(err)}'
-
         logging.info(json.dumps({'exception': message}))
         sys.exit(1)  # Retry Job Task by exiting the process
 
 
-def file_validation(bucket_name, key, uuid, md5sum, file_format, output_type, file_size, number_of_reads, read_length):
+def file_validation(bucket_name, key, uuid, md5sum, file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly):
     logging.info(f'Checking file uuid {uuid}...')
     response = boto3.client('s3').get_object(Bucket=bucket_name, Key=key)
     file_path = get_local_file_path(key)
 
     errors = {}
     is_gzipped = is_file_gzipped(file_path)
-    logging.info(f'is file gziped: {is_gzipped}')
+    logging.info(f'is file gzipped: {is_gzipped}')
     error = check_valid_gzipped_file_format(is_gzipped, file_format)
     errors.update(error)
     error = check_file_size(file_size, response.get('ContentLength'))
@@ -95,6 +117,10 @@ def file_validation(bucket_name, key, uuid, md5sum, file_format, output_type, fi
             bam_generate_bai_file(file_path)
     elif file_format == 'fastq':
         error = fastq_check(file_path, number_of_reads, read_length)
+        errors.update(error)
+    elif file_format in ['bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe']:
+        error = validate_files_check(
+            file_path, file_format, file_format_type, assembly)
         errors.update(error)
     elif file_format in TABULAR_FORMAT:
         error = tabular_file_check(output_type, file_path)
@@ -238,6 +264,37 @@ def tabular_file_check(output_type, file_path, schemas=TABULAR_FILE_SCHEMAS, max
             'tabular_file_error': report
         }
     return error
+
+
+def validate_files_check(file_path, file_format, file_format_type, assembly):
+    error = {}
+    chrom_info_file = get_chrom_info_file(assembly)
+
+    validate_args = get_validate_files_args(
+        file_format, file_format_type, chrom_info_file)
+    command = ['validateFiles'] + validate_args + [file_path]
+    try:
+        output = subprocess.check_output(command, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        error['validate_files'] = e.output.decode(
+            errors='replace').rstrip('\n')
+    return error
+
+
+def get_validate_files_args(file_format, file_format_type, chrom_info_file, schema=VALIDATE_FILES_ARGS):
+    args = schema.get((file_format, file_format_type))
+    chrom_info_arg = 'chromInfo=' + chrom_info_file
+    args.append(chrom_info_arg)
+    return args
+
+
+def get_chrom_info_file(assembly, chrom_info_dir=CHROM_INFO_DIR):
+    if assembly in HUMAN_ASSEMBLIES:
+        organism = 'human'
+    elif assembly in RODENT_ASSEMBLIES:
+        organism = 'rodent'
+
+    return f'{chrom_info_dir}/{organism}/{assembly}/chrom.sizes'
 
 
 # Start script

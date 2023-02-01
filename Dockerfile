@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM --platform=linux/amd64 ubuntu:20.04
 
 
 WORKDIR /checkfiles
@@ -19,14 +19,14 @@ RUN pip3 install awscli
 RUN curl -sS -L -o /usr/local/bin/goofys https://github.com/kahing/goofys/releases/download/v0.24.0/goofys \
     && chmod +x /usr/local/bin/goofys
 
-COPY src/ src/
+RUN curl -sS -L -o /usr/local/bin/validateFiles https://raw.githubusercontent.com/IGVF-DACC/validateFiles/main/validateFiles \
+    && chmod +x /usr/local/bin/validateFiles
 
-# Collect pip requirements
 COPY requirements.txt .
 COPY entrypoint.sh /
-# Install pip requirements
-
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
+
+COPY src/ src/
 
 CMD ["sh", "/entrypoint.sh"]

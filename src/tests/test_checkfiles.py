@@ -1,5 +1,6 @@
 from checkfiles.checkfiles import is_file_gzipped, check_valid_gzipped_file_format, check_file_size
 from checkfiles.checkfiles import check_md5sum, check_content_md5sum, bam_pysam_check, fastq_check, file_validation, get_local_file_path
+from checkfiles.checkfiles import get_chrom_info_file, get_validate_files_args, validate_files_check
 
 
 def test_is_file_gzipped_gzipped():
@@ -92,6 +93,58 @@ def test_fastq_check_number_fail():
     }
 
 
+def test_get_chrom_info_file_human():
+    file = get_chrom_info_file('GRCh38')
+    assert file == 'src/schemas/genome_builds/human/GRCh38/chrom.sizes'
+
+
+def test_get_chrom_info_file_rodent():
+    file = get_chrom_info_file('GRCm39')
+    assert file == 'src/schemas/genome_builds/rodent/GRCm39/chrom.sizes'
+
+
+def test_get_validate_files_args():
+    args = get_validate_files_args(
+        'bed', 'bed3+', 'src/schemas/genome_builds/human/GRCh38/chrom.sizes')
+    assert args == [
+        '-tab',
+        '-type=bed3+',
+        'chromInfo=src/schemas/genome_builds/human/GRCh38/chrom.sizes',
+    ]
+
+
+def test_validate_files_check_pass():
+    file_path = 'src/tests/data/ENCFF597JNC.bed.gz'
+    file_format = 'bed'
+    file_format_type = 'bed3'
+    assembly = 'GRCh38'
+    error = validate_files_check(
+        file_path, file_format, file_format_type, assembly)
+    assert error == {}
+
+
+def test_validate_files_check_invalid_chrom():
+    file_path = 'src/tests/data/invalid_chrom.bed'
+    file_format = 'bed'
+    file_format_type = 'bed3'
+    assembly = 'GRCh38'
+    error = validate_files_check(
+        file_path, file_format, file_format_type, assembly)
+    assert error == {
+        'validate_files': 'Error [file=src/tests/data/invalid_chrom.bed, line=1]: chrom chr1xxx not found [chr1xxx\t0\t10000]\nAborting ... found error.'}
+
+
+def test_validate_files_check_invalid_size():
+    file_path = 'src/tests/data/invalid_size.bed'
+    file_format = 'bed'
+    file_format_type = 'bed3'
+    assembly = 'GRCh38'
+    error = validate_files_check(
+        file_path, file_format, file_format_type, assembly)
+    assert error == {
+        'validate_files': 'Error [file=src/tests/data/invalid_size.bed, line=1]: bed->chromEnd[348956422] > chromSize[248956422] [chr1\t0\t348956422]'}
+
+
 def test_main_fastq(mocker):
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
     bucket_name = 'checkfile-mingjie'
@@ -103,6 +156,8 @@ def test_main_fastq(mocker):
     file_size = 1371
     number_of_reads = 25
     read_length = 58
+    file_format_type = None
+    assembly = None
     mocker.patch('checkfiles.checkfiles.get_local_file_path',
                  return_value=file_path)
     mocker.patch('botocore.client.BaseClient._make_api_call',
@@ -111,7 +166,7 @@ def test_main_fastq(mocker):
                      'ContentLength': 1371
                  })
     result = file_validation(bucket_name, key, uuid, md5sum,
-                             file_format, output_type, file_size, number_of_reads, read_length)
+                             file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
         'uuid': 'a3b754b6-0213-4ed4-a5f3-124f90273561',
         'validation_result': 'failed',
@@ -130,6 +185,8 @@ def test_main_bam(mocker):
     file_size = 118126
     number_of_reads = 1709
     read_length = 58
+    file_format_type = None
+    assembly = None
 
     mocker.patch('checkfiles.checkfiles.get_local_file_path',
                  return_value=file_path)
@@ -148,7 +205,7 @@ def test_main_bam(mocker):
                  })
 
     result = file_validation(bucket_name, key, uuid, md5sum,
-                             file_format, output_type, file_size, number_of_reads, read_length)
+                             file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
         'validation_result': 'pass'
@@ -166,6 +223,8 @@ def test_main_tabular(mocker):
     file_size = 118126
     number_of_reads = 1709
     read_length = 58
+    file_format_type = None
+    assembly = None
 
     mocker.patch('checkfiles.checkfiles.get_local_file_path',
                  return_value=file_path)
@@ -184,7 +243,7 @@ def test_main_tabular(mocker):
                  })
 
     result = file_validation(bucket_name, key, uuid, md5sum,
-                             file_format, output_type, file_size, number_of_reads, read_length)
+                             file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
         'validation_result': 'failed',
@@ -199,3 +258,33 @@ def test_get_local_file_path():
     blob_name = 'ENCFF594AYI.fastq.gz'
     file_path = get_local_file_path(blob_name)
     assert file_path == '/s3/ENCFF594AYI.fastq.gz'
+
+
+def test_main_bed(mocker):
+    file_path = 'src/tests/data/ENCFF597JNC.bed.gz'
+    bucket_name = 'checkfile-mingjie'
+    key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF597JNC.bed.gz'
+    uuid = 'a3c64b51-5838-4ad2-a6c3-dc289786f626'
+    md5sum = 'd1bae8af8fec54424cff157134652d26'
+    file_format = 'bed'
+    output_type = 'exclusion list regions'
+    file_format_type = 'bed3'
+    assembly = 'GRCh38'
+    file_size = 5751
+    number_of_reads = None
+    read_length = None
+
+    mocker.patch('checkfiles.checkfiles.get_local_file_path',
+                 return_value=file_path)
+    mocker.patch('botocore.client.BaseClient._make_api_call',
+                 return_value={
+                     'ETag': '"d1bae8af8fec54424cff157134652d26"',
+                     'ContentLength': 5751
+                 })
+    result = file_validation(bucket_name, key, uuid, md5sum,
+                             file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly)
+    assert result == {
+        'uuid': 'a3c64b51-5838-4ad2-a6c3-dc289786f626',
+        'validation_result': 'failed',
+        'errors': {'content_md5sum': 'content md5sum 16a792c57f2de7877b1a09e5bef7cb5c conflicts with content md5sum of existing file(s): ENCFF597JNC'}
+    }

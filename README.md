@@ -37,27 +37,32 @@ Additional checks for FASTQ file:
 
 `docker image build -t checkfiles .`
 
-- Run the build
+- There are some test file examples in file_examples folder. You can use one of them to run the build
 
 ```bash
-docker run -it --privileged \
+docker run -it --privileged --platform linux/amd64 \
+    --env-file src/file_examples/bed_bed3+_env.txt \
     -e AWS_ACCESS_KEY_ID=xxxxxxxx -e AWS_SECRET_ACCESS_KEY=xxxxxxxx\
-    -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_CECRET_KEY=xxxxxxxx\
+    -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_SECRET_KEY=xxxxxxxx\
     checkfiles
 ```
 
-## Local test
+## Testing
 
-To run the tests, use the pytest command.
+Use the docker image to run test.
 
-`pytest`
+```bash
+docker run -it --privileged --platform linux/amd64 \
+    -e AWS_ACCESS_KEY_ID=xxxxxxxx -e AWS_SECRET_ACCESS_KEY=xxxxxxxx\
+    -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_SECRET_KEY=xxxxxxxx\
+    checkfiles pytest
+```
 
 To measure the code coverage of your tests, use the coverage command to run pytest instead of running it directly.
 
-`coverage run -m pytest`
-
-An HTML report allows you to see which lines were covered in each file:
-
-`coverage html`
-
-This generates files in the htmlcov directory. Open htmlcov/index.html in your browser to see the report.
+```bash
+docker run -it --privileged --platform linux/amd64 \
+    -e AWS_ACCESS_KEY_ID=xxxxxxxx -e AWS_SECRET_ACCESS_KEY=xxxxxxxx\
+    -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_SECRET_KEY=xxxxxxxx\
+    checkfiles coverage run -m pytest && coverage report
+```
