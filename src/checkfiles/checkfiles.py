@@ -14,8 +14,6 @@ import logging
 import boto3
 import shutil
 import tempfile
-from frictionless import validate
-from frictionless import system
 from FastaValidator import fasta_validator
 
 
