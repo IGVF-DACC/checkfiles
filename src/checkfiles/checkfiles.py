@@ -19,7 +19,6 @@ from frictionless import system
 from FastaValidator import fasta_validator
 
 
-
 BUCKET_NAME = os.getenv('BUCKET_NAME')
 KEY = os.getenv('KEY')
 MD5SUM = os.getenv('MD5SUM')
@@ -137,7 +136,7 @@ def file_validation(bucket_name, key, uuid, md5sum, file_format, output_type, fi
             file_path, file_format, file_format_type, assembly)
         errors.update(error)
     elif file_format == 'fasta':
-        error = fasta_check(file_path)
+        error = fasta_check(file_path, is_gzipped)
         errors.update(error)
     elif file_format in TABULAR_FORMAT:
         error = tabular_file_check(output_type, file_path)
@@ -268,8 +267,15 @@ def fastq_check(file_path, number_of_reads, read_length):
     return error
 
 
-def fasta_check(file_path, info=FASTA_VALIDATION_INFO):
+def fasta_check(file_path, is_gzipped, info=FASTA_VALIDATION_INFO):
     error = {}
+    if is_gzipped:
+        with gzip.open(file_path, 'rb') as f_in:
+            temp_file = tempfile.NamedTemporaryFile()
+            with open(temp_file.name, 'wb') as f_out:
+                temp_file = tempfile.NamedTemporaryFile()
+                shutil.copyfileobj(f_in, f_out)
+        file_path = temp_file.name
     try:
         code = fasta_validator(file_path)
         if code != 0:

@@ -93,7 +93,6 @@ def test_fastq_check_number_fail():
     }
 
 
-
 def test_get_chrom_info_file_human():
     file = get_chrom_info_file('GRCh38')
     assert file == 'src/schemas/genome_builds/human/GRCh38/chrom.sizes'
@@ -145,11 +144,36 @@ def test_validate_files_check_invalid_size():
     assert error == {
         'validate_files': 'Error [file=src/tests/data/invalid_size.bed, line=1]: bed->chromEnd[348956422] > chromSize[248956422] [chr1\t0\t348956422]'}
 
-def test_fasta_check():
-    file_path = ''
-    error = fasta_check(file_path)
-    pass
 
+def test_fasta_check_pass():
+    file_path = 'src/tests/data/ENCFF329FTG.fasta.gz'
+    is_gzipped = True
+    error = fasta_check(file_path, is_gzipped)
+    assert error == {}
+
+
+def test_fasta_check_invalid_start():
+    file_path = 'src/tests/data/fasta_invalid_start.fasta'
+    is_gzipped = False
+    error = fasta_check(file_path, is_gzipped)
+    assert error == {
+        'fasta_error': 'the first line does not start with a > (rule 1 violated).'}
+
+
+def test_fasta_check_invalid_seq():
+    file_path = 'src/tests/data/fasta_invalid_seq.fasta'
+    is_gzipped = False
+    error = fasta_check(file_path, is_gzipped)
+    assert error == {
+        'fasta_error': 'there are characters in a sequence line other than [A-Za-z]'}
+
+
+def test_fasta_check_duplicate():
+    file_path = 'src/tests/data/fasta_duplicate.fasta'
+    is_gzipped = False
+    error = fasta_check(file_path, is_gzipped)
+    assert error == {
+        'fasta_error': 'there are duplicate sequence identifiers in the file (rule 7 violated)'}
 
 
 def test_validate_files_fastq_check_invalid_quality():
