@@ -1,6 +1,6 @@
 from checkfiles.checkfiles import is_file_gzipped, check_valid_gzipped_file_format, check_file_size
 from checkfiles.checkfiles import check_md5sum, check_content_md5sum, bam_pysam_check, fastq_check, file_validation, get_local_file_path
-from checkfiles.checkfiles import get_chrom_info_file, get_validate_files_args, validate_files_check
+from checkfiles.checkfiles import get_chrom_info_file, get_validate_files_args, validate_files_check, validate_files_fastq_check
 
 
 def test_is_file_gzipped_gzipped():
@@ -143,6 +143,26 @@ def test_validate_files_check_invalid_size():
         file_path, file_format, file_format_type, assembly)
     assert error == {
         'validate_files': 'Error [file=src/tests/data/invalid_size.bed, line=1]: bed->chromEnd[348956422] > chromSize[248956422] [chr1\t0\t348956422]'}
+
+
+def test_validate_files_fastq_check_invalid_quality():
+    file_path = 'src/tests/data/fastq_invalid_quality.fastq'
+    error = validate_files_fastq_check(file_path)
+    assert error == {
+        'validate_files': 'Error [file=src/tests/data/fastq_invalid_quality.fastq, line=4]: quality not as long as sequence (58 bases) [AGAA...<.<<G<<.<<.GGAGGGGGAGGAGGAGG..<.GGA.<A.]\nAborting .. found 1 error', }
+
+
+def test_validate_files_fastq_check_invalid_seq():
+    file_path = 'src/tests/data/fastq_invalid_seq.fastq'
+    error = validate_files_fastq_check(file_path)
+    assert error == {
+        'validate_files': 'Error [file=src/tests/data/fastq_invalid_seq.fastq, line=2]: invalid DNA chars in sequence(TGCTTCTGTGTA5TTTTTATTTGAAGATATTTTCTTTTCAATCATAGGGCAGATCGGA)\nAborting .. found 1 error'}
+
+
+def test_validate_files_fastq_check_pass():
+    file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
+    error = validate_files_fastq_check(file_path)
+    assert error == {}
 
 
 def test_main_fastq(mocker):

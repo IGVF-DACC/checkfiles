@@ -132,3 +132,12 @@ dmypy.json
 
 # GOOGLE_APPLICATION_CREDENTIALS
 key.json
+
+# fastq index file:
+*.fastq.gz.fxi
+
+# coveralls
+.coveralls.yml
+
+# sandbox
+sandbox/
