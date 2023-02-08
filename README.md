@@ -14,10 +14,18 @@ Checks for all files:
 
 Additional checks for BAM file:
 
-- Is the file a valid BAM file by SamtoolsError
+- Is the file a valid BAM file by pysam
 - Is the file sorted
 - The number of reads
 - Generate index file for this BAM file
+
+Additional checks for BED, BEDPE, BIGBED, BIGINTERACT and BIGWIG files:
+
+- Is the file a valid file by validateFiles
+
+Additional checks for FASTA file:
+
+- Is the file a valid FASTA file by py_fasta_validator
 
 Additional checks for FASTQ file:
 
@@ -26,8 +34,14 @@ Additional checks for FASTQ file:
 
 ## File types for validation
 
-- FASTQ
 - BAM
+- BED
+- BEDPE
+- BIGBED
+- BIGINTERACT
+- BIGWIG
+- FASTQ
+- FASTA
 - TXT
 - TSV
 

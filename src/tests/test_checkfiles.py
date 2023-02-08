@@ -1,4 +1,4 @@
-from checkfiles.checkfiles import is_file_gzipped, check_valid_gzipped_file_format, check_file_size
+from checkfiles.checkfiles import is_file_gzipped, check_valid_gzipped_file_format, check_file_size, fasta_check
 from checkfiles.checkfiles import check_md5sum, check_content_md5sum, bam_pysam_check, fastq_check, file_validation, get_local_file_path
 from checkfiles.checkfiles import get_chrom_info_file, get_validate_files_args, validate_files_check, validate_files_fastq_check
 
@@ -143,6 +143,37 @@ def test_validate_files_check_invalid_size():
         file_path, file_format, file_format_type, assembly)
     assert error == {
         'validate_files': 'Error [file=src/tests/data/invalid_size.bed, line=1]: bed->chromEnd[348956422] > chromSize[248956422] [chr1\t0\t348956422]'}
+
+
+def test_fasta_check_pass():
+    file_path = 'src/tests/data/ENCFF329FTG.fasta.gz'
+    is_gzipped = True
+    error = fasta_check(file_path, is_gzipped)
+    assert error == {}
+
+
+def test_fasta_check_invalid_start():
+    file_path = 'src/tests/data/fasta_invalid_start.fasta'
+    is_gzipped = False
+    error = fasta_check(file_path, is_gzipped)
+    assert error == {
+        'fasta_error': 'the first line does not start with a > (rule 1 violated).'}
+
+
+def test_fasta_check_invalid_seq():
+    file_path = 'src/tests/data/fasta_invalid_seq.fasta'
+    is_gzipped = False
+    error = fasta_check(file_path, is_gzipped)
+    assert error == {
+        'fasta_error': 'there are characters in a sequence line other than [A-Za-z]'}
+
+
+def test_fasta_check_duplicate():
+    file_path = 'src/tests/data/fasta_duplicate.fasta'
+    is_gzipped = False
+    error = fasta_check(file_path, is_gzipped)
+    assert error == {
+        'fasta_error': 'there are duplicate sequence identifiers in the file (rule 7 violated)'}
 
 
 def test_validate_files_fastq_check_invalid_quality():
