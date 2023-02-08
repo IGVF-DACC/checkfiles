@@ -116,6 +116,8 @@ def file_validation(bucket_name, key, uuid, md5sum, file_format, output_type, fi
         if 'bam_error' not in errors:
             bam_generate_bai_file(file_path)
     elif file_format == 'fastq':
+        error = validate_files_fastq_check(file_path)
+        errors.update(error)
         error = fastq_check(file_path, number_of_reads, read_length)
         errors.update(error)
     elif file_format in ['bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe']:
@@ -278,6 +280,18 @@ def validate_files_check(file_path, file_format, file_format_type, assembly):
     except subprocess.CalledProcessError as e:
         error['validate_files'] = e.output.decode(
             errors='replace').rstrip('\n')
+    return error
+
+
+def validate_files_fastq_check(file_path):
+    error = {}
+    command = ['validateFiles'] + ['-type=fastq'] + [file_path]
+    try:
+        output = subprocess.check_output(command, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        error['validate_files'] = e.output.decode(
+            errors='replace').rstrip('\n')
+
     return error
 
 
