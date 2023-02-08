@@ -176,6 +176,9 @@ def test_fasta_check_duplicate():
         'fasta_error': 'there are duplicate sequence identifiers in the file (rule 7 violated)'}
 
 
+<< << << < HEAD
+
+
 def test_validate_files_fastq_check_invalid_quality():
     file_path = 'src/tests/data/fastq_invalid_quality.fastq'
     error = validate_files_fastq_check(file_path)
@@ -194,6 +197,10 @@ def test_validate_files_fastq_check_pass():
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
     error = validate_files_fastq_check(file_path)
     assert error == {}
+
+
+== == == =
+>>>>>> > 5e7c02804b812f530fcce30e64d5421009a8d4e6
 
 
 def test_main_fastq(mocker):
