@@ -21,11 +21,11 @@ Additional checks for BAM file:
 
 Additional checks for BED, BEDPE, BIGBED, BIGINTERACT and BIGWIG files:
 
-- Is the file a valid file by validateFiles.
+- Is the file a valid file by validateFiles
 
 Additional checks for FASTA file:
 
-- is the file a valid FASTA file by py_fasta_validator
+- Is the file a valid FASTA file by py_fasta_validator
 
 Additional checks for FASTQ file:
 
