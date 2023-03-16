@@ -10,11 +10,11 @@ logging.basicConfig(
     force=True
 )
 
-def get_portal_key():
-    return os.environ['ENCODE_PORTAL_KEY']
+def get_portal_key(secret):
+    return secret['IGVF_PORTAL_KEY']
 
-def get_portal_secret_key():
-    return os.environ['ENCODE_PORTAL_SECRET_KEY']
+def get_portal_secret_key(secret):
+    return secret['IGVF_PORTAL_SECRET_KEY']
 
 def get_sqs_queue():
     return os.environ['SQS_QUEUE_URL']
@@ -51,6 +51,9 @@ def put_pending_files(event, context):
     sqs_client = get_sqs_client()
     queue_url = get_sqs_queue()
     secret_arn = get_secrets_arn()
+    logging.info('Getting portal secrets')
     secret = get_secret(secret_arn)
+    portal_key = get_portal_key(secret)
+    logging.info(f'got the portal key: {portal_key}')
     logging.info(f'putting message to: {queue_url}')
     send_message(sqs_client,queue_url,'Hello from lambda, queue!')

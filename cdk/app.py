@@ -24,7 +24,7 @@ from typing import Any
 IGVF_DEV_ENV = Environment(account='109189702753', region='us-west-2')
 PORTAL_SECRETS_ARN = 'arn:aws:secretsmanager:us-west-2:109189702753:secret:testingcheckfiles-bb38pj' 
 
-class PendingFilesLambdaToSQS(Stack):
+class CheckFilesStack(Stack):
 
     def __init__(
             self,
@@ -65,5 +65,5 @@ class PendingFilesLambdaToSQS(Stack):
         )
         portal_secrets.grant_read(get_pending_files_lambda)
 app = App()
-pending_files_to_sqs = PendingFilesLambdaToSQS(app, 'PendingFilesLambdaToSQS', env=IGVF_DEV_ENV)
+pending_files_to_sqs = CheckFilesStack(app, 'CheckFilesStack', env=IGVF_DEV_ENV)
 app.synth()
