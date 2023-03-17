@@ -23,7 +23,7 @@ from typing import Any
 
 IGVF_DEV_ENV = Environment(account='109189702753', region='us-west-2')
 PORTAL_SECRETS_ARN = 'arn:aws:secretsmanager:us-west-2:109189702753:secret:testingcheckfiles-bb38pj' 
-
+PORTAL_API_URL = 'https://api.sandbox.igvf.org'
 class CheckFilesStack(Stack):
 
     def __init__(
@@ -53,7 +53,8 @@ class CheckFilesStack(Stack):
             timeout=Duration.seconds(60),
             environment={
                 'SQS_QUEUE_URL': pending_files_queue.queue_url,
-                'PORTAL_SECRETS_ARN': PORTAL_SECRETS_ARN
+                'PORTAL_SECRETS_ARN': PORTAL_SECRETS_ARN,
+                'PORTAL_URL': PORTAL_API_URL
             }
         )
 

@@ -1,4 +1,5 @@
 import boto3
+import json
 import os
 import requests
 
@@ -10,14 +11,22 @@ logging.basicConfig(
     force=True
 )
 
+PENDING_FILES_SEARCH = '/search?type=File&upload_status=pending&field=href&field=uuid&field=upload_status'
+
 def get_portal_key(secret):
     return secret['IGVF_PORTAL_KEY']
 
 def get_portal_secret_key(secret):
     return secret['IGVF_PORTAL_SECRET_KEY']
 
+def get_auth(secret):
+    return (get_portal_key(secret), get_portal_secret_key(secret))
+
 def get_sqs_queue():
     return os.environ['SQS_QUEUE_URL']
+
+def get_portal_url():
+    return os.environ['PORTAL_URL']
 
 def get_secrets_arn():
     return os.environ['PORTAL_SECRETS_ARN']
@@ -45,15 +54,29 @@ def get_secret(secret_arn):
         raise e
     secret = get_secret_value_response['SecretString']
     logging.info(f'got secret from {secret_arn}')
-    return secret
+    return json.loads(secret)
+
+def get_pending_files(secret, portal_url):
+    headers = {'accept': 'application/json'}
+    auth = get_auth(secret)
+    response = requests.get(
+        portal_url + PENDING_FILES_SEARCH,
+        headers=headers,
+        auth=auth,
+    )
+    pending_files = response.json()['@graph']
+    return pending_files
+
 
 def put_pending_files(event, context):
     sqs_client = get_sqs_client()
     queue_url = get_sqs_queue()
     secret_arn = get_secrets_arn()
-    logging.info('Getting portal secrets')
     secret = get_secret(secret_arn)
-    portal_key = get_portal_key(secret)
-    logging.info(f'got the portal key: {portal_key}')
-    logging.info(f'putting message to: {queue_url}')
-    send_message(sqs_client,queue_url,'Hello from lambda, queue!')
+    portal_url = get_portal_url()
+    pending_files = get_pending_files(secret, portal_url)
+    number_of_pending = len(pending_files)
+    logging.info(f'putting {number_of_pending} messages to: {queue_url}')
+    for fileobj in pending_files:
+        msg = json.dumps(fileobj)
+        send_message(sqs_client,queue_url, msg)
