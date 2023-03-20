@@ -24,7 +24,7 @@ from aws_cdk.aws_ecs_patterns import QueueProcessingFargateService
 
 from aws_cdk.aws_lambda_python_alpha import PythonFunction
 
-from aws_cdk.aws_secretsmanager import Secret
+from aws_cdk.aws_secretsmanager import Secret as SMSecret
 
 from aws_cdk.aws_applicationautoscaling import ScalingInterval
 
@@ -86,7 +86,7 @@ class CheckFilesStack(Stack):
         self.props = props
 
 
-        self.portal_secrets = Secret.from_secret_complete_arn(
+        self.portal_secrets = SMSecret.from_secret_complete_arn(
             self,
             id='PortalSecrets',
             secret_complete_arn=self.props.portal_secrets_complete_arn
@@ -133,11 +133,21 @@ class CheckFilesStack(Stack):
             circuit_breaker=DeploymentCircuitBreaker(
                 rollback=True,
             ),
-            command=['echo', 'Hello'],
+            command=['echo', 'key:', '$IGVF_PORTAL_KEY'],
             log_driver=LogDriver.aws_logs(
                 stream_prefix='checkfiles-service',
                 mode=AwsLogDriverMode.NON_BLOCKING,
             ),
+            secrets={
+                'IGVF_PORTAL_KEY': Secret.from_secrets_manager(
+                    self.portal_secrets,
+                    'IGVF_PORTAL_KEY',
+                ),
+                'IGVF_PORTAL_SECRET_KEY': Secret.from_secrets_manager(
+                    self.portal_secrets,
+                    'IGVF_PORTAL_SECRET_KEY',
+                )
+            }
         )
 
         self.pending_files_queue.grant_consume_messages(self.checkfiles_service.task_definition.task_role)
