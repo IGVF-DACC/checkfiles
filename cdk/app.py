@@ -133,11 +133,14 @@ class CheckFilesStack(Stack):
             circuit_breaker=DeploymentCircuitBreaker(
                 rollback=True,
             ),
-            command=['echo', 'key:', '$IGVF_PORTAL_KEY'],
+            command=['python', '/checkfiles/read_from_queue.py'],
             log_driver=LogDriver.aws_logs(
                 stream_prefix='checkfiles-service',
                 mode=AwsLogDriverMode.NON_BLOCKING,
             ),
+            environment={
+                'PENDING_FILES_QUEUE_URL': self.pending_files_queue.queue_url
+            },
             secrets={
                 'IGVF_PORTAL_KEY': Secret.from_secrets_manager(
                     self.portal_secrets,
