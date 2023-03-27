@@ -3,6 +3,8 @@ import json
 import logging
 import os
 
+import requests
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -13,6 +15,9 @@ logging.basicConfig(
 def get_queue_url():
     return os.environ['PENDING_FILES_QUEUE_URL']
 
+def get_portal_url():
+    return os.environ['PORTAL_URL']
+
 def get_sqs_client():
     return boto3.client('sqs')
 
@@ -21,12 +26,19 @@ def get_message_from_queue(queue_url):
     response = client.receive_message(
             QueueUrl=queue_url
     )
-    if not response:
+    if 'Messages' not in response:
         logging.info(f'No messages in queue')
         return None
     number_of_messages = len(response.get('Messages'))
     logging.info(f'Got {number_of_messages} messages')
     return response
+
+def build_download_url_from_message(message: dict) -> str:
+    body = message['Body']
+    href = body['href']
+    soft_redirect_url = get_portal_url() + href + '?soft=true'
+    return soft_redirect_url
+
 
 def try_to_handle_message(queue_url):
     response = get_message_from_queue(queue_url)
@@ -35,8 +47,10 @@ def try_to_handle_message(queue_url):
     else:
         messages = response['Messages']
         message = messages[0]
+        presigned_download_url = build_download_url_from_message(message)
         receipt_handle = message['ReceiptHandle']
         logging.info(f'Received message with ReceiptHandle: {receipt_handle}')
+        logging.info(f'Got presigned url: {presigned_download_url}')
         client = get_sqs_client()
         logging.info(f'Deleting message')
         client.delete_message(

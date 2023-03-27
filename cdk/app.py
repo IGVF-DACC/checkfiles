@@ -139,7 +139,8 @@ class CheckFilesStack(Stack):
                 mode=AwsLogDriverMode.NON_BLOCKING,
             ),
             environment={
-                'PENDING_FILES_QUEUE_URL': self.pending_files_queue.queue_url
+                'PENDING_FILES_QUEUE_URL': self.pending_files_queue.queue_url,
+                'PORTAL_URL': PORTAL_API_URL
             },
             secrets={
                 'IGVF_PORTAL_KEY': Secret.from_secrets_manager(
