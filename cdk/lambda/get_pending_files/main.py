@@ -11,7 +11,7 @@ logging.basicConfig(
     force=True
 )
 
-PENDING_FILES_SEARCH = '/search?type=File&upload_status=pending&field=href&field=uuid&field=upload_status&field=file_format&field=content_md5sum&field=md5sum'
+PENDING_FILES_SEARCH = '/search?type=File&upload_status=pending&field=href&field=uuid&field=upload_status&field=file_format&field=content_md5sum&field=md5sum&limit=3'
 
 def get_portal_key(secret):
     return secret['IGVF_PORTAL_KEY']
