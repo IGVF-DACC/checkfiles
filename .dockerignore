@@ -1,0 +1,15 @@
+test-reports
+sandbox
+.test-results
+.circleci
+.git
+.gitignore
+.pre-commit-config.yaml
+*.egg-info/
+cdk
+**/__pycache__
+**/*.pyc
+**/.mypy_cache
+**/.pytest_cache
+**/.DS_Store
+**/*.egg-info

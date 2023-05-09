@@ -27,7 +27,7 @@ jobs:
           name: Install dependencies
           command: |
             sudo apt-get update
-            pip install -r requirements.txt
+            pip install -r src/checkfiles/requirements.txt
             pip install coveralls
             sudo curl -sS -L -o /usr/local/bin/validateFiles http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/validateFiles
             sudo chmod +x /usr/local/bin/validateFiles
