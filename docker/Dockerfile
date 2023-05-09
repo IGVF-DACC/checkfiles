@@ -4,8 +4,10 @@ ENV PYTHONDONTWRITEBYTECODE 1
 
 ENV PYTHONUNBUFFERED 1
 
-WORKDIR /checkfiles
-RUN mkdir -p /s3
+ENV VIRTUAL_ENV=/opt/venv
+
+RUN useradd -u 1444 -m checkfiles
+
 # default aws buckdet is the test folder: checkfiles-test in igvf-dev
 ARG AWS_BUCKET_NAME
 ENV AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-checkfiles-test}
@@ -28,9 +30,32 @@ RUN curl -sS -L -o /usr/local/bin/goofys https://github.com/kahing/goofys/releas
 RUN curl -sS -L -o /usr/local/bin/validateFiles https://raw.githubusercontent.com/IGVF-DACC/validateFiles/main/validateFiles \
     && chmod +x /usr/local/bin/validateFiles
 
-COPY . .
+RUN mkdir -p /s3
+RUN chmod 777 /s3
 
-RUN pip install --upgrade pip
-RUN pip install -r src/checkfiles/requirements.txt
+RUN python3 -m venv $VIRTUAL_ENV
 
-CMD ["sh", "scripts/entrypoint.sh"]
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN chown -R  checkfiles:checkfiles $VIRTUAL_ENV
+
+WORKDIR /scripts
+
+COPY --chown=checkfiles:checkfiles scripts .
+
+RUN chmod -R +x /scripts
+
+WORKDIR /checkfiles
+
+COPY --chown=checkfiles:checkfiles src/checkfiles .
+
+USER checkfiles
+
+# RUN python -m pip  install --upgrade pip
+RUN python -m pip install wheel
+
+RUN python -m pip install -r requirements.txt
+
+ENTRYPOINT ["/scripts/entrypoint.sh"]
+
+CMD ["python", "/checkfiles/checkfiles.py"]
