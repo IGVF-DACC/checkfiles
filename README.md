@@ -49,7 +49,7 @@ Additional checks for FASTQ file:
 
 - Build the image
 
-`docker image build -t checkfiles .`
+`docker image build -f docker/Dockerfile -t checkfiles .`
 
 - There are some test file examples in file_examples folder. You can use one of them to run the build
 

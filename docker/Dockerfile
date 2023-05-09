@@ -1,5 +1,9 @@
 FROM ubuntu:22.04
 
+ENV PYTHONDONTWRITEBYTECODE 1
+
+ENV PYTHONUNBUFFERED 1
+
 WORKDIR /checkfiles
 RUN mkdir -p /s3
 # default aws buckdet is the test folder: checkfiles-test in igvf-dev
@@ -12,7 +16,10 @@ RUN apt-get update && apt-get install -y \
     curl \
     zlib1g-dev \
     libsqlite3-dev \
-    fuse
+    fuse \
+    build-essential \
+    libbz2-dev \
+    liblzma-dev
 
 RUN pip3 install awscli
 RUN curl -sS -L -o /usr/local/bin/goofys https://github.com/kahing/goofys/releases/download/v0.24.0/goofys \
