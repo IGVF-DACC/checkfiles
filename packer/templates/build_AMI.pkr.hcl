@@ -65,7 +65,7 @@ source "amazon-ebs" "builder" {
   source_ami_filter {
     filters = {
       virtualization-type = "hvm"
-        name = "${var.source_ami_name}" 
+        name = "${var.source_ami_name}"
         root-device-type = "ebs"
     }
     owners = ["099720109477"]
