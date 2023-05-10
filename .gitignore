@@ -1,3 +1,5 @@
+# temporary vim files
+**/*.swp
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -141,3 +143,7 @@ key.json
 
 # sandbox
 sandbox/
+
+# packer manifest
+
+packer/templates/manifest.json

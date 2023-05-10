@@ -1,5 +1,6 @@
 test-reports
 sandbox
+packer
 .test-results
 .circleci
 .git
