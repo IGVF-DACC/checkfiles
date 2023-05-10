@@ -141,3 +141,7 @@ key.json
 
 # sandbox
 sandbox/
+
+# packer manifest
+
+packer/templates/manifest.json
