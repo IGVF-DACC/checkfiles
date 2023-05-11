@@ -5,17 +5,18 @@ import json
 import requests
 import hashlib
 import gzip
-import pysam
-import pyfastx
 import json
-import os
-import sys
 import logging
-import boto3
+import os
 import shutil
+import sys
 import tempfile
-from FastaValidator import fasta_validator
 
+import boto3
+import pyfastx
+import pysam
+
+from FastaValidator import fasta_validator
 
 BUCKET_NAME = os.getenv('BUCKET_NAME')
 KEY = os.getenv('KEY')
@@ -31,6 +32,8 @@ READ_LENGTH = int(os.getenv('READ_LENGTH', 0))
 ENCODE_ACCESS_KEY = os.getenv('ENCODE_ACCESS_KEY', '')
 ENCODE_SECRET_KEY = os.getenv('ENCODE_SECRET_KEY', '')
 DATA_DIR = '/s3/'
+CONTENT_MD5SUM_URL = 'https://www.encodeproject.org/search/?type=File&format=json&content_md5sum='
+
 SCHEMA_DIR = 'src/schemas/'
 CHROM_INFO_DIR = SCHEMA_DIR + 'genome_builds'
 CHUNK_SIZE = 128*6400
@@ -49,10 +52,6 @@ ZIP_FILE_FORMAT = [
 TABULAR_FORMAT = [
     'txt',
     'tsv',
-]
-
-EXCLUDE_FORMAT = [
-    'bai',
 ]
 
 TABULAR_FILE_SCHEMAS = {
@@ -76,7 +75,6 @@ HUMAN_ASSEMBLIES = ['GRCh38', 'hg19']
 
 RODENT_ASSEMBLIES = ['GRCm39', 'GRCm38', 'MGSCv37']
 
-CONTENT_MD5SUM_URL = 'https://www.encodeproject.org/search/?type=File&format=json&content_md5sum='
 
 FASTA_VALIDATION_INFO = {
     0: 'this is a valid fasta file',
@@ -100,19 +98,18 @@ def main():
         sys.exit(1)  # Retry Job Task by exiting the process
 
 
-def file_validation(bucket_name, key, uuid, md5sum, file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly):
+def file_validation(bucket_name, key, uuid, submitted_md5sum, file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly):
     logging.info(f'Checking file uuid {uuid}...')
     response = boto3.client('s3').get_object(Bucket=bucket_name, Key=key)
     file_path = get_local_file_path(key)
-
     errors = {}
     is_gzipped = is_file_gzipped(file_path)
-    logging.info(f'is file gzipped: {is_gzipped}')
     error = check_valid_gzipped_file_format(is_gzipped, file_format)
     errors.update(error)
     error = check_file_size(file_size, response.get('ContentLength'))
     errors.update(error)
-    error = check_md5sum(md5sum, response.get('ETag').strip('"'), file_path)
+    error = check_md5sum(submitted_md5sum, response.get(
+        'ETag').strip('"'), file_path)
     errors.update(error)
 
     if is_gzipped:
@@ -122,8 +119,6 @@ def file_validation(bucket_name, key, uuid, md5sum, file_format, output_type, fi
     if file_format == 'bam':
         error = bam_pysam_check(file_path, number_of_reads)
         errors.update(error)
-        if 'bam_error' not in errors:
-            bam_generate_bai_file(file_path)
     elif file_format == 'fastq':
         error = validate_files_fastq_check(file_path)
         errors.update(error)
@@ -184,19 +179,19 @@ def check_file_size(file_size, size_in_cloud_storage):
     return error
 
 
-def check_md5sum(md5sum, etag, file_path, chunk_size=CHUNK_SIZE):
+def check_md5sum(expected_md5sum, etag, file_path, chunk_size=CHUNK_SIZE):
     error = {}
     logging.info(f'the eTag is {etag}')
-    if etag != md5sum:
+    if etag != expected_md5sum:
         md5 = hashlib.md5()
         with open(file_path, 'rb') as local_file:
             while chunk := local_file.read(chunk_size):
                 md5.update(chunk)
         calculated_md5sum = md5.hexdigest()
 
-        if md5sum != calculated_md5sum:
+        if expected_md5sum != calculated_md5sum:
             error = {
-                'md5sum': f'submitted file md5sum {md5sum} does not mactch file md5sum {calculated_md5sum} in cloud storage'}
+                'md5sum': f'submitted file md5sum {md5sum} does not match calculated md5sum {calculated_md5sum}.'}
     return error
 
 
@@ -242,10 +237,6 @@ def bam_pysam_check(file_path, number_of_reads):
     return error
 
 
-def bam_generate_bai_file(file_path):
-    pysam.index(file_path)
-
-
 def fastq_check(file_path, number_of_reads, read_length):
     error = {}
     temp_file = tempfile.NamedTemporaryFile()
@@ -280,7 +271,6 @@ def fasta_check(file_path, is_gzipped, info=FASTA_VALIDATION_INFO):
             error['fasta_error'] = info[code]
     except Exception as e:
         error['fasta_error'] = str(e)
-
     return error
 
 
@@ -322,7 +312,6 @@ def validate_files_fastq_check(file_path):
     except subprocess.CalledProcessError as e:
         error['validate_files'] = e.output.decode(
             errors='replace').rstrip('\n')
-
     return error
 
 
