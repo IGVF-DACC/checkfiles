@@ -258,7 +258,7 @@ def test_main_tabular(mocker):
     md5sum = '4b0b3c68fafc5a26d0fc6150baadaa5b'
     file_format = 'tsv'
     output_type = 'element quantifications'
-    file_size = 118126
+    file_size = 22585
     number_of_reads = 1709
     read_length = 58
     file_format_type = None
