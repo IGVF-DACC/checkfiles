@@ -100,9 +100,9 @@ def main():
 def file_validation(bucket_name, key, uuid, submitted_md5sum, file_format, output_type, submitted_file_size_bytes, number_of_reads, read_length, file_format_type, assembly):
     logging.info(f'Checking file uuid {uuid}...')
     local_file_path = get_local_file_path(key)
-    true_file_size_bytes = os.path.getsize(file_path)
+    true_file_size_bytes = os.path.getsize(local_file_path)
     errors = {}
-    is_gzipped = is_file_gzipped(file_path)
+    is_gzipped = is_file_gzipped(local_file_path)
     error = check_valid_gzipped_file_format(is_gzipped, file_format)
     errors.update(error)
     error = check_file_size(submitted_file_size, true_files_size_bytes)
