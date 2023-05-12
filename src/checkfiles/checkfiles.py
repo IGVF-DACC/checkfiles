@@ -191,7 +191,7 @@ def check_md5sum(expected_md5sum, etag, file_path, chunk_size=CHUNK_SIZE):
 
         if expected_md5sum != calculated_md5sum:
             error = {
-                'md5sum': f'submitted file md5sum {md5sum} does not match calculated md5sum {calculated_md5sum}.'}
+                'md5sum': f'submitted file md5sum {expected_md5sum} does not match calculated md5sum {calculated_md5sum}.'}
     return error
 
 
