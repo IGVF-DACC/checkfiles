@@ -12,7 +12,6 @@ import shutil
 import sys
 import tempfile
 
-import boto3
 import pyfastx
 import pysam
 
@@ -98,41 +97,40 @@ def main():
         sys.exit(1)  # Retry Job Task by exiting the process
 
 
-def file_validation(bucket_name, key, uuid, submitted_md5sum, file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly):
+def file_validation(bucket_name, key, uuid, submitted_md5sum, file_format, output_type, submitted_file_size_bytes, number_of_reads, read_length, file_format_type, assembly):
     logging.info(f'Checking file uuid {uuid}...')
-    response = boto3.client('s3').get_object(Bucket=bucket_name, Key=key)
-    file_path = get_local_file_path(key)
+    local_file_path = get_local_file_path(key)
+    true_file_size_bytes = os.path.getsize(file_path)
     errors = {}
     is_gzipped = is_file_gzipped(file_path)
     error = check_valid_gzipped_file_format(is_gzipped, file_format)
     errors.update(error)
-    error = check_file_size(file_size, response.get('ContentLength'))
+    error = check_file_size(submitted_file_size, true_files_size_bytes)
     errors.update(error)
-    error = check_md5sum(submitted_md5sum, response.get(
-        'ETag').strip('"'), file_path)
+    error = check_md5sum(submitted_md5sum, local_file_path)
     errors.update(error)
 
     if is_gzipped:
-        error = check_content_md5sum(file_path)
+        error = check_content_md5sum(local_file_path)
         errors.update(error)
 
     if file_format == 'bam':
-        error = bam_pysam_check(file_path, number_of_reads)
+        error = bam_pysam_check(local_file_path, number_of_reads)
         errors.update(error)
     elif file_format == 'fastq':
-        error = validate_files_fastq_check(file_path)
+        error = validate_files_fastq_check(local_file_path)
         errors.update(error)
-        error = fastq_check(file_path, number_of_reads, read_length)
+        error = fastq_check(local_file_path, number_of_reads, read_length)
         errors.update(error)
     elif file_format in ['bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe']:
         error = validate_files_check(
-            file_path, file_format, file_format_type, assembly)
+            local_file_path, file_format, file_format_type, assembly)
         errors.update(error)
     elif file_format == 'fasta':
-        error = fasta_check(file_path, is_gzipped)
+        error = fasta_check(local_file_path, is_gzipped)
         errors.update(error)
     elif file_format in TABULAR_FORMAT:
-        error = tabular_file_check(output_type, file_path)
+        error = tabular_file_check(output_type, local_file_path)
         errors.update(error)
     logging.info(f'Completed file validation for file uuid {uuid}.')
 
@@ -179,19 +177,17 @@ def check_file_size(file_size, size_in_cloud_storage):
     return error
 
 
-def check_md5sum(expected_md5sum, etag, file_path, chunk_size=CHUNK_SIZE):
+def check_md5sum(expected_md5sum, file_path, chunk_size=CHUNK_SIZE):
     error = {}
-    logging.info(f'the eTag is {etag}')
-    if etag != expected_md5sum:
-        md5 = hashlib.md5()
-        with open(file_path, 'rb') as local_file:
-            while chunk := local_file.read(chunk_size):
-                md5.update(chunk)
-        calculated_md5sum = md5.hexdigest()
+    md5 = hashlib.md5()
+    with open(file_path, 'rb') as local_file:
+        while chunk := local_file.read(chunk_size):
+            md5.update(chunk)
+    calculated_md5sum = md5.hexdigest()
 
-        if expected_md5sum != calculated_md5sum:
-            error = {
-                'md5sum': f'submitted file md5sum {expected_md5sum} does not match calculated md5sum {calculated_md5sum}.'}
+    if expected_md5sum != calculated_md5sum:
+        error = {
+            'md5sum': f'submitted file md5sum {expected_md5sum} does not match calculated md5sum {calculated_md5sum}.'}
     return error
 
 
