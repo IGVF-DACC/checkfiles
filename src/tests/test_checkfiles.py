@@ -47,7 +47,7 @@ def test_check_md5sum_pass():
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
     md5sum = '3e814f4af7a4c13460584b26fbe32dc4'
     etag = None
-    error = check_md5sum(md5sum, etag, file_path)
+    error = check_md5sum(md5sum, file_path)
     assert error == {}
 
 
@@ -55,7 +55,7 @@ def test_check_md5sum_fail():
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
     md5sum = 'invalid_md5sum'
     etag = None
-    error = check_md5sum(md5sum, etag, file_path)
+    error = check_md5sum(md5sum, file_path)
     assert len(error) > 0
 
 
@@ -209,11 +209,6 @@ def test_main_fastq(mocker):
     assembly = None
     mocker.patch('checkfiles.checkfiles.get_local_file_path',
                  return_value=file_path)
-    mocker.patch('botocore.client.BaseClient._make_api_call',
-                 return_value={
-                     'ETag': '"3e814f4af7a4c13460584b26fbe32dc4"',
-                     'ContentLength': 1371
-                 })
     result = file_validation(bucket_name, key, uuid, md5sum,
                              file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
@@ -247,12 +242,6 @@ def test_main_bam(mocker):
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_session)
 
-    mocker.patch('botocore.client.BaseClient._make_api_call',
-                 return_value={
-                     'ETag': '"2d3b7df013d257c7052c084d93ff9026"',
-                     'ContentLength': 118126
-                 })
-
     result = file_validation(bucket_name, key, uuid, md5sum,
                              file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
@@ -284,12 +273,6 @@ def test_main_tabular(mocker):
     }
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_get_local_file_path)
-
-    mocker.patch('botocore.client.BaseClient._make_api_call',
-                 return_value={
-                     'ETag': '"4b0b3c68fafc5a26d0fc6150baadaa5b"',
-                     'ContentLength': 118126
-                 })
 
     result = file_validation(bucket_name, key, uuid, md5sum,
                              file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly)
@@ -325,11 +308,6 @@ def test_main_bed(mocker):
 
     mocker.patch('checkfiles.checkfiles.get_local_file_path',
                  return_value=file_path)
-    mocker.patch('botocore.client.BaseClient._make_api_call',
-                 return_value={
-                     'ETag': '"d1bae8af8fec54424cff157134652d26"',
-                     'ContentLength': 5751
-                 })
     result = file_validation(bucket_name, key, uuid, md5sum,
                              file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
