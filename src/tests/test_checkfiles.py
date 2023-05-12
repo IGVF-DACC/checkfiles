@@ -208,8 +208,8 @@ def test_main_fastq(mocker):
     assembly = None
     mocker.patch('checkfiles.checkfiles.get_local_file_path',
                  return_value=file_path)
-    result = file_validation(key, uuid, md5sum,
-                             file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly)
+    result = file_validation(key, uuid, md5sum, file_format, output_type,
+                             file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
         'uuid': 'a3b754b6-0213-4ed4-a5f3-124f90273561',
         'validation_result': 'failed',
@@ -240,8 +240,8 @@ def test_main_bam(mocker):
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_session)
 
-    result = file_validation(key, uuid, md5sum,
-                             file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly)
+    result = file_validation(key, uuid, md5sum, file_format, output_type,
+                             file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
         'validation_result': 'pass'
@@ -271,8 +271,8 @@ def test_main_tabular(mocker):
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_get_local_file_path)
 
-    result = file_validation(key, uuid, md5sum,
-                             file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly)
+    result = file_validation(key, uuid, md5sum, file_format, output_type,
+                             file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
         'validation_result': 'failed',
@@ -304,8 +304,8 @@ def test_main_bed(mocker):
 
     mocker.patch('checkfiles.checkfiles.get_local_file_path',
                  return_value=file_path)
-    result = file_validation(key, uuid, md5sum,
-                             file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly)
+    result = file_validation(key, uuid, md5sum, file_format, output_type,
+                             file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
         'uuid': 'a3c64b51-5838-4ad2-a6c3-dc289786f626',
         'validation_result': 'failed',

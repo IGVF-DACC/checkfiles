@@ -17,7 +17,6 @@ import pysam
 
 from FastaValidator import fasta_validator
 
-BUCKET_NAME = os.getenv('BUCKET_NAME')
 KEY = os.getenv('KEY')
 MD5SUM = os.getenv('MD5SUM')
 FILE_FORMAT = os.getenv('FILE_FORMAT')
@@ -88,8 +87,8 @@ logging.basicConfig(
 
 def main():
     try:
-        response = file_validation(BUCKET_NAME, KEY, UUID,
-                                   MD5SUM, FILE_FORMAT, OUTPUT_TYPE, FILE_SIZE, NUMBER_OF_READS, READ_LENGTH, FILE_FORMAT_TYPE, ASSEMBLY)
+        response = file_validation(KEY, UUID, MD5SUM, FILE_FORMAT, OUTPUT_TYPE,
+                                   FILE_SIZE, NUMBER_OF_READS, READ_LENGTH, FILE_FORMAT_TYPE, ASSEMBLY)
         logging.info(json.dumps(response))
     except Exception as err:
         message = f'exception occurred when checking file uuid #{UUID}: {str(err)}'
@@ -97,7 +96,7 @@ def main():
         sys.exit(1)  # Retry Job Task by exiting the process
 
 
-def file_validation(bucket_name, key, uuid, submitted_md5sum, file_format, output_type, submitted_file_size_bytes, number_of_reads, read_length, file_format_type, assembly):
+def file_validation(key, uuid, submitted_md5sum, file_format, output_type, submitted_file_size_bytes, number_of_reads, read_length, file_format_type, assembly):
     logging.info(f'Checking file uuid {uuid}...')
     local_file_path = get_local_file_path(key)
     true_file_size_bytes = os.path.getsize(local_file_path)
