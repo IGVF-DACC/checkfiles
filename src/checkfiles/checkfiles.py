@@ -105,7 +105,7 @@ def file_validation(bucket_name, key, uuid, submitted_md5sum, file_format, outpu
     is_gzipped = is_file_gzipped(local_file_path)
     error = check_valid_gzipped_file_format(is_gzipped, file_format)
     errors.update(error)
-    error = check_file_size(submitted_file_size, true_files_size_bytes)
+    error = check_file_size(submitted_file_size_bytes, true_files_size_bytes)
     errors.update(error)
     error = check_md5sum(submitted_md5sum, local_file_path)
     errors.update(error)
