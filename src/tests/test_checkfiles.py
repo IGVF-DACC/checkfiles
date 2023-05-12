@@ -196,7 +196,6 @@ def test_validate_files_fastq_check_pass():
 
 def test_main_fastq(mocker):
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
-    bucket_name = 'checkfile-mingjie'
     key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF594AYI.fastq.gz'
     uuid = 'a3b754b6-0213-4ed4-a5f3-124f90273561'
     md5sum = '3e814f4af7a4c13460584b26fbe32dc4'
@@ -209,7 +208,7 @@ def test_main_fastq(mocker):
     assembly = None
     mocker.patch('checkfiles.checkfiles.get_local_file_path',
                  return_value=file_path)
-    result = file_validation(bucket_name, key, uuid, md5sum,
+    result = file_validation(key, uuid, md5sum,
                              file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
         'uuid': 'a3b754b6-0213-4ed4-a5f3-124f90273561',
@@ -220,7 +219,6 @@ def test_main_fastq(mocker):
 
 def test_main_bam(mocker):
     file_path = 'src/tests/data/ENCFF206HGF.bam'
-    bucket_name = 'checkfile-mingjie'
     key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF206HGF.bam'
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
     md5sum = '2d3b7df013d257c7052c084d93ff9026'
@@ -242,7 +240,7 @@ def test_main_bam(mocker):
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_session)
 
-    result = file_validation(bucket_name, key, uuid, md5sum,
+    result = file_validation(key, uuid, md5sum,
                              file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
@@ -252,7 +250,6 @@ def test_main_bam(mocker):
 
 def test_main_tabular(mocker):
     file_path = 'src/tests/data/ENCFF500IBL.tsv'
-    bucket_name = 'checkfile-mingjie'
     key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF500IBL.tsv'
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
     md5sum = '4b0b3c68fafc5a26d0fc6150baadaa5b'
@@ -274,7 +271,7 @@ def test_main_tabular(mocker):
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_get_local_file_path)
 
-    result = file_validation(bucket_name, key, uuid, md5sum,
+    result = file_validation(key, uuid, md5sum,
                              file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
@@ -294,7 +291,6 @@ def test_get_local_file_path():
 
 def test_main_bed(mocker):
     file_path = 'src/tests/data/ENCFF597JNC.bed.gz'
-    bucket_name = 'checkfile-mingjie'
     key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF597JNC.bed.gz'
     uuid = 'a3c64b51-5838-4ad2-a6c3-dc289786f626'
     md5sum = 'd1bae8af8fec54424cff157134652d26'
@@ -308,7 +304,7 @@ def test_main_bed(mocker):
 
     mocker.patch('checkfiles.checkfiles.get_local_file_path',
                  return_value=file_path)
-    result = file_validation(bucket_name, key, uuid, md5sum,
+    result = file_validation(key, uuid, md5sum,
                              file_format, output_type, file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
         'uuid': 'a3c64b51-5838-4ad2-a6c3-dc289786f626',
