@@ -159,6 +159,10 @@ def check_valid_gzipped_file_format(is_gzipped, file_format, zip_file_format=ZIP
     return error
 
 
+def get_file_size_bytes(file_path):
+    return os.path.getsize()
+
+
 def check_file_size(file_size, size_in_cloud_storage):
     error = {}
     if size_in_cloud_storage != file_size:
@@ -173,7 +177,7 @@ def calculate_md5sum(file_path, unzip=False, chunk_size=CHUNK_SIZE):
         open_func = gzip.open
     else:
         open_func = open
-    with gzip.open(file_path, 'rb') as fp:
+    with open_func(file_path, 'rb') as fp:
         while chunk := fp.read(chunk_size):
             md5.update(chunk)
     return md5.hexdigest()
