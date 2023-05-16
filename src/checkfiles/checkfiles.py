@@ -19,8 +19,6 @@ from FastaValidator import fasta_validator
 from frictionless import system
 from frictionless import validate
 
-from jsonlogformatter import JsonFormatter
-
 
 KEY = os.getenv('KEY')
 MD5SUM = os.getenv('MD5SUM')
@@ -85,6 +83,24 @@ FASTA_VALIDATION_INFO = {
     2: 'there are duplicate sequence identifiers in the file (rule 7 violated)',
     4: 'there are characters in a sequence line other than [A-Za-z]'
 }
+
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record):
+        data = {
+            'asctime': self.formatTime(record, self.datefmt),
+            'levelname': record.levelname,
+            'message': record.getMessage(),
+        }
+        if record.exc_info:
+            # Cache the traceback text to avoid converting it multiple times
+            # (it's constant anyway)
+            if not record.exc_text:
+                record.exc_text = ''.join(
+                    traceback.format_exception(*record.exc_info))
+            if record.exc_text:
+                data['exc_text'] = record.exc_text.splitlines()
+        return json.dumps(data)
 
 
 logger = logging.getLogger(__name__)
