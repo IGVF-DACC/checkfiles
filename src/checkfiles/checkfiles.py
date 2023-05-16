@@ -107,7 +107,7 @@ logger = logging.getLogger(__name__)
 handler = logging.StreamHandler()
 handler.setFormatter(JsonFormatter())
 logger.addHandler(handler)
-logger.setLevel(logging.info)
+logger.setLevel(logging.INFO)
 
 
 def file_validation(relative_path, uuid, submitted_md5sum, file_format, output_type, submitted_file_size_bytes, number_of_reads, read_length, file_format_type, assembly):
