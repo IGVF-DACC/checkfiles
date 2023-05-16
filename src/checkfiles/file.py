@@ -62,3 +62,7 @@ class File:
             return True
         except gzip.BadGzipFile:
             return False
+
+
+def get_file(path, file_format):
+    return File(path, file_format)
