@@ -167,14 +167,25 @@ def check_file_size(file_size, size_in_cloud_storage):
     return error
 
 
+def calculate_md5sum(file_path, unzip=False, chunk_size=CHUNK_SIZE):
+    md5 = hashlib.md5()
+    if unzip:
+        open_func = gzip.open
+    else:
+        open_func = open
+    with gzip.open(file_path, 'rb') as fp:
+        while chunk := fp.read(chunk_size):
+            md5.update(chunk)
+    return md5.hexdigest()
+
+
+def calculate_content_md5sum(file_path):
+    return calculate_md5sum(file_path, unzip=True)
+
+
 def check_md5sum(expected_md5sum, file_path, chunk_size=CHUNK_SIZE):
     error = {}
-    md5 = hashlib.md5()
-    with open(file_path, 'rb') as local_file:
-        while chunk := local_file.read(chunk_size):
-            md5.update(chunk)
-    calculated_md5sum = md5.hexdigest()
-
+    calculated_md5sum = calculate_md5sum(file_path)
     if expected_md5sum != calculated_md5sum:
         error = {
             'md5sum': f'submitted file md5sum {expected_md5sum} does not match calculated md5sum {calculated_md5sum}.'}
@@ -183,11 +194,7 @@ def check_md5sum(expected_md5sum, file_path, chunk_size=CHUNK_SIZE):
 
 def check_content_md5sum(file_path, chunk_size=CHUNK_SIZE, base_url=CONTENT_MD5SUM_URL, username=ENCODE_ACCESS_KEY, password=ENCODE_SECRET_KEY):
     error = {}
-    md5 = hashlib.md5()
-    with gzip.open(file_path) as f:
-        while chunk := f.read(chunk_size):
-            md5.update(chunk)
-    content_md5sum = md5.hexdigest()
+    content_md5sum = calculate_content_md5sum(file_path)
     logging.info(f'content md5sum is {content_md5sum}')
     url = base_url + content_md5sum
     session = requests.Session()
