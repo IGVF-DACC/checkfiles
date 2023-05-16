@@ -8,7 +8,7 @@ def get_gzipped_file():
 
 
 def get_non_gzipped_file():
-    return File('src/tests/data/encff080hpn.tsv', 'tsv')
+    return File('src/tests/data/ENCFF080HPN.tsv', 'tsv')
 
 
 def test_is_zipped():

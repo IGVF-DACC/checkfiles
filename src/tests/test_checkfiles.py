@@ -9,7 +9,7 @@ def test_is_file_gzipped_gzipped():
 
 
 def test_is_file_gzipped_not_gzipped():
-    is_gzipped = is_file_gzipped('src/tests/data/encff080hpn.tsv')
+    is_gzipped = is_file_gzipped('src/tests/data/ENCFF080HPN.tsv')
     assert is_gzipped == False
 
 
