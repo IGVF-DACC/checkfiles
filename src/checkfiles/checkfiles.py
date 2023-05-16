@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import traceback
 
 import pyfastx
 import pysam
@@ -17,6 +18,8 @@ from FastaValidator import fasta_validator
 
 from frictionless import system
 from frictionless import validate
+
+from jsonlogformatter import JsonFormatter
 
 
 KEY = os.getenv('KEY')
@@ -83,12 +86,16 @@ FASTA_VALIDATION_INFO = {
     4: 'there are characters in a sequence line other than [A-Za-z]'
 }
 
-logging.basicConfig(
-    format='%(asctime)s | %(levelname)s: %(message)s', level=logging.INFO)
+
+logger = logging.getLogger(__name__)
+handler = logging.StreamHandler()
+handler.setFormatter(JsonFormatter())
+logger.addHandler(handler)
+logger.setLevel(logging.info)
 
 
 def file_validation(relative_path, uuid, submitted_md5sum, file_format, output_type, submitted_file_size_bytes, number_of_reads, read_length, file_format_type, assembly):
-    logging.info(f'Checking file uuid {uuid}...')
+    logger.info(f'Checking file uuid {uuid}')
     local_file_path = get_local_file_path(relative_path)
     true_file_size_bytes = os.path.getsize(local_file_path)
     errors = {}
@@ -122,7 +129,7 @@ def file_validation(relative_path, uuid, submitted_md5sum, file_format, output_t
     elif file_format in TABULAR_FORMAT:
         error = tabular_file_check(output_type, local_file_path)
         errors.update(error)
-    logging.info(f'Completed file validation for file uuid {uuid}.')
+    logger.info(f'Completed file validation for file uuid {uuid}.')
 
     if errors:
         return {
@@ -199,7 +206,7 @@ def check_md5sum(expected_md5sum, file_path, chunk_size=CHUNK_SIZE):
 def check_content_md5sum(file_path, chunk_size=CHUNK_SIZE, base_url=CONTENT_MD5SUM_URL, username=ENCODE_ACCESS_KEY, password=ENCODE_SECRET_KEY):
     error = {}
     content_md5sum = calculate_content_md5sum(file_path)
-    logging.info(f'content md5sum is {content_md5sum}')
+    logger.info(f'content md5sum is {content_md5sum}')
     url = base_url + content_md5sum
     session = requests.Session()
     session.auth = (username, password)
@@ -223,7 +230,7 @@ def bam_pysam_check(file_path, number_of_reads):
         else:
             samfile = pysam.AlignmentFile(file_path, 'rb')
             count = samfile.count(until_eof=True)
-            logging.info(f'the number of reads: {count}')
+            logger.info(f'the number of reads: {count}')
             if count != number_of_reads:
                 error = {
                     'bam_error': f'sumbitted number of reads {number_of_reads} does not match number of reads {count} in cloud storage'}
@@ -241,8 +248,8 @@ def fastq_check(file_path, number_of_reads, read_length):
     fq = pyfastx.Fastq(temp_file.name)
     count = len(fq)
     avg_len = int(fq.avglen)
-    logging.info(f'number of reads is {count}')
-    logging.info(f'read length is {avg_len}')
+    logger.info(f'number of reads is {count}')
+    logger.info(f'read length is {avg_len}')
     if count != number_of_reads:
         error['fastq_number_of_reads'] = f'sumbitted number of reads {number_of_reads} does not match number of reads {count} in cloud storage'
     if avg_len != read_length:
@@ -335,7 +342,7 @@ def main():
         logging.info(json.dumps(response))
     except Exception as err:
         message = f'exception occurred when checking file uuid #{UUID}: {str(err)}'
-        logging.info(json.dumps({'exception': message}))
+        logger.exception(message)
         sys.exit(1)  # Retry Job Task by exiting the process
 
 
