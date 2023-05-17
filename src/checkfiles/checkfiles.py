@@ -134,7 +134,8 @@ def file_validation(validation_record: FileValidationRecord, submitted_md5sum, o
     elif file_format in TABULAR_FORMAT:
         error = tabular_file_check(output_type, local_file_path)
         errors.update(error)
-    logger.info(f'Completed file validation for file uuid {uuid}.')
+    logger.info(
+        f'Completed file validation for file uuid {validation_record.uuid}.')
 
     if errors:
         return {
