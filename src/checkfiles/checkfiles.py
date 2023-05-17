@@ -19,10 +19,11 @@ from FastaValidator import fasta_validator
 from frictionless import system
 from frictionless import validate
 
-from .file import File
-from .file import get_file
+from file import File
+from file import FileValidationRecord
+from file import get_file
 
-from .logformatter import JsonFormatter
+from logformatter import JsonFormatter
 
 
 KEY = os.getenv('KEY')
