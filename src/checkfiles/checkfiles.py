@@ -4,6 +4,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import requests
 import shutil
 import subprocess
@@ -337,15 +338,36 @@ def get_chrom_info_file(assembly, chrom_info_dir=CHROM_INFO_DIR):
         organism = 'human'
     elif assembly in RODENT_ASSEMBLIES:
         organism = 'rodent'
-
     return f'{chrom_info_dir}/{organism}/{assembly}/chrom.sizes'
 
 
-def main():
+def fetch_file_metadata_by_uuid(uuid: str, server: str, portal_key_id: str, portal_secret_key: str):
+    response = requests.get(server + '/' + uuid,
+                            auth=(portal_key_id, portal_secret_key))
+    # todo handle exceptions, retries etc.
+    return response.json()
+
+
+def make_local_path_from_s3_uri(s3_uri: str):
+    return re.sub(r's3://', '/', s3_uri)
+
+
+def get_file_validation_record_from_metadata(file_metadata: dict):
+    if not ('s3_uri' in file_metadata and 'file_format' in file_metadata and 'uuid' in file_medata):
+        raise ValueError('Invalid metdata dict')
+    else:
+        path = make_local_path_from_s3_uri(file_metadata['s3_uri'])
+        uuid = file_metadata['uuid']
+        file_format = file_metadata['file_format']
+        return FileValidationRecord(get_file(path, file_format), uuid)
+
+
+def main(args):
     try:
-        filepath = get_local_file_path(KEY)
-        file_to_check = get_file(filepath, FILE_FORMAT)
-        file_validation_record = FileValidationRecord(file_to_check, UUID)
+        file_metadata = fetch_file_metadata_by_uuid(
+            args.uuid, args.server, args.portal_key_id, args.porta_secret_key)
+        file_validation_record = get_file_validation_record_from_metadata(
+            file_metadata)
         response = file_validation(KEY, UUID, MD5SUM, FILE_FORMAT, OUTPUT_TYPE,
                                    FILE_SIZE, NUMBER_OF_READS, READ_LENGTH, FILE_FORMAT_TYPE, ASSEMBLY)
         logging.info(json.dumps(response))
@@ -367,4 +389,4 @@ if __name__ == '__main__':
                         help='Portal secret key')
 
     args = parser.parse_args()
-    main()
+    main(args)
