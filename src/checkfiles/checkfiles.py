@@ -110,7 +110,7 @@ def file_validation(validation_record: FileValidationRecord, submitted_md5sum, o
     error = check_file_size(submitted_file_size_bytes, true_file_size_bytes)
     validation_record.update_errors(error)
     error = check_md5sum(submitted_md5sum, local_file_path)
-    validation_record.update_errorsh(error)
+    validation_record.update_errors(error)
 
     if is_gzipped:
         error = check_content_md5sum(local_file_path)
