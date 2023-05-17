@@ -99,7 +99,8 @@ logger.setLevel(logging.INFO)
 
 
 def file_validation(validation_record: FileValidationRecord, submitted_md5sum, output_type, submitted_file_size_bytes, number_of_reads, read_length, file_format_type, assembly):
-    logger.info(f'Checking file uuid {validation_record.uuid}')
+    uuid = validation_record.uuid
+    logger.info(f'Checking file uuid {uuid}')
     local_file_path = validation_record.file.path
     true_file_size_bytes = validation_record.file.size
     file_format = validation_record.file.file_format
@@ -135,7 +136,7 @@ def file_validation(validation_record: FileValidationRecord, submitted_md5sum, o
         error = tabular_file_check(output_type, local_file_path)
         errors.update(error)
     logger.info(
-        f'Completed file validation for file uuid {validation_record.uuid}.')
+        f'Completed file validation for file uuid {uuid}.')
 
     if errors:
         return {
