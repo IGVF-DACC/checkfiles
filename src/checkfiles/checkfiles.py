@@ -104,45 +104,44 @@ def file_validation(validation_record: FileValidationRecord, submitted_md5sum, o
     local_file_path = validation_record.file.path
     true_file_size_bytes = validation_record.file.size
     file_format = validation_record.file.file_format
-    errors = {}
     is_gzipped = validation_record.file.is_zipped
     error = check_valid_gzipped_file_format(is_gzipped, file_format)
-    errors.update(error)
+    validation_record.update_errors(error)
     error = check_file_size(submitted_file_size_bytes, true_file_size_bytes)
-    errors.update(error)
+    validation_record.update_errors(error)
     error = check_md5sum(submitted_md5sum, local_file_path)
-    errors.update(error)
+    validation_record.update_errorsh(error)
 
     if is_gzipped:
         error = check_content_md5sum(local_file_path)
-        errors.update(error)
+        validation_record.update_errors(error)
 
     if file_format == 'bam':
         error = bam_pysam_check(local_file_path, number_of_reads)
-        errors.update(error)
+        validation_record.update_errors(error)
     elif file_format == 'fastq':
         error = validate_files_fastq_check(local_file_path)
-        errors.update(error)
+        validation_record.update_errors(error)
         error = fastq_check(local_file_path, number_of_reads, read_length)
-        errors.update(error)
+        validation_record.update_errors(error)
     elif file_format in ['bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe']:
         error = validate_files_check(
             local_file_path, file_format, file_format_type, assembly)
-        errors.update(error)
+        validation_record.update_errors(error)
     elif file_format == 'fasta':
         error = fasta_check(local_file_path, is_gzipped)
-        errors.update(error)
+        validation_record.update_errors(error)
     elif file_format in TABULAR_FORMAT:
         error = tabular_file_check(output_type, local_file_path)
-        errors.update(error)
+        validation_record.update_errors(error)
     logger.info(
         f'Completed file validation for file uuid {uuid}.')
 
-    if errors:
+    if validation_record.errors:
         return {
             'uuid': uuid,
             'validation_result': 'failed',
-            'errors': errors
+            'errors': validation_record.errors
         }
     else:
         return {
