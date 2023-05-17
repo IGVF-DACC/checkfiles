@@ -42,16 +42,12 @@ class File:
     def size(self):
         return self.__size
 
-    def _calculate_content_md5sum(self, chunk_size=4096):
-        hash_md5 = hashlib.md5()
-        with gzip.open(self.path, 'rb') as fp:
-            while chunk := fp.read(chunk_size):
-                hash_md5.update(chunk)
-        return hash_md5.hexdigest()
+    def _calculate_content_md5sum(self):
+        return self._calculate_md5sum(open_func=gzip.open)
 
-    def _calculate_md5sum(self, chunk_size=4096):
+    def _calculate_md5sum(self, chunk_size=4096, open_func=open):
         hash_md5 = hashlib.md5()
-        with open(self.path, 'rb') as fp:
+        with open_func(self.path, 'rb') as fp:
             while chunk := fp.read(chunk_size):
                 hash_md5.update(chunk)
         return hash_md5.hexdigest()
