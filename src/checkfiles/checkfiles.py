@@ -19,11 +19,11 @@ from FastaValidator import fasta_validator
 from frictionless import system
 from frictionless import validate
 
-from file import File
-from file import FileValidationRecord
-from file import get_file
+from .file import File
+from .file import FileValidationRecord
+from .file import get_file
 
-from logformatter import JsonFormatter
+from .logformatter import JsonFormatter
 
 
 KEY = os.getenv('KEY')
@@ -98,12 +98,13 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def file_validation(relative_path, uuid, submitted_md5sum, file_format, output_type, submitted_file_size_bytes, number_of_reads, read_length, file_format_type, assembly):
+def file_validation(validation_record: FileValidationRecord, submitted_md5sum, output_type, submitted_file_size_bytes, number_of_reads, read_length, file_format_type, assembly):
     logger.info(f'Checking file uuid {uuid}')
-    local_file_path = get_local_file_path(relative_path)
-    true_file_size_bytes = os.path.getsize(local_file_path)
+    local_file_path = validation_record.file.path
+    true_file_size_bytes = validation_record.file.size
+    file_format = validation_record.file.file_format
     errors = {}
-    is_gzipped = is_file_gzipped(local_file_path)
+    is_gzipped = validation_record.file.is_zipped
     error = check_valid_gzipped_file_format(is_gzipped, file_format)
     errors.update(error)
     error = check_file_size(submitted_file_size_bytes, true_file_size_bytes)
@@ -341,6 +342,9 @@ def get_chrom_info_file(assembly, chrom_info_dir=CHROM_INFO_DIR):
 
 def main():
     try:
+        filepath = get_local_file_path(KEY)
+        file_to_check = get_file(filepath, FILE_FORMAT)
+        file_validation_record = FileValidationRecord(file_to_check, UUID)
         response = file_validation(KEY, UUID, MD5SUM, FILE_FORMAT, OUTPUT_TYPE,
                                    FILE_SIZE, NUMBER_OF_READS, READ_LENGTH, FILE_FORMAT_TYPE, ASSEMBLY)
         logging.info(json.dumps(response))
