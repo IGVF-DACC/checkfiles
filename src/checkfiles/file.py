@@ -2,9 +2,11 @@ import gzip
 import hashlib
 import os
 
+from typing import Optional
+
 
 class File:
-    def __init__(self, path, file_format):
+    def __init__(self, path: str, file_format: str):
         self.file_format = file_format
         self.path = path
         self.__size = os.path.getsize(path)
@@ -62,3 +64,14 @@ class File:
 
 def get_file(path, file_format):
     return File(path, file_format)
+
+
+class FileValidationRecord:
+    def __init__(self, file: File, uuid: Optional[str] = None):
+        self.file = file
+        self.uuid = uuid
+        self.errors = {}
+        self.validation_result = None
+
+    def update_errors(self, error: dict):
+        self.errors.update(error)
