@@ -352,7 +352,7 @@ def get_file_validation_record_from_metadata(file_metadata: dict):
 def main(args):
     try:
         file_metadata = fetch_file_metadata_by_uuid(
-            args.uuid, args.server, args.portal_key_id, args.porta_secret_key)
+            args.uuid, args.server, args.portal_key_id, args.portal_secret_key)
         assembly = file_metadata.get('assembly')
         output_type = file_metadata.get('output_type')
         submitted_file_size_bytes = file_metadata.get('file_size')
