@@ -20,11 +20,11 @@ from FastaValidator import fasta_validator
 from frictionless import system
 from frictionless import validate
 
-from .file import File
-from .file import FileValidationRecord
-from .file import get_file
+from file.file import File
+from file.file import FileValidationRecord
+from file.file import get_file
 
-from .logformatter import JsonFormatter
+from logformatter.logformatter import JsonFormatter
 
 
 KEY = os.getenv('KEY')
@@ -340,7 +340,7 @@ def make_local_path_from_s3_uri(s3_uri: str):
 
 
 def get_file_validation_record_from_metadata(file_metadata: dict, mount_basedir=os.environ.get('HOME')):
-    if not ('s3_uri' in file_metadata and 'file_format' in file_metadata and 'uuid' in file_medata):
+    if not ('s3_uri' in file_metadata and 'file_format' in file_metadata and 'uuid' in file_metadata):
         raise ValueError('Invalid metdata dict')
     else:
         path = mount_basedir + \
