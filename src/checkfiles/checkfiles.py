@@ -339,11 +339,12 @@ def make_local_path_from_s3_uri(s3_uri: str):
     return re.sub(r's3://', '/', s3_uri)
 
 
-def get_file_validation_record_from_metadata(file_metadata: dict):
+def get_file_validation_record_from_metadata(file_metadata: dict, mount_basedir=os.environ.get('HOME')):
     if not ('s3_uri' in file_metadata and 'file_format' in file_metadata and 'uuid' in file_medata):
         raise ValueError('Invalid metdata dict')
     else:
-        path = make_local_path_from_s3_uri(file_metadata['s3_uri'])
+        path = mount_basedir + \
+            make_local_path_from_s3_uri(file_metadata['s3_uri'])
         uuid = file_metadata['uuid']
         file_format = file_metadata['file_format']
         return FileValidationRecord(get_file(path, file_format), uuid)
