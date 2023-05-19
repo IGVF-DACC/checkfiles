@@ -71,7 +71,11 @@ class FileValidationRecord:
         self.file = file
         self.uuid = uuid
         self.errors = {}
+        self.info = {}
         self.validation_result = None
 
     def update_errors(self, error: dict):
         self.errors.update(error)
+
+    def update_info(self, info: dict):
+        self.info.update(info)

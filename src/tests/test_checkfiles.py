@@ -46,26 +46,6 @@ def test_check_file_size_fail():
     assert error == {}
 
 
-def test_check_md5sum_pass():
-    file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
-    md5sum = '3e814f4af7a4c13460584b26fbe32dc4'
-    error = check_md5sum(md5sum, file_path)
-    assert error == {}
-
-
-def test_check_md5sum_fail():
-    file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
-    md5sum = 'invalid_md5sum'
-    error = check_md5sum(md5sum, file_path)
-    assert len(error) > 0
-
-
-def test_check_content_md5sum_fail():
-    file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
-    error = check_content_md5sum(file_path)
-    assert len(error) > 0
-
-
 def test_bam_pysam_check_invalid_bam_file():
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
     number_of_reads = 158

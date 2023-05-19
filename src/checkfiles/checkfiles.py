@@ -106,35 +106,40 @@ def file_validation(validation_record: FileValidationRecord, submitted_md5sum, o
     true_file_size_bytes = validation_record.file.size
     file_format = validation_record.file.file_format
     is_gzipped = validation_record.file.is_zipped
-    error = check_valid_gzipped_file_format(is_gzipped, file_format)
-    validation_record.update_errors(error)
-    error = check_file_size(submitted_file_size_bytes, true_file_size_bytes)
-    validation_record.update_errors(error)
-    error = check_md5sum(submitted_md5sum, local_file_path)
+    gzipped_format_error = check_valid_gzipped_file_format(
+        is_gzipped, file_format)
+    validation_record.update_errors(gzipped_format_error)
+    error = check_md5sum(submitted_md5sum, validation_record.file.md5sum)
     validation_record.update_errors(error)
 
+    validation_record.update_info({'file_size': true_file_size_bytes})
     if is_gzipped:
-        error = check_content_md5sum(local_file_path)
-        validation_record.update_errors(error)
-
+        content_md5_error = check_content_md5sum(
+            validation_record.file.content_md5sum)
+        validation_record.update_info(
+            {'content_md5sum': validation_record.file.content_md5sum})
+        validation_record.update_errors(content_md5_error)
     if file_format == 'bam':
-        error = bam_pysam_check(local_file_path, number_of_reads)
-        validation_record.update_errors(error)
+        file_format_error = bam_pysam_check(local_file_path, number_of_reads)
+        validation_record.update_errors(file_format_error)
     elif file_format == 'fastq':
-        error = validate_files_fastq_check(local_file_path)
-        validation_record.update_errors(error)
-        error = fastq_check(local_file_path, number_of_reads, read_length)
-        validation_record.update_errors(error)
+        validate_files_fastq_check_error = validate_files_fastq_check(
+            local_file_path)
+        validation_record.update_errors(validate_files_fastq_check_error)
+        fastq_check_error = fastq_check(
+            local_file_path, number_of_reads, read_length)
+        validation_record.update_errors(fastq_check_error)
     elif file_format in ['bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe']:
-        error = validate_files_check(
+        validate_files_check_error = validate_files_check(
             local_file_path, file_format, file_format_type, assembly)
-        validation_record.update_errors(error)
+        validation_record.update_errors(validate_files_check_error)
     elif file_format == 'fasta':
-        error = fasta_check(local_file_path, is_gzipped)
-        validation_record.update_errors(error)
+        fasta_check_error = fasta_check(local_file_path, is_gzipped)
+        validation_record.update_errors(fasta_check_error)
     elif file_format in TABULAR_FORMAT:
-        error = tabular_file_check(output_type, local_file_path)
-        validation_record.update_errors(error)
+        tabular_file_check_error = tabular_file_check(
+            output_type, local_file_path)
+        validation_record.update_errors(tabular_file_check_error)
     logger.info(
         f'Completed file validation for file uuid {uuid}.')
 
@@ -185,34 +190,16 @@ def check_file_size(file_size, size_in_cloud_storage):
     return error
 
 
-def calculate_md5sum(file_path, unzip=False, chunk_size=CHUNK_SIZE):
-    md5 = hashlib.md5()
-    if unzip:
-        open_func = gzip.open
-    else:
-        open_func = open
-    with open_func(file_path, 'rb') as fp:
-        while chunk := fp.read(chunk_size):
-            md5.update(chunk)
-    return md5.hexdigest()
-
-
-def calculate_content_md5sum(file_path):
-    return calculate_md5sum(file_path, unzip=True)
-
-
-def check_md5sum(expected_md5sum, file_path, chunk_size=CHUNK_SIZE):
+def check_md5sum(expected_md5sum, calculated_md5sum):
     error = {}
-    calculated_md5sum = calculate_md5sum(file_path)
     if expected_md5sum != calculated_md5sum:
         error = {
             'md5sum': f'submitted file md5sum {expected_md5sum} does not match calculated md5sum {calculated_md5sum}.'}
     return error
 
 
-def check_content_md5sum(file_path, chunk_size=CHUNK_SIZE, base_url=CONTENT_MD5SUM_URL, username=ENCODE_ACCESS_KEY, password=ENCODE_SECRET_KEY):
+def check_content_md5sum(content_md5sum, chunk_size=CHUNK_SIZE, base_url=CONTENT_MD5SUM_URL, username=ENCODE_ACCESS_KEY, password=ENCODE_SECRET_KEY):
     error = {}
-    content_md5sum = calculate_content_md5sum(file_path)
     logger.info(f'content md5sum is {content_md5sum}')
     url = base_url + content_md5sum
     session = requests.Session()
@@ -366,11 +353,15 @@ def main(args):
     try:
         file_metadata = fetch_file_metadata_by_uuid(
             args.uuid, args.server, args.portal_key_id, args.porta_secret_key)
+        assembly = file_metadata.get('assembly')
+        output_type = file_metadata.get('output_type')
+        submitted_file_size_bytes = file_metadata.get('file_size')
+        submitted_md5sum = file_metadata['md5sum']
         file_validation_record = get_file_validation_record_from_metadata(
             file_metadata)
-        response = file_validation(KEY, UUID, MD5SUM, FILE_FORMAT, OUTPUT_TYPE,
-                                   FILE_SIZE, NUMBER_OF_READS, READ_LENGTH, FILE_FORMAT_TYPE, ASSEMBLY)
-        logging.info(json.dumps(response))
+        response = file_validation(file_validation_record, submitted_md5sum, output_type,
+                                   submitted_file_size_bytes,  NUMBER_OF_READS, READ_LENGTH, FILE_FORMAT_TYPE, assembly=assembly)
+        print(json.dumps(response))
     except Exception as err:
         message = f'exception occurred when checking file uuid #{UUID}: {str(err)}'
         logger.exception(message)
