@@ -1,9 +1,9 @@
 from checkfiles.checkfiles import is_file_gzipped, check_valid_gzipped_file_format, check_file_size, fasta_check
 from checkfiles.checkfiles import check_md5sum, check_content_md5sum, bam_pysam_check, fastq_check, file_validation, get_local_file_path
 from checkfiles.checkfiles import get_chrom_info_file, get_validate_files_args, validate_files_check, validate_files_fastq_check
-from checkfiles.file.file import File
-from checkfiles.file.file import FileValidationRecord
-from checkfiles.file.file import get_file
+from checkfiles.file import File
+from checkfiles.file import FileValidationRecord
+from checkfiles.file import get_file
 
 
 def test_is_file_gzipped_gzipped():

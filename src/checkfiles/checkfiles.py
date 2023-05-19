@@ -20,11 +20,9 @@ from FastaValidator import fasta_validator
 from frictionless import system
 from frictionless import validate
 
-from file.file import File
-from file.file import FileValidationRecord
-from file.file import get_file
+from . import file
 
-from logformatter.logformatter import JsonFormatter
+from . import logformatter
 
 
 KEY = os.getenv('KEY')
@@ -94,12 +92,12 @@ FASTA_VALIDATION_INFO = {
 
 logger = logging.getLogger(__name__)
 handler = logging.StreamHandler()
-handler.setFormatter(JsonFormatter())
+handler.setFormatter(logformatter.JsonFormatter())
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def file_validation(validation_record: FileValidationRecord, submitted_md5sum, output_type, submitted_file_size_bytes, number_of_reads, read_length, file_format_type, assembly):
+def file_validation(validation_record: file.FileValidationRecord, submitted_md5sum, output_type, submitted_file_size_bytes, number_of_reads, read_length, file_format_type, assembly):
     uuid = validation_record.uuid
     logger.info(f'Checking file uuid {uuid}')
     local_file_path = validation_record.file.path
@@ -347,7 +345,7 @@ def get_file_validation_record_from_metadata(file_metadata: dict, mount_basedir=
             make_local_path_from_s3_uri(file_metadata['s3_uri'])
         uuid = file_metadata['uuid']
         file_format = file_metadata['file_format']
-        return FileValidationRecord(get_file(path, file_format), uuid)
+        return file.FileValidationRecord(file.get_file(path, file_format), uuid)
 
 
 def main(args):
