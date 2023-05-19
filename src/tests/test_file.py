@@ -1,7 +1,7 @@
 import pytest
 
-from checkfiles.file.file import File
-from checkfiles.file.file import FileValidationRecord
+from checkfiles.file import File
+from checkfiles.file import FileValidationRecord
 
 
 def get_gzipped_file():
