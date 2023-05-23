@@ -16,6 +16,7 @@ import pyfastx
 import pysam
 
 from collections import namedtuple
+from typing import Optional
 
 from FastaValidator import fasta_validator
 
