@@ -167,7 +167,7 @@ def check_md5sum(expected_md5sum, calculated_md5sum):
     return error
 
 
-def check_content_md5sum(content_md5sum, portal_auth: PortalAuth, chunk_size=CHUNK_SIZE, base_url=CONTENT_MD5SUM_URL):
+def check_content_md5sum(content_md5sum, portal_auth: Optional[PortalAuth] = None, chunk_size=CHUNK_SIZE, base_url=CONTENT_MD5SUM_URL):
     error = {}
     logger.info(f'content md5sum is {content_md5sum}')
     url = base_url + content_md5sum

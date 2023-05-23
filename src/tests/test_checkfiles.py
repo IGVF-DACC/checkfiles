@@ -163,7 +163,7 @@ def test_main_fastq():
     read_length = 58
     file_format_type = None
     assembly = None
-    portal_auth = PortalAuth('key_id', 'secret_key')
+    portal_auth = None
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
@@ -189,7 +189,7 @@ def test_main_bam(mocker):
     read_length = 58
     file_format_type = None
     assembly = None
-    portal_auth = PortalAuth('key_id', 'secret_key')
+    portal_auth = None
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
@@ -222,7 +222,7 @@ def test_main_tabular(mocker):
     read_length = 58
     file_format_type = None
     assembly = None
-    portal_auth = PortalAuth('key_id', 'secret_key')
+    portal_auth = None
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
@@ -259,7 +259,7 @@ def test_main_bed(mocker):
     file_size = 5751
     number_of_reads = None
     read_length = None
-    portal_auth = PortalAuth('key_id', 'secret_key')
+    portal_auth = None
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
