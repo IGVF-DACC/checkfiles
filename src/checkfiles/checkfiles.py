@@ -15,6 +15,8 @@ import traceback
 import pyfastx
 import pysam
 
+from collections import namedtuple
+
 from FastaValidator import fasta_validator
 
 from frictionless import system
@@ -79,6 +81,9 @@ FASTA_VALIDATION_INFO = {
 }
 
 
+PortalAuth = namedtuple('PortalAuth', ['portal_key_id', 'portal_secret_key'])
+
+
 logger = logging.getLogger(__name__)
 handler = logging.StreamHandler()
 handler.setFormatter(logformatter.JsonFormatter())
@@ -86,7 +91,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def file_validation(validation_record: file.FileValidationRecord, submitted_md5sum, output_type, submitted_file_size_bytes, number_of_reads, read_length, file_format_type, assembly):
+def file_validation(portal_auth: PortalAuth, validation_record: file.FileValidationRecord, submitted_md5sum, output_type, submitted_file_size_bytes, number_of_reads, read_length, file_format_type, assembly):
     uuid = validation_record.uuid
     logger.info(f'Checking file uuid {uuid}')
     local_file_path = validation_record.file.path
@@ -102,7 +107,7 @@ def file_validation(validation_record: file.FileValidationRecord, submitted_md5s
     validation_record.update_errors(md5_sum_error)
     if is_gzipped:
         content_md5_error = check_content_md5sum(
-            validation_record.file.content_md5sum)
+            validation_record.file.content_md5sum, portal_auth)
         validation_record.update_info(
             {'content_md5sum': validation_record.file.content_md5sum})
         validation_record.update_errors(content_md5_error)
@@ -154,14 +159,6 @@ def check_valid_gzipped_file_format(is_gzipped, file_format, zip_file_format=ZIP
     return error
 
 
-def check_file_size(file_size, size_in_cloud_storage):
-    error = {}
-    if size_in_cloud_storage != file_size:
-        error = {
-            'file_size': f'submitted file zise {str(file_size)} does not mactch file zise {str(size_in_cloud_storage)} in cloud storage'}
-    return error
-
-
 def check_md5sum(expected_md5sum, calculated_md5sum):
     error = {}
     if expected_md5sum != calculated_md5sum:
@@ -170,12 +167,12 @@ def check_md5sum(expected_md5sum, calculated_md5sum):
     return error
 
 
-def check_content_md5sum(content_md5sum, chunk_size=CHUNK_SIZE, base_url=CONTENT_MD5SUM_URL, username=ENCODE_ACCESS_KEY, password=ENCODE_SECRET_KEY):
+def check_content_md5sum(content_md5sum, portal_auth: PortalAuth, chunk_size=CHUNK_SIZE, base_url=CONTENT_MD5SUM_URL):
     error = {}
     logger.info(f'content md5sum is {content_md5sum}')
     url = base_url + content_md5sum
     session = requests.Session()
-    session.auth = (username, password)
+    session.auth = portal_auth
     conflict_files = session.get(url).json()['@graph']
     if conflict_files:
         accessions = []
@@ -324,6 +321,7 @@ def get_file_validation_record_from_metadata(file_metadata: dict, mount_basedir=
 
 def main(args):
     try:
+        portal_auth = PortalAuth(args.portal_key_id, args.portal_secret_key)
         file_metadata = fetch_file_metadata_by_uuid(
             args.uuid, args.server, args.portal_key_id, args.portal_secret_key)
         assembly = file_metadata.get('assembly')
@@ -332,7 +330,7 @@ def main(args):
         submitted_md5sum = file_metadata['md5sum']
         file_validation_record = get_file_validation_record_from_metadata(
             file_metadata)
-        response = file_validation(file_validation_record, submitted_md5sum, output_type,
+        response = file_validation(portal_auth, file_validation_record, submitted_md5sum, output_type,
                                    submitted_file_size_bytes,  NUMBER_OF_READS, READ_LENGTH, FILE_FORMAT_TYPE, assembly=assembly)
         print(json.dumps(response))
     except Exception as err:

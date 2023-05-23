@@ -1,6 +1,7 @@
 from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check
 from checkfiles.checkfiles import check_md5sum, check_content_md5sum, bam_pysam_check, fastq_check, file_validation
 from checkfiles.checkfiles import get_chrom_info_file, get_validate_files_args, validate_files_check, validate_files_fastq_check
+from checkfiles.checkfiles import PortalAuth
 from checkfiles.file import File
 from checkfiles.file import FileValidationRecord
 from checkfiles.file import get_file
@@ -162,10 +163,11 @@ def test_main_fastq():
     read_length = 58
     file_format_type = None
     assembly = None
+    portal_auth = PortalAuth('key_id', 'secret_key')
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
-    result = file_validation(validation_record, md5sum, output_type,
+    result = file_validation(portal_auth, validation_record, md5sum, output_type,
                              file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
         'uuid': 'a3b754b6-0213-4ed4-a5f3-124f90273561',
@@ -187,6 +189,7 @@ def test_main_bam(mocker):
     read_length = 58
     file_format_type = None
     assembly = None
+    portal_auth = PortalAuth('key_id', 'secret_key')
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
@@ -198,7 +201,7 @@ def test_main_bam(mocker):
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_session)
 
-    result = file_validation(validation_record, md5sum, output_type,
+    result = file_validation(portal_auth, validation_record, md5sum, output_type,
                              file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
@@ -219,6 +222,7 @@ def test_main_tabular(mocker):
     read_length = 58
     file_format_type = None
     assembly = None
+    portal_auth = PortalAuth('key_id', 'secret_key')
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
@@ -230,7 +234,7 @@ def test_main_tabular(mocker):
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_get_local_file_path)
 
-    result = file_validation(validation_record, md5sum, output_type,
+    result = file_validation(portal_auth, validation_record, md5sum, output_type,
                              file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
@@ -255,11 +259,12 @@ def test_main_bed(mocker):
     file_size = 5751
     number_of_reads = None
     read_length = None
+    portal_auth = PortalAuth('key_id', 'secret_key')
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
 
-    result = file_validation(validation_record, md5sum, output_type,
+    result = file_validation(portal_auth, validation_record, md5sum, output_type,
                              file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
         'uuid': 'a3c64b51-5838-4ad2-a6c3-dc289786f626',
