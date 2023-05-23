@@ -166,10 +166,10 @@ def check_md5sum(expected_md5sum, calculated_md5sum):
     return error
 
 
-def check_content_md5sum(content_md5sum, portal_auth: Optional[PortalAuth] = None, server=None):
+def check_content_md5sum(content_md5sum, portal_auth: Optional[PortalAuth] = None, portal_url=None):
     error = {}
     logger.info(f'content md5sum is {content_md5sum}')
-    url = base_url + '/search/?type=File&format=json&content_md5sum=' + content_md5sum
+    url = portal_url + '/search/?type=File&format=json&content_md5sum=' + content_md5sum
     session = requests.Session()
     session.auth = portal_auth
     conflict_files = session.get(url).json()['@graph']
