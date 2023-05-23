@@ -40,6 +40,7 @@ ZIP_FILE_FORMAT = [
     'bed',
     'bedpe',
     'fasta',
+    'gtf'
 ]
 
 TABULAR_FORMAT = [
