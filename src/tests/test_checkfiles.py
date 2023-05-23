@@ -264,6 +264,6 @@ def test_main_bed(mocker):
     assert result == {
         'uuid': 'a3c64b51-5838-4ad2-a6c3-dc289786f626',
         'validation_result': 'failed',
-        {'info': {'content_md5sum': '16a792c57f2de7877b1a09e5bef7cb5c', 'file_size': 5751}},
+        'info': {'content_md5sum': '16a792c57f2de7877b1a09e5bef7cb5c', 'file_size': 5751},
         'errors': {'content_md5sum': 'content md5sum 16a792c57f2de7877b1a09e5bef7cb5c conflicts with content md5sum of existing file(s): ENCFF597JNC'}
     }
