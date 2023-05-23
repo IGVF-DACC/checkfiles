@@ -166,6 +166,7 @@ def test_main_fastq():
         'uuid': 'a3b754b6-0213-4ed4-a5f3-124f90273561',
         'validation_result': 'failed',
         'info': {
+            'calculated_md5sum': '3e814f4af7a4c13460584b26fbe32dc4',
             'content_md5sum': '1fa9f74aa895c4c938e1712bedf044ec',
             'file_size': 1371,
             'fastq_number_of_reads': 25,
@@ -202,6 +203,7 @@ def test_main_bam(mocker):
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
         'info': {
+            'calculated_md5sum': '2d3b7df013d257c7052c084d93ff9026',
             'content_md5sum': '9095bad36672afefd7bf9165d89b4eb5',
             'file_size': 118126,
             'bam_number_of_reads': 1709
@@ -237,7 +239,9 @@ def test_main_tabular(mocker):
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
         'validation_result': 'failed',
-        'info': {'file_size': 22585},
+        'info': {
+            'calculated_md5sum': '4b0b3c68fafc5a26d0fc6150baadaa5b',
+            'file_size': 22585},
         'errors': {
             'gzip': 'tsv file should be gzipped',
             'tabular_file_error': [[None, 1, 'incorrect-label', ''], [None, 2, 'incorrect-label', ''], [None, 3, 'incorrect-label', ''], [60, 24, 'type-error', "type is \"boolean/default\""], [61, 24, 'type-error', "type is \"boolean/default\""]]
