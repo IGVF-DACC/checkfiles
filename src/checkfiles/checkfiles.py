@@ -134,13 +134,13 @@ def file_validation(validation_record: file.FileValidationRecord, submitted_md5s
         return {
             'uuid': uuid,
             'validation_result': 'failed',
-            'errors': validation_record.errors
+            'errors': validation_record.errors,
             'info': validation_record.info
         }
     else:
         return {
             'uuid': uuid,
-            'info': validation_record.info
+            'info': validation_record.info,
             'validation_result': 'pass'
         }
 
