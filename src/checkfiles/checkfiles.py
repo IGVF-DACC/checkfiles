@@ -28,13 +28,8 @@ import file
 import logformatter
 
 
-ENCODE_ACCESS_KEY = os.getenv('ENCODE_ACCESS_KEY', '')
-ENCODE_SECRET_KEY = os.getenv('ENCODE_SECRET_KEY', '')
-CONTENT_MD5SUM_URL = 'https://www.encodeproject.org/search/?type=File&format=json&content_md5sum='
-
 SCHEMA_DIR = 'src/schemas/'
 CHROM_INFO_DIR = SCHEMA_DIR + 'genome_builds'
-CHUNK_SIZE = 128*6400
 MAX_NUM_ERROR_FOR_TABULAR_FILE = 10
 
 ZIP_FILE_FORMAT = [
@@ -92,7 +87,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def file_validation(portal_auth: PortalAuth, validation_record: file.FileValidationRecord, submitted_md5sum, output_type, file_format_type, assembly):
+def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file.FileValidationRecord, submitted_md5sum, output_type, file_format_type, assembly):
     uuid = validation_record.uuid
     logger.info(f'Checking file uuid {uuid}')
     local_file_path = validation_record.file.path
@@ -108,7 +103,7 @@ def file_validation(portal_auth: PortalAuth, validation_record: file.FileValidat
     validation_record.update_errors(md5_sum_error)
     if is_gzipped:
         content_md5_error = check_content_md5sum(
-            validation_record.file.content_md5sum, portal_auth)
+            validation_record.file.content_md5sum, portal_auth, portal_url)
         validation_record.update_info(
             {'content_md5sum': validation_record.file.content_md5sum})
         validation_record.update_errors(content_md5_error)
@@ -171,10 +166,10 @@ def check_md5sum(expected_md5sum, calculated_md5sum):
     return error
 
 
-def check_content_md5sum(content_md5sum, portal_auth: Optional[PortalAuth] = None, chunk_size=CHUNK_SIZE, base_url=CONTENT_MD5SUM_URL):
+def check_content_md5sum(content_md5sum, portal_auth: Optional[PortalAuth] = None, server=None):
     error = {}
     logger.info(f'content md5sum is {content_md5sum}')
-    url = base_url + content_md5sum
+    url = base_url + '/search/?type=File&format=json&content_md5sum=' + content_md5sum
     session = requests.Session()
     session.auth = portal_auth
     conflict_files = session.get(url).json()['@graph']
@@ -333,11 +328,11 @@ def main(args):
         submitted_md5sum = file_metadata['md5sum']
         file_validation_record = get_file_validation_record_from_metadata(
             file_metadata)
-        response = file_validation(portal_auth, file_validation_record,
+        response = file_validation(args.server, portal_auth, file_validation_record,
                                    submitted_md5sum, output_type, file_format_type, assembly=assembly)
         print(json.dumps(response))
     except Exception as err:
-        message = f'exception occurred when checking file uuid #{UUID}: {str(err)}'
+        message = f'exception occurred when checking file uuid {args.uuid}: {str(err)}'
         logger.exception(message)
         sys.exit(1)  # Retry Job Task by exiting the process
 
