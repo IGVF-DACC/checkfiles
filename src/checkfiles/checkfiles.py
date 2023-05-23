@@ -173,7 +173,7 @@ def check_content_md5sum(content_md5sum, portal_auth: Optional[PortalAuth] = Non
     logger.info(f'content md5sum is {content_md5sum}')
     url = base_url + content_md5sum
     session = requests.Session()
-    session.auth = (portal_auth.portal_key_id, portal_auth.portal_secret_key)
+    session.auth = portal_auth
     conflict_files = session.get(url).json()['@graph']
     if conflict_files:
         accessions = []
