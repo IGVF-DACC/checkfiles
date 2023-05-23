@@ -23,9 +23,9 @@ from FastaValidator import fasta_validator
 from frictionless import system
 from frictionless import validate
 
-from . import file
+import file
 
-from . import logformatter
+import logformatter
 
 
 ENCODE_ACCESS_KEY = os.getenv('ENCODE_ACCESS_KEY', '')
