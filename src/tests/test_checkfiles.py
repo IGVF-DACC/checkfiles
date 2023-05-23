@@ -160,7 +160,7 @@ def test_main_fastq():
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
-    result = file_validation(portal_auth, validation_record,
+    result = file_validation(portal_url, portal_auth, validation_record,
                              md5sum, output_type, file_format_type, assembly)
     assert result == {
         'uuid': 'a3b754b6-0213-4ed4-a5f3-124f90273561',
@@ -197,7 +197,7 @@ def test_main_bam(mocker):
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_session)
 
-    result = file_validation(portal_auth, validation_record,
+    result = file_validation(portal_url, portal_auth, validation_record,
                              md5sum, output_type, file_format_type, assembly)
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
@@ -232,7 +232,7 @@ def test_main_tabular(mocker):
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_get_local_file_path)
 
-    result = file_validation(portal_auth, validation_record,
+    result = file_validation(portal_url, portal_auth, validation_record,
                              md5sum, output_type, file_format_type, assembly)
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
@@ -260,7 +260,7 @@ def test_main_bed(mocker):
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
 
-    result = file_validation(portal_auth, validation_record,
+    result = file_validation(portal_url, portal_auth, validation_record,
                              md5sum, output_type, file_format_type, assembly)
     assert result == {
         'uuid': 'a3c64b51-5838-4ad2-a6c3-dc289786f626',
