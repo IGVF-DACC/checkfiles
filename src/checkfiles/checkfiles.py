@@ -122,8 +122,9 @@ def file_validation(portal_auth: PortalAuth, validation_record: file.FileValidat
         validate_files_fastq_check_error = validate_files_fastq_check(
             local_file_path)
         validation_record.update_errors(validate_files_fastq_check_error)
-        fastq_check_error = fastq_check(local_file_path)
-        validation_record.update_errors(fastq_check_error)
+        fastq_read_info = fastq_get_average_read_length_and_number_of_reads(
+            local_file_path)
+        validation_record.update_info(fastq_read_info)
     elif file_format in ['bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe']:
         validate_files_check_error = validate_files_check(
             local_file_path, file_format, file_format_type, assembly)
@@ -183,7 +184,7 @@ def check_content_md5sum(content_md5sum, portal_auth: Optional[PortalAuth] = Non
             accessions.append(file['accession'])
         accessions_serialize = ', '.join(accessions)
         error = {
-            'content_md5sum': f'content md5sum {content_md5sum} conflicts with content md5sum of existing file(s): {accessions_serialize}'
+            'content_md5sum_error': f'content md5sum {content_md5sum} conflicts with content md5sum of existing file(s): {accessions_serialize}'
         }
     return error
 
@@ -208,7 +209,7 @@ def bam_pysam_check(file_path):
         return error
 
 
-def fastq_check(file_path):
+def fastq_get_average_read_length_and_number_of_reads(file_path):
     info = {}
     temp_file = tempfile.NamedTemporaryFile()
     shutil.copyfile(file_path, temp_file.name)

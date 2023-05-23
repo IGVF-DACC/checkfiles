@@ -1,5 +1,5 @@
 from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check
-from checkfiles.checkfiles import check_md5sum, check_content_md5sum, bam_pysam_check, fastq_check, file_validation
+from checkfiles.checkfiles import check_md5sum, check_content_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, file_validation
 from checkfiles.checkfiles import get_chrom_info_file, get_validate_files_args, validate_files_check, validate_files_fastq_check
 from checkfiles.checkfiles import PortalAuth
 from checkfiles.file import File
@@ -34,9 +34,9 @@ def test_bam_pysam_check_number_of_read():
     assert error == {'bam_number_of_reads': 1709}
 
 
-def test_fastq_check_number_fail():
+def test_fastq_get_average_read_length_and_number_of_reads():
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
-    error = fastq_check(file_path)
+    error = fastq_get_average_read_length_and_number_of_reads(file_path)
     assert error == {
         'fastq_number_of_reads': 25,
         'fastq_read_length': 58
@@ -165,7 +165,7 @@ def test_main_fastq():
         'uuid': 'a3b754b6-0213-4ed4-a5f3-124f90273561',
         'validation_result': 'failed',
         'info': {'content_md5sum': '1fa9f74aa895c4c938e1712bedf044ec', 'file_size': 1371},
-        'errors': {'content_md5sum': 'content md5sum 1fa9f74aa895c4c938e1712bedf044ec conflicts with content md5sum of existing file(s): ENCFF594AYI'}
+        'errors': {'content_md5sum_error': 'content md5sum 1fa9f74aa895c4c938e1712bedf044ec conflicts with content md5sum of existing file(s): ENCFF594AYI'}
     }
 
 
