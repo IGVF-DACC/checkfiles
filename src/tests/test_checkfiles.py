@@ -1,19 +1,9 @@
-from checkfiles.checkfiles import is_file_gzipped, check_valid_gzipped_file_format, check_file_size, fasta_check
-from checkfiles.checkfiles import check_md5sum, check_content_md5sum, bam_pysam_check, fastq_check, file_validation, get_local_file_path
+from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check
+from checkfiles.checkfiles import check_md5sum, check_content_md5sum, bam_pysam_check, fastq_check, file_validation
 from checkfiles.checkfiles import get_chrom_info_file, get_validate_files_args, validate_files_check, validate_files_fastq_check
 from checkfiles.file import File
 from checkfiles.file import FileValidationRecord
 from checkfiles.file import get_file
-
-
-def test_is_file_gzipped_gzipped():
-    is_gzipped = is_file_gzipped('src/tests/data/ENCFF594AYI.fastq.gz')
-    assert is_gzipped == True
-
-
-def test_is_file_gzipped_not_gzipped():
-    is_gzipped = is_file_gzipped('src/tests/data/ENCFF080HPN.tsv')
-    assert is_gzipped == False
 
 
 def test_check_valid_gzipped_file_format_no_error():
@@ -29,21 +19,6 @@ def test_check_valid_gzipped_file_format_error_zip():
 def test_check_valid_gzipped_file_format_error_unzip():
     error = check_valid_gzipped_file_format(False, 'bam')
     assert error == {'gzip': 'bam file should be gzipped'}
-
-
-def test_check_file_size_pass():
-    file_size = 100
-    size_in_cloud_storage = 80
-    error = check_file_size(file_size, size_in_cloud_storage)
-    assert error == {
-        'file_size': 'submitted file zise 100 does not mactch file zise 80 in cloud storage'}
-
-
-def test_check_file_size_fail():
-    file_size = 100
-    size_in_cloud_storage = 100
-    error = check_file_size(file_size, size_in_cloud_storage)
-    assert error == {}
 
 
 def test_bam_pysam_check_invalid_bam_file():
@@ -263,12 +238,6 @@ def test_main_tabular(mocker):
             'tabular_file_error': [[None, 1, 'incorrect-label', ''], [None, 2, 'incorrect-label', ''], [None, 3, 'incorrect-label', ''], [60, 24, 'type-error', "type is \"boolean/default\""], [61, 24, 'type-error', "type is \"boolean/default\""]]
         }
     }
-
-
-def test_get_local_file_path():
-    blob_name = 'ENCFF594AYI.fastq.gz'
-    file_path = get_local_file_path(blob_name)
-    assert file_path == '/s3/ENCFF594AYI.fastq.gz'
 
 
 def test_main_bed(mocker):

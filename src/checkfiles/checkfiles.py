@@ -25,19 +25,8 @@ from . import file
 from . import logformatter
 
 
-KEY = os.getenv('KEY')
-MD5SUM = os.getenv('MD5SUM')
-FILE_FORMAT = os.getenv('FILE_FORMAT')
-FILE_FORMAT_TYPE = os.getenv('FILE_FORMAT_TYPE')
-OUTPUT_TYPE = os.getenv('OUTPUT_TYPE')
-UUID = os.getenv('UUID')
-FILE_SIZE = int(os.getenv('FILE_SIZE', 0))
-ASSEMBLY = os.getenv('ASSEMBLY')
-NUMBER_OF_READS = int(os.getenv('NUMBER_OF_READS', 0))
-READ_LENGTH = int(os.getenv('READ_LENGTH', 0))
 ENCODE_ACCESS_KEY = os.getenv('ENCODE_ACCESS_KEY', '')
 ENCODE_SECRET_KEY = os.getenv('ENCODE_SECRET_KEY', '')
-DATA_DIR = '/s3/'
 CONTENT_MD5SUM_URL = 'https://www.encodeproject.org/search/?type=File&format=json&content_md5sum='
 
 SCHEMA_DIR = 'src/schemas/'
@@ -102,15 +91,15 @@ def file_validation(validation_record: file.FileValidationRecord, submitted_md5s
     logger.info(f'Checking file uuid {uuid}')
     local_file_path = validation_record.file.path
     true_file_size_bytes = validation_record.file.size
+    validation_record.update_info({'file_size': true_file_size_bytes})
     file_format = validation_record.file.file_format
     is_gzipped = validation_record.file.is_zipped
     gzipped_format_error = check_valid_gzipped_file_format(
         is_gzipped, file_format)
     validation_record.update_errors(gzipped_format_error)
-    error = check_md5sum(submitted_md5sum, validation_record.file.md5sum)
-    validation_record.update_errors(error)
-
-    validation_record.update_info({'file_size': true_file_size_bytes})
+    md5_sum_error = check_md5sum(
+        submitted_md5sum, validation_record.file.md5sum)
+    validation_record.update_errors(md5_sum_error)
     if is_gzipped:
         content_md5_error = check_content_md5sum(
             validation_record.file.content_md5sum)
@@ -146,25 +135,14 @@ def file_validation(validation_record: file.FileValidationRecord, submitted_md5s
             'uuid': uuid,
             'validation_result': 'failed',
             'errors': validation_record.errors
+            'info': validation_record.info
         }
     else:
         return {
             'uuid': uuid,
+            'info': validation_record.info
             'validation_result': 'pass'
         }
-
-
-def get_local_file_path(relative_path):
-    file_path = DATA_DIR + relative_path
-    return file_path
-
-
-def is_file_gzipped(file_path):
-    try:
-        gzip.GzipFile(filename=file_path).read(1)
-        return True
-    except gzip.BadGzipFile:
-        return False
 
 
 def check_valid_gzipped_file_format(is_gzipped, file_format, zip_file_format=ZIP_FILE_FORMAT):
@@ -174,10 +152,6 @@ def check_valid_gzipped_file_format(is_gzipped, file_format, zip_file_format=ZIP
     elif file_format not in zip_file_format and is_gzipped:
         error = {'gzip': f'{file_format} file should not be gzipped'}
     return error
-
-
-def get_file_size_bytes(file_path):
-    return os.path.getsize()
 
 
 def check_file_size(file_size, size_in_cloud_storage):
