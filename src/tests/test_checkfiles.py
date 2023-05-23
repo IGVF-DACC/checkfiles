@@ -153,17 +153,14 @@ def test_main_fastq():
     md5sum = '3e814f4af7a4c13460584b26fbe32dc4'
     file_format = 'fastq'
     output_type = 'reads'
-    file_size = 1371
-    number_of_reads = 25
-    read_length = 58
     file_format_type = None
     assembly = None
     portal_auth = None
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
-    result = file_validation(portal_auth, validation_record, md5sum, output_type,
-                             file_size, number_of_reads, read_length, file_format_type, assembly)
+    result = file_validation(portal_auth, validation_record,
+                             md5sum, output_type, file_format_type, assembly)
     assert result == {
         'uuid': 'a3b754b6-0213-4ed4-a5f3-124f90273561',
         'validation_result': 'failed',
@@ -179,9 +176,6 @@ def test_main_bam(mocker):
     md5sum = '2d3b7df013d257c7052c084d93ff9026'
     file_format = 'bam'
     output_type = 'alignments'
-    file_size = 118126
-    number_of_reads = 1709
-    read_length = 58
     file_format_type = None
     assembly = None
     portal_auth = None
@@ -196,8 +190,8 @@ def test_main_bam(mocker):
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_session)
 
-    result = file_validation(portal_auth, validation_record, md5sum, output_type,
-                             file_size, number_of_reads, read_length, file_format_type, assembly)
+    result = file_validation(portal_auth, validation_record,
+                             md5sum, output_type, file_format_type, assembly)
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
         'info': {'content_md5sum': '9095bad36672afefd7bf9165d89b4eb5', 'file_size': 118126},
@@ -212,9 +206,6 @@ def test_main_tabular(mocker):
     md5sum = '4b0b3c68fafc5a26d0fc6150baadaa5b'
     file_format = 'tsv'
     output_type = 'element quantifications'
-    file_size = 22585
-    number_of_reads = 1709
-    read_length = 58
     file_format_type = None
     assembly = None
     portal_auth = None
@@ -229,8 +220,8 @@ def test_main_tabular(mocker):
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_get_local_file_path)
 
-    result = file_validation(portal_auth, validation_record, md5sum, output_type,
-                             file_size, number_of_reads, read_length, file_format_type, assembly)
+    result = file_validation(portal_auth, validation_record,
+                             md5sum, output_type, file_format_type, assembly)
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
         'validation_result': 'failed',
@@ -251,16 +242,13 @@ def test_main_bed(mocker):
     output_type = 'exclusion list regions'
     file_format_type = 'bed3'
     assembly = 'GRCh38'
-    file_size = 5751
-    number_of_reads = None
-    read_length = None
     portal_auth = None
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
 
-    result = file_validation(portal_auth, validation_record, md5sum, output_type,
-                             file_size, number_of_reads, read_length, file_format_type, assembly)
+    result = file_validation(portal_auth, validation_record,
+                             md5sum, output_type, file_format_type, assembly)
     assert result == {
         'uuid': 'a3c64b51-5838-4ad2-a6c3-dc289786f626',
         'validation_result': 'failed',

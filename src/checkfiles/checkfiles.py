@@ -203,6 +203,7 @@ def bam_pysam_check(file_path):
     except pysam.utils.SamtoolsError as e:
         error = {
             'bam_error': f'file is not valid bam file by SamtoolsError: {str(e)}'}
+        return error
 
 
 def fastq_check(file_path):
