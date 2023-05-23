@@ -170,6 +170,7 @@ def test_main_fastq():
     assert result == {
         'uuid': 'a3b754b6-0213-4ed4-a5f3-124f90273561',
         'validation_result': 'failed',
+        'info': {'content_md5sum': '1fa9f74aa895c4c938e1712bedf044ec', 'file_size': 1371},
         'errors': {'content_md5sum': 'content md5sum 1fa9f74aa895c4c938e1712bedf044ec conflicts with content md5sum of existing file(s): ENCFF594AYI'}
     }
 
@@ -201,6 +202,7 @@ def test_main_bam(mocker):
                              file_size, number_of_reads, read_length, file_format_type, assembly)
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
+        'info': {'content_md5sum': '9095bad36672afefd7bf9165d89b4eb5', 'file_size': 118126},
         'validation_result': 'pass'
     }
 
@@ -233,6 +235,7 @@ def test_main_tabular(mocker):
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
         'validation_result': 'failed',
+        'info': {'file_size': 22585},
         'errors': {
             'gzip': 'tsv file should be gzipped',
             'tabular_file_error': [[None, 1, 'incorrect-label', ''], [None, 2, 'incorrect-label', ''], [None, 3, 'incorrect-label', ''], [60, 24, 'type-error', "type is \"boolean/default\""], [61, 24, 'type-error', "type is \"boolean/default\""]]
@@ -261,5 +264,6 @@ def test_main_bed(mocker):
     assert result == {
         'uuid': 'a3c64b51-5838-4ad2-a6c3-dc289786f626',
         'validation_result': 'failed',
+        {'info': {'content_md5sum': '16a792c57f2de7877b1a09e5bef7cb5c', 'file_size': 5751}},
         'errors': {'content_md5sum': 'content md5sum 16a792c57f2de7877b1a09e5bef7cb5c conflicts with content md5sum of existing file(s): ENCFF597JNC'}
     }
