@@ -113,14 +113,16 @@ def file_validation(portal_auth: PortalAuth, validation_record: file.FileValidat
             {'content_md5sum': validation_record.file.content_md5sum})
         validation_record.update_errors(content_md5_error)
     if file_format == 'bam':
-        file_format_error = bam_pysam_check(local_file_path)
-        validation_record.update_errors(file_format_error)
+        bam_check_result = bam_pysam_check(local_file_path)
+        if 'bam_error' in bam_check_result:
+            validation_record.update_errors(bam_check_result)
+        else:
+            validation_record.update_info(bam_check_result)
     elif file_format == 'fastq':
         validate_files_fastq_check_error = validate_files_fastq_check(
             local_file_path)
         validation_record.update_errors(validate_files_fastq_check_error)
-        fastq_check_error = fastq_check(
-            local_file_path, number_of_reads, read_length)
+        fastq_check_error = fastq_check(local_file_path)
         validation_record.update_errors(fastq_check_error)
     elif file_format in ['bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe']:
         validate_files_check_error = validate_files_check(
