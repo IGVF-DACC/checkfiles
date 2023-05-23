@@ -24,27 +24,22 @@ def test_check_valid_gzipped_file_format_error_unzip():
 
 def test_bam_pysam_check_invalid_bam_file():
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
-    number_of_reads = 158
-    error = bam_pysam_check(file_path, number_of_reads)
+    error = bam_pysam_check(file_path)
     assert error == {'bam_error': "file is not valid bam file by SamtoolsError: 'samtools returned with error 8: stdout=, stderr=src/tests/data/ENCFF594AYI.fastq.gz had no targets in header.\\n'"}
 
 
 def test_bam_pysam_check_number_of_read():
     file_path = 'src/tests/data/ENCFF206HGF.bam'
-    number_of_reads = 158
-    error = bam_pysam_check(file_path, number_of_reads)
-    assert error == {
-        'bam_error': 'sumbitted number of reads 158 does not match number of reads 1709 in cloud storage'}
+    error = bam_pysam_check(file_path)
+    assert error == {'bam_number_of_reads': 1709}
 
 
 def test_fastq_check_number_fail():
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
-    number_of_reads = 1
-    read_length = 1
-    error = fastq_check(file_path, number_of_reads, read_length)
+    error = fastq_check(file_path)
     assert error == {
-        'fastq_number_of_reads': 'sumbitted number of reads 1 does not match number of reads 25 in cloud storage',
-        'fastq_read_length': 'sumbitted read length 1 does not match read length 58 in cloud storage'
+        'fastq_number_of_reads': 25,
+        'fastq_read_length': 58
     }
 
 

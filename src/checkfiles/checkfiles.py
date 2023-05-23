@@ -92,7 +92,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def file_validation(portal_auth: PortalAuth, validation_record: file.FileValidationRecord, submitted_md5sum, output_type, submitted_file_size_bytes, number_of_reads, read_length, file_format_type, assembly):
+def file_validation(portal_auth: PortalAuth, validation_record: file.FileValidationRecord, submitted_md5sum, output_type, file_format_type, assembly):
     uuid = validation_record.uuid
     logger.info(f'Checking file uuid {uuid}')
     local_file_path = validation_record.file.path
@@ -113,7 +113,7 @@ def file_validation(portal_auth: PortalAuth, validation_record: file.FileValidat
             {'content_md5sum': validation_record.file.content_md5sum})
         validation_record.update_errors(content_md5_error)
     if file_format == 'bam':
-        file_format_error = bam_pysam_check(local_file_path, number_of_reads)
+        file_format_error = bam_pysam_check(local_file_path)
         validation_record.update_errors(file_format_error)
     elif file_format == 'fastq':
         validate_files_fastq_check_error = validate_files_fastq_check(
@@ -179,34 +179,34 @@ def check_content_md5sum(content_md5sum, portal_auth: Optional[PortalAuth] = Non
         accessions = []
         for file in conflict_files:
             accessions.append(file['accession'])
+        accessions_serialize = ', '.join(accessions)
         error = {
-            'content_md5sum': f"content md5sum {content_md5sum} conflicts with content md5sum of existing file(s): {', '.join(accessions)}"}
+            'content_md5sum': f'content md5sum {content_md5sum} conflicts with content md5sum of existing file(s): {accessions_serialize}'
+        }
     return error
 
 
-def bam_pysam_check(file_path, number_of_reads):
-    error = {}
+def bam_pysam_check(file_path):
     try:
         pysam.quickcheck(file_path)
         result = pysam.stats(file_path)
         if 'SN\tis sorted:\t0' in result:
             error = {'bam_error': 'the bam file is not sorted'}
+            return error
         else:
             samfile = pysam.AlignmentFile(file_path, 'rb')
             count = samfile.count(until_eof=True)
             logger.info(f'the number of reads: {count}')
-            if count != number_of_reads:
-                error = {
-                    'bam_error': f'sumbitted number of reads {number_of_reads} does not match number of reads {count} in cloud storage'}
+            info = {'bam_number_of_reads': count}
             samfile.close()
+            return info
     except pysam.utils.SamtoolsError as e:
         error = {
             'bam_error': f'file is not valid bam file by SamtoolsError: {str(e)}'}
-    return error
 
 
-def fastq_check(file_path, number_of_reads, read_length):
-    error = {}
+def fastq_check(file_path):
+    info = {}
     temp_file = tempfile.NamedTemporaryFile()
     shutil.copyfile(file_path, temp_file.name)
     fq = pyfastx.Fastq(temp_file.name)
@@ -214,14 +214,12 @@ def fastq_check(file_path, number_of_reads, read_length):
     avg_len = int(fq.avglen)
     logger.info(f'number of reads is {count}')
     logger.info(f'read length is {avg_len}')
-    if count != number_of_reads:
-        error['fastq_number_of_reads'] = f'sumbitted number of reads {number_of_reads} does not match number of reads {count} in cloud storage'
-    if avg_len != read_length:
-        error['fastq_read_length'] = f'sumbitted read length {read_length} does not match read length {avg_len} in cloud storage'
+    info['fastq_number_of_reads'] = count
+    info['fastq_read_length'] = avg_len
     fxi_file_path = temp_file.name + '.fxi'
     if os.path.exists(fxi_file_path):
         os.remove(fxi_file_path)
-    return error
+    return info
 
 
 def fasta_check(file_path, is_gzipped, info=FASTA_VALIDATION_INFO):
@@ -327,12 +325,12 @@ def main(args):
             args.uuid, args.server, args.portal_key_id, args.portal_secret_key)
         assembly = file_metadata.get('assembly')
         output_type = file_metadata.get('output_type')
-        submitted_file_size_bytes = file_metadata.get('file_size')
+        file_format_type = file_metadata.get('file_format_type')
         submitted_md5sum = file_metadata['md5sum']
         file_validation_record = get_file_validation_record_from_metadata(
             file_metadata)
-        response = file_validation(portal_auth, file_validation_record, submitted_md5sum, output_type,
-                                   submitted_file_size_bytes,  NUMBER_OF_READS, READ_LENGTH, FILE_FORMAT_TYPE, assembly=assembly)
+        response = file_validation(portal_auth, file_validation_record,
+                                   submitted_md5sum, output_type, file_format_type, assembly=assembly)
         print(json.dumps(response))
     except Exception as err:
         message = f'exception occurred when checking file uuid #{UUID}: {str(err)}'
