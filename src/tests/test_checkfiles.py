@@ -30,14 +30,14 @@ def test_bam_pysam_check_invalid_bam_file():
 
 def test_bam_pysam_check_number_of_read():
     file_path = 'src/tests/data/ENCFF206HGF.bam'
-    error = bam_pysam_check(file_path)
-    assert error == {'bam_number_of_reads': 1709}
+    result = bam_pysam_check(file_path)
+    assert result == {'bam_number_of_reads': 1709}
 
 
 def test_fastq_get_average_read_length_and_number_of_reads():
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
-    error = fastq_get_average_read_length_and_number_of_reads(file_path)
-    assert error == {
+    result = fastq_get_average_read_length_and_number_of_reads(file_path)
+    assert result == {
         'fastq_number_of_reads': 25,
         'fastq_read_length': 58
     }
@@ -164,7 +164,12 @@ def test_main_fastq():
     assert result == {
         'uuid': 'a3b754b6-0213-4ed4-a5f3-124f90273561',
         'validation_result': 'failed',
-        'info': {'content_md5sum': '1fa9f74aa895c4c938e1712bedf044ec', 'file_size': 1371},
+        'info': {
+            'content_md5sum': '1fa9f74aa895c4c938e1712bedf044ec',
+            'file_size': 1371,
+            'fastq_number_of_reads': 25,
+            'fastq_read_length': 58
+        },
         'errors': {'content_md5sum_error': 'content md5sum 1fa9f74aa895c4c938e1712bedf044ec conflicts with content md5sum of existing file(s): ENCFF594AYI'}
     }
 
@@ -194,7 +199,11 @@ def test_main_bam(mocker):
                              md5sum, output_type, file_format_type, assembly)
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
-        'info': {'content_md5sum': '9095bad36672afefd7bf9165d89b4eb5', 'file_size': 118126},
+        'info': {
+            'content_md5sum': '9095bad36672afefd7bf9165d89b4eb5',
+            'file_size': 118126,
+            'bam_number_of_reads': 1709
+        },
         'validation_result': 'pass'
     }
 
@@ -253,5 +262,5 @@ def test_main_bed(mocker):
         'uuid': 'a3c64b51-5838-4ad2-a6c3-dc289786f626',
         'validation_result': 'failed',
         'info': {'content_md5sum': '16a792c57f2de7877b1a09e5bef7cb5c', 'file_size': 5751},
-        'errors': {'content_md5sum': 'content md5sum 16a792c57f2de7877b1a09e5bef7cb5c conflicts with content md5sum of existing file(s): ENCFF597JNC'}
+        'errors': {'content_md5sum_error': 'content md5sum 16a792c57f2de7877b1a09e5bef7cb5c conflicts with content md5sum of existing file(s): ENCFF597JNC'}
     }
