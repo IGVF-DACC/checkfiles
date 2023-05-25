@@ -33,7 +33,7 @@ jobs:
             sudo chmod +x /usr/local/bin/validateFiles
       - run:
           name: Tests
-          command: pytest --cov=checkfiles
+          command: pytest --cov .
       - run:
           name: Upload coverage report
           command:
