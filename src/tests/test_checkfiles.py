@@ -149,8 +149,8 @@ def test_validate_files_fastq_check_pass():
     assert error == {}
 
 
-def test_main_fastq():
-    portal_url = 'https://www.encodeproject.org'
+def test_main_fastq(mocker):
+    portal_url = 'url_to_portal'
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
     key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF594AYI.fastq.gz'
     uuid = 'a3b754b6-0213-4ed4-a5f3-124f90273561'
@@ -163,8 +163,19 @@ def test_main_fastq():
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
+    mock_response_session = mocker.Mock()
+    mock_response_session.json.return_value = {
+        '@graph': [
+            {
+                'accession': 'ENCFF594AYI'
+            }
+        ]
+    }
+    mocker.patch('checkfiles.checkfiles.requests.Session.get',
+                 return_value=mock_response_session)
     result = file_validation(portal_url, portal_auth, validation_record,
                              md5sum, output_type, file_format_type, assembly)
+
     assert result == {
         'uuid': 'a3b754b6-0213-4ed4-a5f3-124f90273561',
         'validation_result': 'failed',
@@ -180,7 +191,7 @@ def test_main_fastq():
 
 
 def test_main_bam(mocker):
-    portal_url = 'https://www.encodeproject.org'
+    portal_url = 'url_to_portal'
     file_path = 'src/tests/data/ENCFF206HGF.bam'
     key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF206HGF.bam'
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
@@ -216,7 +227,7 @@ def test_main_bam(mocker):
 
 
 def test_main_tabular(mocker):
-    portal_url = 'https//www.encodeproject.org'
+    portal_url = 'url_to_portal'
     file_path = 'src/tests/data/ENCFF500IBL.tsv'
     key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF500IBL.tsv'
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
@@ -253,7 +264,7 @@ def test_main_tabular(mocker):
 
 
 def test_main_bed(mocker):
-    portal_url = 'https://www.encodeproject.org'
+    portal_url = 'url_to_portal'
     file_path = 'src/tests/data/ENCFF597JNC.bed.gz'
     key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF597JNC.bed.gz'
     uuid = 'a3c64b51-5838-4ad2-a6c3-dc289786f626'
@@ -267,6 +278,16 @@ def test_main_bed(mocker):
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
 
+    mock_response_session = mocker.Mock()
+    mock_response_session.json.return_value = {
+        '@graph': [
+            {
+                'accession': 'ENCFF597JNC'
+            }
+        ]
+    }
+    mocker.patch('checkfiles.checkfiles.requests.Session.get',
+                 return_value=mock_response_session)
     result = file_validation(portal_url, portal_auth, validation_record,
                              md5sum, output_type, file_format_type, assembly)
     assert result == {
