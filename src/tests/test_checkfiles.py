@@ -1,7 +1,10 @@
+import datetime
+
 from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check
 from checkfiles.checkfiles import check_md5sum, check_content_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, file_validation
 from checkfiles.checkfiles import get_chrom_info_file, get_validate_files_args, validate_files_check, validate_files_fastq_check
 from checkfiles.checkfiles import PortalAuth
+from checkfiles.checkfiles import upload_credentials_are_expired
 from checkfiles.file import File
 from checkfiles.file import FileValidationRecord
 from checkfiles.file import get_file
@@ -276,3 +279,49 @@ def test_main_bed(mocker):
         },
         'errors': {'content_md5sum_error': 'content md5sum 16a792c57f2de7877b1a09e5bef7cb5c conflicts with content md5sum of existing file(s): ENCFF597JNC'}
     }
+
+
+def test_upload_credentials_are_expired_expired(mocker):
+    patched_current_time = mocker.patch(
+        'checkfiles.checkfiles.get_current_utc_time')
+    patched_current_time.return_value = datetime.datetime(
+        2023, 5, 26, 20, 20, 0, 0, tzinfo=datetime.timezone.utc)
+    mock_response = mocker.Mock()
+    mock_response.json.return_value = {
+        '@graph':
+            [
+                {
+                    'upload_credentials':
+                        {
+                            'expiration': '2023-05-24T08:20:16+00:00'
+                        }
+                }
+            ]
+    }
+    mocker.patch('checkfiles.checkfiles.requests.get',
+                 return_value=mock_response)
+    assert upload_credentials_are_expired(
+        'uri_to_portal', 'file_uuid', PortalAuth('fake', 'creds')) == True
+
+
+def test_upload_credentials_are_expired_not_expired(mocker):
+    patched_current_time = mocker.patch(
+        'checkfiles.checkfiles.get_current_utc_time')
+    patched_current_time.return_value = datetime.datetime(
+        2023, 5, 26, 20, 20, 0, 0, tzinfo=datetime.timezone.utc)
+    mock_response = mocker.Mock()
+    mock_response.json.return_value = {
+        '@graph':
+            [
+                {
+                    'upload_credentials':
+                        {
+                            'expiration': '2023-06-26T08:20:16+00:00'
+                        }
+                }
+            ]
+    }
+    mocker.patch('checkfiles.checkfiles.requests.get',
+                 return_value=mock_response)
+    assert upload_credentials_are_expired(
+        'uri_to_portal', 'file_uuid', PortalAuth('fake', 'creds')) == False
