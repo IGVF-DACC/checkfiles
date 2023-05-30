@@ -325,7 +325,7 @@ def get_current_utc_time():
 
 
 def upload_credentials_are_expired(portal_uri: str, file_uuid: str, portal_auth: PortalAuth) -> bool:
-    request_uri = f'{portal_uri}/{file_uuid}/@@upload_credentials'
+    request_uri = f'{portal_uri}/{file_uuid}/@@upload'
     response = requests.get(request_uri, auth=portal_auth)
     expiration = response.json(
     )['@graph'][0]['upload_credentials']['expiration']
@@ -342,7 +342,7 @@ def main(args):
             args.uuid, args.server, portal_auth)
         uuid = args.uuid
         credentials_expired = upload_credentials_are_expired(
-            args.portal_uri, uuid, portal_auth)
+            args.server, uuid, portal_auth)
         if not args.ignore_active_credentials:
             if not credentials_expired:
                 logger.info(
@@ -369,7 +369,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Checkfiles argumentparser')
     parser.add_argument('--uuid', type=str,
-                        help='UUID of the fileobject to be checked')
+                        help='UUID of the fileobject to be checked.')
     parser.add_argument(
         '--server', type=str, help='igvf instance to check. https://api.sandbox.igvf.org for example')
     parser.add_argument('--portal-key-id', type=str, help='Portal key id')
