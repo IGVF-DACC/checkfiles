@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import gzip
 import hashlib
 import json
@@ -298,9 +299,8 @@ def get_chrom_info_file(assembly, chrom_info_dir=CHROM_INFO_DIR):
     return f'{chrom_info_dir}/{organism}/{assembly}/chrom.sizes'
 
 
-def fetch_file_metadata_by_uuid(uuid: str, server: str, portal_key_id: str, portal_secret_key: str):
-    response = requests.get(server + '/' + uuid,
-                            auth=(portal_key_id, portal_secret_key))
+def fetch_file_metadata_by_uuid(uuid: str, server: str, portal_auth: PortalAuth):
+    response = requests.get(server + '/' + uuid, auth=portal_auth)
     # todo handle exceptions, retries etc.
     return response.json()
 
@@ -320,11 +320,36 @@ def get_file_validation_record_from_metadata(file_metadata: dict, mount_basedir=
         return file.FileValidationRecord(file.get_file(path, file_format), uuid)
 
 
+def get_current_utc_time():
+    return datetime.datetime.now(tz=datetime.timezone.utc)
+
+
+def upload_credentials_are_expired(portal_uri: str, file_uuid: str, portal_auth: PortalAuth) -> bool:
+    request_uri = f'{portal_uri}/{file_uuid}/@@upload_credentials'
+    response = requests.get(request_uri, auth=portal_auth)
+    expiration = response.json(
+    )['@graph'][0]['upload_credentials']['expiration']
+    # portal times are utc
+    expiration_time = datetime.datetime.fromisoformat(expiration)
+    now = get_current_utc_time()
+    return expiration_time < now
+
+
 def main(args):
     try:
         portal_auth = PortalAuth(args.portal_key_id, args.portal_secret_key)
         file_metadata = fetch_file_metadata_by_uuid(
-            args.uuid, args.server, args.portal_key_id, args.portal_secret_key)
+            args.uuid, args.server, portal_auth)
+        uuid = args.uuid
+        credentials_expired = upload_credentials_are_expired(
+            args.portal_uri, uuid, portal_auth)
+        if not args.ignore_active_credentials:
+            if not credentials_expired:
+                logger.info(
+                    'Upload credentials for {args.uuid} are not expired yet. Skipping.')
+                return
+        else:
+            logger.warning('Skipping upload credentials expired check')
         assembly = file_metadata.get('assembly')
         output_type = file_metadata.get('output_type')
         file_format_type = file_metadata.get('file_format_type')
@@ -350,6 +375,8 @@ if __name__ == '__main__':
     parser.add_argument('--portal-key-id', type=str, help='Portal key id')
     parser.add_argument('--portal-secret-key', type=str,
                         help='Portal secret key')
+    parser.add_argument('--ignore-active-credentials', action='store_true',
+                        help='If this flag is set, then we omit checking if the file has unexpired upload credentials. There be dragons here, someone might change the underlying file after checking.')
 
     args = parser.parse_args()
     main(args)

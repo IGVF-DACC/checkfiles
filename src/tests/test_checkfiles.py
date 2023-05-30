@@ -1,7 +1,10 @@
+import datetime
+
 from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check
 from checkfiles.checkfiles import check_md5sum, check_content_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, file_validation
 from checkfiles.checkfiles import get_chrom_info_file, get_validate_files_args, validate_files_check, validate_files_fastq_check
 from checkfiles.checkfiles import PortalAuth
+from checkfiles.checkfiles import upload_credentials_are_expired
 from checkfiles.file import File
 from checkfiles.file import FileValidationRecord
 from checkfiles.file import get_file
@@ -146,8 +149,8 @@ def test_validate_files_fastq_check_pass():
     assert error == {}
 
 
-def test_main_fastq():
-    portal_url = 'https://www.encodeproject.org'
+def test_main_fastq(mocker):
+    portal_url = 'url_to_portal'
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
     key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF594AYI.fastq.gz'
     uuid = 'a3b754b6-0213-4ed4-a5f3-124f90273561'
@@ -160,8 +163,19 @@ def test_main_fastq():
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
+    mock_response_session = mocker.Mock()
+    mock_response_session.json.return_value = {
+        '@graph': [
+            {
+                'accession': 'ENCFF594AYI'
+            }
+        ]
+    }
+    mocker.patch('checkfiles.checkfiles.requests.Session.get',
+                 return_value=mock_response_session)
     result = file_validation(portal_url, portal_auth, validation_record,
                              md5sum, output_type, file_format_type, assembly)
+
     assert result == {
         'uuid': 'a3b754b6-0213-4ed4-a5f3-124f90273561',
         'validation_result': 'failed',
@@ -177,7 +191,7 @@ def test_main_fastq():
 
 
 def test_main_bam(mocker):
-    portal_url = 'https://www.encodeproject.org'
+    portal_url = 'url_to_portal'
     file_path = 'src/tests/data/ENCFF206HGF.bam'
     key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF206HGF.bam'
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
@@ -213,7 +227,7 @@ def test_main_bam(mocker):
 
 
 def test_main_tabular(mocker):
-    portal_url = 'https//www.encodeproject.org'
+    portal_url = 'url_to_portal'
     file_path = 'src/tests/data/ENCFF500IBL.tsv'
     key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF500IBL.tsv'
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
@@ -250,7 +264,7 @@ def test_main_tabular(mocker):
 
 
 def test_main_bed(mocker):
-    portal_url = 'https://www.encodeproject.org'
+    portal_url = 'url_to_portal'
     file_path = 'src/tests/data/ENCFF597JNC.bed.gz'
     key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF597JNC.bed.gz'
     uuid = 'a3c64b51-5838-4ad2-a6c3-dc289786f626'
@@ -264,6 +278,16 @@ def test_main_bed(mocker):
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
 
+    mock_response_session = mocker.Mock()
+    mock_response_session.json.return_value = {
+        '@graph': [
+            {
+                'accession': 'ENCFF597JNC'
+            }
+        ]
+    }
+    mocker.patch('checkfiles.checkfiles.requests.Session.get',
+                 return_value=mock_response_session)
     result = file_validation(portal_url, portal_auth, validation_record,
                              md5sum, output_type, file_format_type, assembly)
     assert result == {
@@ -276,3 +300,49 @@ def test_main_bed(mocker):
         },
         'errors': {'content_md5sum_error': 'content md5sum 16a792c57f2de7877b1a09e5bef7cb5c conflicts with content md5sum of existing file(s): ENCFF597JNC'}
     }
+
+
+def test_upload_credentials_are_expired_expired(mocker):
+    patched_current_time = mocker.patch(
+        'checkfiles.checkfiles.get_current_utc_time')
+    patched_current_time.return_value = datetime.datetime(
+        2023, 5, 26, 20, 20, 0, 0, tzinfo=datetime.timezone.utc)
+    mock_response = mocker.Mock()
+    mock_response.json.return_value = {
+        '@graph':
+            [
+                {
+                    'upload_credentials':
+                        {
+                            'expiration': '2023-05-24T08:20:16+00:00'
+                        }
+                }
+            ]
+    }
+    mocker.patch('checkfiles.checkfiles.requests.get',
+                 return_value=mock_response)
+    assert upload_credentials_are_expired(
+        'uri_to_portal', 'file_uuid', PortalAuth('fake', 'creds')) == True
+
+
+def test_upload_credentials_are_expired_not_expired(mocker):
+    patched_current_time = mocker.patch(
+        'checkfiles.checkfiles.get_current_utc_time')
+    patched_current_time.return_value = datetime.datetime(
+        2023, 5, 26, 20, 20, 0, 0, tzinfo=datetime.timezone.utc)
+    mock_response = mocker.Mock()
+    mock_response.json.return_value = {
+        '@graph':
+            [
+                {
+                    'upload_credentials':
+                        {
+                            'expiration': '2023-06-26T08:20:16+00:00'
+                        }
+                }
+            ]
+    }
+    mocker.patch('checkfiles.checkfiles.requests.get',
+                 return_value=mock_response)
+    assert upload_credentials_are_expired(
+        'uri_to_portal', 'file_uuid', PortalAuth('fake', 'creds')) == False
