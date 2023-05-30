@@ -398,7 +398,7 @@ def main(args):
                 jobs.append((args.server, portal_auth, file_validation_record,
                             submitted_md5sum, output_type, file_format_type, assembly))
             for job in jobs:
-                print(job)
+                file_validation(*job)
         except Exception as e:
             logger.exception('Validation failed')
             raise e
