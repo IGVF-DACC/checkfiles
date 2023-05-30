@@ -368,8 +368,7 @@ def main(args):
 # Start script
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Checkfiles argumentparser')
-    parser.add_argument('--uuid', type=str,
-                        help='UUID of the fileobject to be checked.')
+    parser.add_argument('--uuid', type=str, help='UUID of the fileobject to be checked.')
     parser.add_argument(
         '--server', type=str, help='igvf instance to check. https://api.sandbox.igvf.org for example')
     parser.add_argument('--portal-key-id', type=str, help='Portal key id')
