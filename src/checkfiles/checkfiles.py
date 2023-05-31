@@ -403,7 +403,7 @@ def main(args):
                             submitted_md5sum, output_type, file_format_type, assembly))
             number_of_cpus = multiprocessing.cpu_count()
 
-            with multiprocessing.pool(number_of_cpus):
+            with multiprocessing.Pool(number_of_cpus) as pool:
                 results = pool.map(worker, jobs)
 
             print('Validation finished')
