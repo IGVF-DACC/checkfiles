@@ -96,6 +96,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     local_file_path = validation_record.file.path
     true_file_size_bytes = validation_record.file.size
     validation_record.update_info({'file_size': true_file_size_bytes})
+    logger.info(f'{uuid} file size {true_file_size_bytes} bytes'}
     file_format = validation_record.file.file_format
     is_gzipped = validation_record.file.is_zipped
     gzipped_format_error = check_valid_gzipped_file_format(
@@ -103,6 +104,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     validation_record.update_errors(gzipped_format_error)
     validation_record.update_info(
         {'calculated_md5sum': validation_record.file.md5sum})
+    logger.info(f'{uuid} md5sum is {validation_record.file.md5sum}')
     md5_sum_error = check_md5sum(
         submitted_md5sum, validation_record.file.md5sum)
     validation_record.update_errors(md5_sum_error)
@@ -111,6 +113,8 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
             validation_record.file.content_md5sum, portal_auth, portal_url)
         validation_record.update_info(
             {'content_md5sum': validation_record.file.content_md5sum})
+        logger.info(
+            f'{uuid} content_md5sum is {validation_record.file.content_md5sum}')
         validation_record.update_errors(content_md5_error)
     if file_format == 'bam':
         bam_check_result = bam_pysam_check(local_file_path)
