@@ -344,6 +344,10 @@ def fetch_pending_files_metadata(portal_uri: str, portal_auth: PortalAuth) -> li
     return metadata
 
 
+def worker(job):
+    return file_validation(*job)
+
+
 def main(args):
     portal_auth = PortalAuth(args.portal_key_id, args.portal_secret_key)
     if args.uuid:
@@ -397,8 +401,15 @@ def main(args):
                     file_metadata)
                 jobs.append((args.server, portal_auth, file_validation_record,
                             submitted_md5sum, output_type, file_format_type, assembly))
-            for job in jobs:
-                file_validation(*job)
+            number_of_cpus = multiprocessing.cpu_count()
+
+            with multiprocessing.pool(number_of_cpus):
+                results = pool.map(worker, jobs)
+
+            print('Validation finished')
+            print(f'Ran {len(results)} jobs. Results:')
+            for result in results:
+                print(json.dumps(result))
         except Exception as e:
             logger.exception('Validation failed')
             raise e
