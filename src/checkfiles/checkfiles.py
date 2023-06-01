@@ -4,6 +4,7 @@ import gzip
 import hashlib
 import json
 import logging
+import multiprocessing
 import os
 import re
 import requests
@@ -95,6 +96,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     local_file_path = validation_record.file.path
     true_file_size_bytes = validation_record.file.size
     validation_record.update_info({'file_size': true_file_size_bytes})
+    logger.info(f'{uuid} file size {true_file_size_bytes} bytes')
     file_format = validation_record.file.file_format
     is_gzipped = validation_record.file.is_zipped
     gzipped_format_error = check_valid_gzipped_file_format(
@@ -102,6 +104,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     validation_record.update_errors(gzipped_format_error)
     validation_record.update_info(
         {'calculated_md5sum': validation_record.file.md5sum})
+    logger.info(f'{uuid} md5sum is {validation_record.file.md5sum}')
     md5_sum_error = check_md5sum(
         submitted_md5sum, validation_record.file.md5sum)
     validation_record.update_errors(md5_sum_error)
@@ -110,6 +113,8 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
             validation_record.file.content_md5sum, portal_auth, portal_url)
         validation_record.update_info(
             {'content_md5sum': validation_record.file.content_md5sum})
+        logger.info(
+            f'{uuid} content_md5sum is {validation_record.file.content_md5sum}')
         validation_record.update_errors(content_md5_error)
     if file_format == 'bam':
         bam_check_result = bam_pysam_check(local_file_path)
@@ -172,7 +177,6 @@ def check_md5sum(expected_md5sum, calculated_md5sum):
 
 def check_content_md5sum(content_md5sum, portal_auth: Optional[PortalAuth] = None, portal_url=None):
     error = {}
-    logger.info(f'content md5sum is {content_md5sum}')
     url = portal_url + '/search/?type=File&format=json&content_md5sum=' + content_md5sum
     session = requests.Session()
     session.auth = portal_auth
@@ -335,34 +339,83 @@ def upload_credentials_are_expired(portal_uri: str, file_uuid: str, portal_auth:
     return expiration_time < now
 
 
+def fetch_pending_files_metadata(portal_uri: str, portal_auth: PortalAuth) -> list:
+    search = 'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=output_type'
+    search_uri = f'{portal_uri}/{search}'
+    response = requests.get(search_uri, auth=portal_auth)
+    metadata = response.json()['@graph']
+    return metadata
+
+
+def worker(job):
+    return file_validation(*job)
+
+
 def main(args):
-    try:
-        portal_auth = PortalAuth(args.portal_key_id, args.portal_secret_key)
-        file_metadata = fetch_file_metadata_by_uuid(
-            args.uuid, args.server, portal_auth)
-        uuid = args.uuid
-        credentials_expired = upload_credentials_are_expired(
-            args.server, uuid, portal_auth)
-        if not args.ignore_active_credentials:
-            if not credentials_expired:
-                logger.info(
-                    'Upload credentials for {args.uuid} are not expired yet. Skipping.')
+    portal_auth = PortalAuth(args.portal_key_id, args.portal_secret_key)
+    if args.uuid:
+        try:
+            file_metadata = fetch_file_metadata_by_uuid(
+                args.uuid, args.server, portal_auth)
+            uuid = args.uuid
+            credentials_expired = upload_credentials_are_expired(
+                args.server, uuid, portal_auth)
+            if not args.ignore_active_credentials:
+                if not credentials_expired:
+                    logger.info(
+                        'Upload credentials for {args.uuid} are not expired yet. Skipping.')
+                    return
+            else:
+                logger.warning('Skipping upload credentials expired check')
+            assembly = file_metadata.get('assembly')
+            output_type = file_metadata.get('output_type')
+            file_format_type = file_metadata.get('file_format_type')
+            submitted_md5sum = file_metadata['md5sum']
+            file_validation_record = get_file_validation_record_from_metadata(
+                file_metadata)
+            response = file_validation(args.server, portal_auth, file_validation_record,
+                                       submitted_md5sum, output_type, file_format_type, assembly=assembly)
+            print(json.dumps(response))
+        except Exception as err:
+            message = f'exception occurred when checking file uuid {args.uuid}: {str(err)}'
+            logger.exception(message)
+            sys.exit(1)  # Retry Job Task by exiting the process
+    else:
+        try:
+            pending_files = fetch_pending_files_metadata(
+                args.server, portal_auth)
+            if not pending_files:
+                logger.info('No files in pending state found. Exiting.')
                 return
-        else:
-            logger.warning('Skipping upload credentials expired check')
-        assembly = file_metadata.get('assembly')
-        output_type = file_metadata.get('output_type')
-        file_format_type = file_metadata.get('file_format_type')
-        submitted_md5sum = file_metadata['md5sum']
-        file_validation_record = get_file_validation_record_from_metadata(
-            file_metadata)
-        response = file_validation(args.server, portal_auth, file_validation_record,
-                                   submitted_md5sum, output_type, file_format_type, assembly=assembly)
-        print(json.dumps(response))
-    except Exception as err:
-        message = f'exception occurred when checking file uuid {args.uuid}: {str(err)}'
-        logger.exception(message)
-        sys.exit(1)  # Retry Job Task by exiting the process
+            jobs = []
+            for file_metadata in pending_files:
+                uuid = file_metadata['uuid']
+                credentials_expired = upload_credentials_are_expired(
+                    args.server, uuid, portal_auth)
+                if not credentials_expired:
+                    logger.info(
+                        'Upload credentials for {uuid} not expired yet, skipping check.')
+                    continue
+                assembly = file_metadata.get('assembly')
+                output_type = file_metadata.get('output_type')
+                file_format_type = file_metadata.get('file_format_type')
+                submitted_md5sum = file_metadata['md5sum']
+                file_validation_record = get_file_validation_record_from_metadata(
+                    file_metadata)
+                jobs.append((args.server, portal_auth, file_validation_record,
+                            submitted_md5sum, output_type, file_format_type, assembly))
+            number_of_cpus = multiprocessing.cpu_count()
+
+            with multiprocessing.Pool(number_of_cpus) as pool:
+                results = pool.map(worker, jobs)
+
+            print('Validation finished')
+            print(f'Ran {len(results)} jobs. Results:')
+            for result in results:
+                print(json.dumps(result))
+        except Exception as e:
+            logger.exception('Validation failed')
+            raise e
 
 
 # Start script
