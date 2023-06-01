@@ -96,7 +96,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     local_file_path = validation_record.file.path
     true_file_size_bytes = validation_record.file.size
     validation_record.update_info({'file_size': true_file_size_bytes})
-    logger.info(f'{uuid} file size {true_file_size_bytes} bytes'}
+    logger.info(f'{uuid} file size {true_file_size_bytes} bytes')
     file_format = validation_record.file.file_format
     is_gzipped = validation_record.file.is_zipped
     gzipped_format_error = check_valid_gzipped_file_format(
