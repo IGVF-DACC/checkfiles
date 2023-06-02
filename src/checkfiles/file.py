@@ -73,9 +73,20 @@ class FileValidationRecord:
         self.errors = {}
         self.info = {}
         self.validation_result = None
+        self.__original_etag = None
 
     def update_errors(self, error: dict):
         self.errors.update(error)
 
     def update_info(self, info: dict):
         self.info.update(info)
+
+    @property
+    def original_etag(self):
+        return self.__original_etag
+
+    @original_etag.setter
+    def original_etag(self, value):
+        if self.__original_etag is not None:
+            raise ValueError('Cannot set original_etag twice.')
+        self.__original_etag = value
