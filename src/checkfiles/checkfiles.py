@@ -148,13 +148,15 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
             'uuid': uuid,
             'validation_result': 'failed',
             'errors': validation_record.errors,
-            'info': validation_record.info
+            'info': validation_record.info,
+            'etag': validation_record.original_etag
         }
     else:
         return {
             'uuid': uuid,
             'info': validation_record.info,
-            'validation_result': 'pass'
+            'validation_result': 'pass',
+            'etag': validation_record.original_etag
         }
 
 
@@ -347,6 +349,13 @@ def fetch_pending_files_metadata(portal_uri: str, portal_auth: PortalAuth) -> li
     return metadata
 
 
+def fetch_etag_for_uuid(portal_uri: str, file_uuid: str, portal_auth: PortalAuth) -> str:
+    request_uri = f'{portal_uri}/{file_uuid}?frame=edit&datastore=database'
+    etag_response = requests.get(request_uri, auth=auth)
+    etag = etag_response.headers['etag']
+    return etag
+
+
 def worker(job):
     return file_validation(*job)
 
@@ -360,6 +369,7 @@ def main(args):
             uuid = args.uuid
             credentials_expired = upload_credentials_are_expired(
                 args.server, uuid, portal_auth)
+
             if not args.ignore_active_credentials:
                 if not credentials_expired:
                     logger.info(
@@ -373,8 +383,25 @@ def main(args):
             submitted_md5sum = file_metadata['md5sum']
             file_validation_record = get_file_validation_record_from_metadata(
                 file_metadata)
+            etag_original_r = requests.get(
+                f'{args.server}/{args.uuid}?frame=edit&datastore=database', auth=portal_auth)
+            etag_original = etag_original_r.headers['etag']
+            file_validation_record.original_etag = etag
             response = file_validation(args.server, portal_auth, file_validation_record,
                                        submitted_md5sum, output_type, file_format_type, assembly=assembly)
+            if args.patch:
+                # check etag first
+                etag_after_r = requests.get(
+                    f'{args.server}/{args.uuid}?frame=edit&datastore=database', auth=portal_auth)
+                etag_after = etag_after_r.headers['etag']
+                if not etag_after == file_validation_record.original_etag:
+                    logger.warning(
+                        'etag original {etag_original} does not match etag after validation {etag_after}. Will not patch {args.uuid}.')
+                    return
+                else:
+                    logger.info(
+                        'etag original {etag_original} matches etag after validation {etag_after}. Will patch {args.uuid}.')
+
             print(json.dumps(response))
         except Exception as err:
             message = f'exception occurred when checking file uuid {args.uuid}: {str(err)}'
@@ -428,6 +455,8 @@ if __name__ == '__main__':
     parser.add_argument('--portal-key-id', type=str, help='Portal key id')
     parser.add_argument('--portal-secret-key', type=str,
                         help='Portal secret key')
+    parser.add_argument('--patch', action='store_true',
+                        help='Patch the checked objects.')
     parser.add_argument('--ignore-active-credentials', action='store_true',
                         help='If this flag is set, then we omit checking if the file has unexpired upload credentials. There be dragons here, someone might change the underlying file after checking.')
 

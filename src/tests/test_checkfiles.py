@@ -163,6 +163,7 @@ def test_main_fastq(mocker):
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
+    validation_record.original_etag = 'foobar'
     mock_response_session = mocker.Mock()
     mock_response_session.json.return_value = {
         '@graph': [
@@ -179,6 +180,7 @@ def test_main_fastq(mocker):
     assert result == {
         'uuid': 'a3b754b6-0213-4ed4-a5f3-124f90273561',
         'validation_result': 'failed',
+        'etag': 'foobar',
         'info': {
             'calculated_md5sum': '3e814f4af7a4c13460584b26fbe32dc4',
             'content_md5sum': '1fa9f74aa895c4c938e1712bedf044ec',
@@ -204,6 +206,7 @@ def test_main_bam(mocker):
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
+    validation_record.original_etag = 'foobar'
 
     mock_response_session = mocker.Mock()
     mock_response_session.json.return_value = {
@@ -216,6 +219,7 @@ def test_main_bam(mocker):
                              md5sum, output_type, file_format_type, assembly)
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
+        'etag': 'foobar',
         'info': {
             'calculated_md5sum': '2d3b7df013d257c7052c084d93ff9026',
             'content_md5sum': '9095bad36672afefd7bf9165d89b4eb5',
@@ -240,6 +244,7 @@ def test_main_tabular(mocker):
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
+    validation_record.original_etag = 'foobar'
 
     mock_response_get_local_file_path = mocker.Mock()
     mock_response_get_local_file_path.json.return_value = {
@@ -253,6 +258,7 @@ def test_main_tabular(mocker):
     assert result == {
         'uuid': '5b887ab3-65d3-4965-97bd-42bea7358431',
         'validation_result': 'failed',
+        'etag': 'foobar',
         'info': {
             'calculated_md5sum': '4b0b3c68fafc5a26d0fc6150baadaa5b',
             'file_size': 22585},
@@ -277,6 +283,7 @@ def test_main_bed(mocker):
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
+    validation_record.original_etag = 'foobar'
 
     mock_response_session = mocker.Mock()
     mock_response_session.json.return_value = {
@@ -293,6 +300,7 @@ def test_main_bed(mocker):
     assert result == {
         'uuid': 'a3c64b51-5838-4ad2-a6c3-dc289786f626',
         'validation_result': 'failed',
+        'etag': 'foobar',
         'info': {
             'calculated_md5sum': 'd1bae8af8fec54424cff157134652d26',
             'content_md5sum': '16a792c57f2de7877b1a09e5bef7cb5c',
