@@ -386,7 +386,7 @@ def main(args):
             etag_original_r = requests.get(
                 f'{args.server}/{args.uuid}?frame=edit&datastore=database', auth=portal_auth)
             etag_original = etag_original_r.headers['etag']
-            file_validation_record.original_etag = etag
+            file_validation_record.original_etag = etag_original
             response = file_validation(args.server, portal_auth, file_validation_record,
                                        submitted_md5sum, output_type, file_format_type, assembly=assembly)
             if args.patch:
