@@ -41,8 +41,10 @@ def test_fastq_get_average_read_length_and_number_of_reads():
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
     result = fastq_get_average_read_length_and_number_of_reads(file_path)
     assert result == {
-        'fastq_number_of_reads': 25,
-        'fastq_read_length': 58
+        'read_count': 25,
+        'mean_read_length': 58,
+        'maximum_read_length': 58,
+        'minimum_read_length': 58
     }
 
 
@@ -185,8 +187,10 @@ def test_main_fastq(mocker):
             'calculated_md5sum': '3e814f4af7a4c13460584b26fbe32dc4',
             'content_md5sum': '1fa9f74aa895c4c938e1712bedf044ec',
             'file_size': 1371,
-            'fastq_number_of_reads': 25,
-            'fastq_read_length': 58
+            'read_count': 25,
+            'mean_read_length': 58,
+            'minimum_read_length': 58,
+            'maximum_read_length': 58
         },
         'errors': {'content_md5sum_error': 'content md5sum 1fa9f74aa895c4c938e1712bedf044ec conflicts with content md5sum of existing file(s): ENCFF594AYI'}
     }

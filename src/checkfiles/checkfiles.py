@@ -221,10 +221,10 @@ def fastq_get_average_read_length_and_number_of_reads(file_path):
     fq = pyfastx.Fastq(temp_file.name)
     count = len(fq)
     avg_len = int(fq.avglen)
-    logger.info(f'number of reads is {count}')
-    logger.info(f'read length is {avg_len}')
-    info['fastq_number_of_reads'] = count
-    info['fastq_read_length'] = avg_len
+    info['read_count'] = count
+    info['mean_read_length'] = avg_len
+    info['minimum_read_length'] = fq.minlen
+    info['maximum_read_length'] = fq.maxlen
     fxi_file_path = temp_file.name + '.fxi'
     if os.path.exists(fxi_file_path):
         os.remove(fxi_file_path)
@@ -317,7 +317,7 @@ def make_local_path_from_s3_uri(s3_uri: str):
 
 def get_file_validation_record_from_metadata(file_metadata: dict, mount_basedir=os.environ.get('HOME')):
     if not ('s3_uri' in file_metadata and 'file_format' in file_metadata and 'uuid' in file_metadata):
-        raise ValueError('Invalid metdata dict')
+        raise ValueError('Invalid metadata dict')
     else:
         path = mount_basedir + \
             make_local_path_from_s3_uri(file_metadata['s3_uri'])
