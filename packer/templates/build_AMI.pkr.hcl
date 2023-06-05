@@ -11,7 +11,7 @@ variable "aws_secret_key" {
 
 variable "aws_profile_name" {
   type    = string
-  default = ""
+  default = "igvf-staging"
 }
 
 variable "aws_region" {
