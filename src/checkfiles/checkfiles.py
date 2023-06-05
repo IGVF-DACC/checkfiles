@@ -396,11 +396,11 @@ def main(args):
                 etag_after = etag_after_r.headers['etag']
                 if not etag_after == file_validation_record.original_etag:
                     logger.warning(
-                        'etag original {etag_original} does not match etag after validation {etag_after}. Will not patch {args.uuid}.')
+                        f'etag original {etag_original} does not match etag after validation {etag_after}. Will not patch {args.uuid}.')
                     return
                 else:
                     logger.info(
-                        'etag original {etag_original} matches etag after validation {etag_after}. Will patch {args.uuid}.')
+                        f'etag original {etag_original} matches etag after validation {etag_after}. Will patch {args.uuid}.')
 
             print(json.dumps(response))
         except Exception as err:
