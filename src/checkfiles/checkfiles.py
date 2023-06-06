@@ -442,6 +442,10 @@ def main(args):
                 submitted_md5sum = file_metadata['md5sum']
                 file_validation_record = get_file_validation_record_from_metadata(
                     file_metadata)
+                etag_original_r = requests.get(
+                    f'{args.server}/{args.uuid}?frame=edit&datastore=database', auth=portal_auth)
+                etag_original = etag_original_r.headers['etag']
+                file_validation_record.original_etag = etag_original
                 jobs.append((args.server, portal_auth, file_validation_record,
                             submitted_md5sum, output_type, file_format_type, assembly))
             number_of_cpus = multiprocessing.cpu_count()
