@@ -96,11 +96,12 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     local_file_path = validation_record.file.path
     try:
         true_file_size_bytes = validation_record.file.size
+        validation_record.update_info({'file_size': true_file_size_bytes})
     except FileNotFoundError:
         logger.warning(f'File not found for {uuid}')
         validation_record.file_not_found = True
         validation_record.update_errors({'file_not_found': 'File Not Found'})
-    validation_record.update_info({'file_size': true_file_size_bytes})
+        return validation_record
     logger.info(f'{uuid} file size {true_file_size_bytes} bytes')
     file_format = validation_record.file.file_format
     is_gzipped = validation_record.file.is_zipped
@@ -108,7 +109,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         is_gzipped, file_format)
     validation_record.update_errors(gzipped_format_error)
     validation_record.update_info(
-        {'calculated_md5sum': validation_record.file.md5sum})
+        {'md5sum': validation_record.file.md5sum})
     logger.info(f'{uuid} md5sum is {validation_record.file.md5sum}')
     md5_sum_error = check_md5sum(
         submitted_md5sum, validation_record.file.md5sum)
@@ -149,20 +150,11 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         f'Completed file validation for file uuid {uuid}.')
 
     if validation_record.errors:
-        return {
-            'uuid': uuid,
-            'validation_result': 'failed',
-            'errors': validation_record.errors,
-            'info': validation_record.info,
-            'etag': validation_record.original_etag
-        }
+        validation_record.validation_success = False
+        return validation_record
     else:
-        return {
-            'uuid': uuid,
-            'info': validation_record.info,
-            'validation_result': 'pass',
-            'etag': validation_record.original_etag
-        }
+        validation_record.validation_success = True
+        return validation_record
 
 
 def check_valid_gzipped_file_format(is_gzipped, file_format, zip_file_format=ZIP_FILE_FORMAT):
@@ -392,14 +384,14 @@ def main(args):
                 f'{args.server}/{args.uuid}?frame=edit&datastore=database', auth=portal_auth)
             etag_original = etag_original_r.headers['etag']
             file_validation_record.original_etag = etag_original
-            response = file_validation(args.server, portal_auth, file_validation_record,
-                                       submitted_md5sum, output_type, file_format_type, assembly=assembly)
+            file_validation_complete_record = file_validation(args.server, portal_auth, file_validation_record,
+                                                              submitted_md5sum, output_type, file_format_type, assembly=assembly)
             if args.patch:
                 # check etag first
                 etag_after_r = requests.get(
                     f'{args.server}/{args.uuid}?frame=edit&datastore=database', auth=portal_auth)
                 etag_after = etag_after_r.headers['etag']
-                if not etag_after == file_validation_record.original_etag:
+                if not etag_after == file_validation_complete_record.original_etag:
                     logger.warning(
                         f'etag original {etag_original} does not match etag after validation {etag_after}. Will not patch {args.uuid}.')
                     return

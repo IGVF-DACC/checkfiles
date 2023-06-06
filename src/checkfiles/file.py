@@ -77,7 +77,7 @@ class FileValidationRecord:
         self.errors = {}
         self.info = {}
         self.file_not_found = False
-        self.validation_result = None
+        self.validation_success = None
         self.__original_etag = None
 
     def update_errors(self, error: dict):
