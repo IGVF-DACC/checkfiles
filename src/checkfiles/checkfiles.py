@@ -94,7 +94,12 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     uuid = validation_record.uuid
     logger.info(f'Checking file uuid {uuid}')
     local_file_path = validation_record.file.path
-    true_file_size_bytes = validation_record.file.size
+    try:
+        true_file_size_bytes = validation_record.file.size
+    except FileNotFoundError:
+        logger.warning(f'File not found for {uuid}')
+        validation_record.file_not_found = True
+        validation_record.update_errors({'file_not_found': 'File Not Found'})
     validation_record.update_info({'file_size': true_file_size_bytes})
     logger.info(f'{uuid} file size {true_file_size_bytes} bytes')
     file_format = validation_record.file.file_format
