@@ -18,6 +18,7 @@ import pyfastx
 import pysam
 
 from collections import namedtuple
+from time import sleep
 from typing import Optional
 
 from FastaValidator import fasta_validator
@@ -339,7 +340,7 @@ def upload_credentials_are_expired(portal_uri: str, file_uuid: str, portal_auth:
 
 
 def fetch_pending_files_metadata(portal_uri: str, portal_auth: PortalAuth) -> list:
-    search = 'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=output_type'
+    search = 'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=output_type&limit=4'
     search_uri = f'{portal_uri}/{search}'
     response = requests.get(search_uri, auth=portal_auth)
     metadata = response.json()['@graph']
@@ -449,9 +450,27 @@ def main(args):
                 results = pool.map(worker, jobs)
 
             print('Validation finished')
-            print(f'Ran {len(results)} jobs. Results:')
-            for result in results:
-                print(json.dumps(result))
+            if args.patch:
+                logger.info('Patch flag was set, attempting to patch.')
+                for result in results:
+                    current_uuid = result.uuid
+                    original_etag = result.original_etag
+                    etag_after_r = requests.get(
+                        f'{args.server}/{current_uuid}?frame=edit&datastore=database', auth=portal_auth)
+                    etag_after = etag_after_r.headers['etag']
+                    if not etag_after == original_etag:
+                        logger.warning(
+                            f'etag original {original_etag} does not match etag after validation {etag_after}. Will not patch {current_uuid}.')
+                        return
+                    else:
+                        logger.info(
+                            f'etag original {original_etag} matches etag after validation {etag_after}. Will patch {current_uuid}.')
+                        patch_response = patch_file(
+                            args.server, portal_auth, result)
+                        logger.info(
+                            f'Attemted patching {current_uuid}. patch response:')
+                        logger.info(json.dumps(patch_response))
+                    time.sleep(1)
         except Exception as e:
             logger.exception('Validation failed')
             raise e
