@@ -1,5 +1,6 @@
 import gzip
 import hashlib
+import json
 import os
 
 from typing import Optional
@@ -95,3 +96,17 @@ class FileValidationRecord:
         if self.__original_etag is not None:
             raise ValueError('Cannot set original_etag twice.')
         self.__original_etag = value
+
+    def make_payload(self):
+        payload = {}
+        if self.errors:
+            payload.update(
+                {'validation_error_detail': json.dumps(self.errors)})
+            payload.update({'upload_status': 'invalidated'})
+        if self.info:
+            payload.update(self.info)
+        if self.validation_success:
+            payload.update({'upload_status': 'validated'})
+        if self.file_not_found:
+            payload.update({'upload_status': 'file not found'})
+        return json.dumps(payload)
