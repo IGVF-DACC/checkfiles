@@ -357,6 +357,19 @@ def worker(job):
     return file_validation(*job)
 
 
+def patch_file(portal_uri: str, portal_auth: PortalAuth, validation_record: FileValidationRecord) -> dict:
+    headers = {
+        'accept': 'application/json',
+        'Content-Type': 'application/json'
+    }
+    uuid_to_patch = validation_record.uuid
+    payload = validation_record.make_payload()
+    logger.info(f'Patching {uuid_to_patch} on {portal_uri}')
+    response = requests.patch(
+        f'{portal_uri}/{uuid_to_patch}', data=payload, headers=headers, auth=portal_auth)
+    return response.json()
+
+
 def main(args):
     portal_auth = PortalAuth(args.portal_key_id, args.portal_secret_key)
     if args.uuid:
@@ -398,8 +411,10 @@ def main(args):
                 else:
                     logger.info(
                         f'etag original {etag_original} matches etag after validation {etag_after}. Will patch {args.uuid}.')
+                    patch_response = patch_file(
+                        args.server, portal_auth, file_validation_complete_record)
 
-            print(json.dumps(response))
+            print(json.dumps(patch_response))
         except Exception as err:
             message = f'exception occurred when checking file uuid {args.uuid}: {str(err)}'
             logger.exception(message)
