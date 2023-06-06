@@ -9,7 +9,7 @@ class File:
     def __init__(self, path: str, file_format: str):
         self.file_format = file_format
         self.path = path
-        self.__size = os.path.getsize(path)
+        self.__size = None
         self.__md5sum = None
         self.__content_md5sum = None
         self.__is_zipped = None
@@ -42,7 +42,11 @@ class File:
 
     @property
     def size(self):
-        return self.__size
+        if self.__size is not None:
+            return self.__size
+        else:
+            self.__size = os.path.getsize(self.path)
+            return self.__size
 
     def _calculate_content_md5sum(self):
         return self._calculate_md5sum(open_func=gzip.open)
