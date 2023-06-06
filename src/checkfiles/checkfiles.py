@@ -357,7 +357,7 @@ def worker(job):
     return file_validation(*job)
 
 
-def patch_file(portal_uri: str, portal_auth: PortalAuth, validation_record: FileValidationRecord) -> dict:
+def patch_file(portal_uri: str, portal_auth: PortalAuth, validation_record: file.FileValidationRecord) -> dict:
     headers = {
         'accept': 'application/json',
         'Content-Type': 'application/json'
