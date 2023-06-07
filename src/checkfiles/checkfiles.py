@@ -11,6 +11,7 @@ import requests
 import shutil
 import subprocess
 import sys
+import time
 import tempfile
 import traceback
 
@@ -18,7 +19,6 @@ import pyfastx
 import pysam
 
 from collections import namedtuple
-from time import sleep
 from typing import Optional
 
 from FastaValidator import fasta_validator
