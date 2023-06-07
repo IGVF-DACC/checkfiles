@@ -30,7 +30,9 @@ Additional checks for FASTA file:
 Additional checks for FASTQ file:
 
 - The number of reads
-- Average Read length
+- Mean Read length
+- Minimum Read length
+- Maximum Read length
 
 ## File types for validation
 
