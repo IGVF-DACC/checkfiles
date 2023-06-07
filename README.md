@@ -69,7 +69,7 @@ optional arguments:
                         If this flag is set, then we omit checking if the file has unexpired upload credentials. There be dragons here, someone might change the underlying file after checking.
 ```
 
-Note that if `uuid` flag is not set, all the files with `upload_status=pending` will be checked.
+Note that if `uuid` flag is not set, all the files with `upload_status=pending` will be checked. It may be prudent to use `screen` to run because the job can take several hours.
 
 ## Running checkfiles on EC2
 
@@ -90,6 +90,7 @@ To run checkfiles on the instance prepared above:
 $ cd checkfiles
 $ python3 -m venv venv
 $ source venv/bin/activate
+$ pip install -r src/checkfiles/requirements.txt
 ```
 
 2. Run (for example for uuid=`my_file_uuid` on sandbox):

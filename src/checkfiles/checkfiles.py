@@ -340,7 +340,7 @@ def upload_credentials_are_expired(portal_uri: str, file_uuid: str, portal_auth:
 
 
 def fetch_pending_files_metadata(portal_uri: str, portal_auth: PortalAuth) -> list:
-    search = 'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=output_type&limit=4'
+    search = 'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=output_type'
     search_uri = f'{portal_uri}/{search}'
     response = requests.get(search_uri, auth=portal_auth)
     metadata = response.json()['@graph']
@@ -472,7 +472,7 @@ def main(args):
                         patch_response = patch_file(
                             args.server, portal_auth, result)
                         logger.info(
-                            f'Attemted patching {current_uuid}. patch response:')
+                            f'Attempted patching {current_uuid}. patch response:')
                         logger.info(json.dumps(patch_response))
                     time.sleep(1)
         except Exception as e:
