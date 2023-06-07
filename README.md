@@ -48,6 +48,29 @@ Additional checks for FASTQ file:
 - TSV
 
 
+## Usage:
+
+```bash
+$ python src/checkfiles/checkfiles.py -h
+usage: checkfiles.py [-h] [--uuid UUID] [--server SERVER] [--portal-key-id PORTAL_KEY_ID] [--portal-secret-key PORTAL_SECRET_KEY] [--patch] [--ignore-active-credentials]
+
+Checkfiles argumentparser
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --uuid UUID           UUID of the fileobject to be checked.
+  --server SERVER       igvf instance to check. https://api.sandbox.igvf.org for example
+  --portal-key-id PORTAL_KEY_ID
+                        Portal key id
+  --portal-secret-key PORTAL_SECRET_KEY
+                        Portal secret key
+  --patch               Patch the checked objects.
+  --ignore-active-credentials
+                        If this flag is set, then we omit checking if the file has unexpired upload credentials. There be dragons here, someone might change the underlying file after checking.
+```
+
+Note that if `uuid` flag is not set, all the files with `upload_status=pending` will be checked.
+
 ## Running checkfiles on EC2
 
 In order to deploy a checkfiles EC2 instance (right now it makes most sense to run on igvf-staging account, to easily have access both to sandbox and prod from same machine).
@@ -74,40 +97,8 @@ $ source venv/bin/activate
 venv/bin/python src/checkfiles/checkfiles.py --server https://api.sandbox.igvf.org --portal-key-id portal_key_id --portal-secret-key my_secret_key --uuid my_file_uuid
 ```
 
-
-
-## Run checkfiles in docker
-
-- Build the image
-
-`docker image build -f docker/Dockerfile -t checkfiles .`
-
-- There are some test file examples in file_examples folder. You can use one of them to run the build
-
-```bash
-docker run -it --privileged --platform linux/amd64 \
-    --env-file src/file_examples/bed_bed3+_env.txt \
-    -e AWS_ACCESS_KEY_ID=xxxxxxxx -e AWS_SECRET_ACCESS_KEY=xxxxxxxx\
-    -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_SECRET_KEY=xxxxxxxx\
-    checkfiles
-```
-
 ## Testing
 
-Use the docker image to run test.
-
-```bash
-docker run -it --privileged --platform linux/amd64 \
-    -e AWS_ACCESS_KEY_ID=xxxxxxxx -e AWS_SECRET_ACCESS_KEY=xxxxxxxx\
-    -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_SECRET_KEY=xxxxxxxx\
-    checkfiles pytest
-```
-
-To measure the code coverage of your tests, use the coverage command to run pytest instead of running it directly.
-
-```bash
-docker run -it --privileged --platform linux/amd64 \
-    -e AWS_ACCESS_KEY_ID=xxxxxxxx -e AWS_SECRET_ACCESS_KEY=xxxxxxxx\
-    -e ENCODE_ACCESS_KEY=xxxxxxxx -e ENCODE_SECRET_KEY=xxxxxxxx\
-    checkfiles coverage run -m pytest && coverage report
-```
+1. Download `validateFiles` from http://hgdownload.cse.ucsc.edu/admin/exe/. If you are running on M1 mac, the file you want is http://hgdownload.cse.ucsc.edu/admin/exe/macOSX.arm64/validateFiles. Make sure `validateFiles` is available in your `$PATH`.
+2. Create a virtualenvironment and install requirements from `src/checkfiles/requirements.txt`.
+3. Run tests with `pytest`
