@@ -82,7 +82,10 @@ In order to deploy a checkfiles EC2 instance (right now it makes most sense to r
 6. Under `Advanced details` IAM instance profile, attach `checkfiles-instance` profile to the machine.
 7. Deploy. Select "Proceed without key pair" Wait for the machine to come up.
 8. Connect to the machine using https://pypi.org/project/ec2instanceconnectcli/
-9. On the machine clone this repo into the home directory of the default ubuntu user.
+9. On the machine clone this repo into the home directory of the default ubuntu user:
+```bash
+$ git clone https://github.com/IGVF-DACC/checkfiles.git
+```
 
 To run checkfiles on the instance prepared above:
 1. Build the python environment and activate:
