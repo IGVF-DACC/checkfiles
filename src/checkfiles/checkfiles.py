@@ -349,7 +349,7 @@ def fetch_pending_files_metadata(portal_uri: str, portal_auth: PortalAuth) -> li
 
 def fetch_etag_for_uuid(portal_uri: str, file_uuid: str, portal_auth: PortalAuth) -> str:
     request_uri = f'{portal_uri}/{file_uuid}?frame=edit&datastore=database'
-    etag_response = requests.get(request_uri, auth=auth)
+    etag_response = requests.get(request_uri, auth=portal_auth)
     etag = etag_response.headers['etag']
     return etag
 
