@@ -78,7 +78,7 @@ In order to deploy a checkfiles EC2 instance (right now it makes most sense to r
 2. Go to EC2 console and in the left tab select `AMIs`
 3. Select the newest `checkfiles__ami` (`ami-02001e7412122509a`)
 4. Click `Launch instance from AMI`.
-5. Select instsance type, and add storage. 200GB should be enough for anything.
+5. Select instance type, and add storage. 200GB should be enough for anything. Instance size depends on the resource requirements. For instance type, t2 family of general purpose instances is good.
 6. Under `Advanced details` IAM instance profile, attach `checkfiles-instance` profile to the machine.
 7. Deploy. Select "Proceed without key pair" Wait for the machine to come up.
 8. Connect to the machine using https://pypi.org/project/ec2instanceconnectcli/

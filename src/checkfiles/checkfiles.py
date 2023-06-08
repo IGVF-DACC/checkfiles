@@ -394,17 +394,15 @@ def main(args):
             submitted_md5sum = file_metadata['md5sum']
             file_validation_record = get_file_validation_record_from_metadata(
                 file_metadata)
-            etag_original_r = requests.get(
-                f'{args.server}/{args.uuid}?frame=edit&datastore=database', auth=portal_auth)
-            etag_original = etag_original_r.headers['etag']
+            etag_original = fetch_etag_for_uuid(
+                args.server, args.uuid, portal_auth)
             file_validation_record.original_etag = etag_original
             file_validation_complete_record = file_validation(args.server, portal_auth, file_validation_record,
                                                               submitted_md5sum, output_type, file_format_type, assembly=assembly)
             if args.patch:
                 # check etag first
-                etag_after_r = requests.get(
-                    f'{args.server}/{args.uuid}?frame=edit&datastore=database', auth=portal_auth)
-                etag_after = etag_after_r.headers['etag']
+                etag_after = fetch_etag_for_uuid(
+                    args.server, args.uuid, portal_auth)
                 if not etag_after == file_validation_complete_record.original_etag:
                     logger.warning(
                         f'etag original {etag_original} does not match etag after validation {etag_after}. Will not patch {args.uuid}.')
@@ -442,9 +440,8 @@ def main(args):
                 submitted_md5sum = file_metadata['md5sum']
                 file_validation_record = get_file_validation_record_from_metadata(
                     file_metadata)
-                etag_original_r = requests.get(
-                    f'{args.server}/{uuid}?frame=edit&datastore=database', auth=portal_auth)
-                etag_original = etag_original_r.headers['etag']
+                etag_original = fetch_etag_for_uuid(
+                    args.server, uuid, portal_auth)
                 file_validation_record.original_etag = etag_original
                 jobs.append((args.server, portal_auth, file_validation_record,
                             submitted_md5sum, output_type, file_format_type, assembly))
@@ -459,9 +456,8 @@ def main(args):
                 for result in results:
                     current_uuid = result.uuid
                     original_etag = result.original_etag
-                    etag_after_r = requests.get(
-                        f'{args.server}/{current_uuid}?frame=edit&datastore=database', auth=portal_auth)
-                    etag_after = etag_after_r.headers['etag']
+                    etag_after = fetch_etag_for_uuid(
+                        args.server, current_uuid, portal_auth)
                     if not etag_after == original_etag:
                         logger.warning(
                             f'etag original {original_etag} does not match etag after validation {etag_after}. Will not patch {current_uuid}.')
