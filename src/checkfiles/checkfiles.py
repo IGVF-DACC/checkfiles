@@ -11,6 +11,7 @@ import requests
 import shutil
 import subprocess
 import sys
+import time
 import tempfile
 import traceback
 
@@ -94,8 +95,14 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     uuid = validation_record.uuid
     logger.info(f'Checking file uuid {uuid}')
     local_file_path = validation_record.file.path
-    true_file_size_bytes = validation_record.file.size
-    validation_record.update_info({'file_size': true_file_size_bytes})
+    try:
+        true_file_size_bytes = validation_record.file.size
+        validation_record.update_info({'file_size': true_file_size_bytes})
+    except FileNotFoundError:
+        logger.warning(f'File not found for {uuid}')
+        validation_record.file_not_found = True
+        validation_record.update_errors({'file_not_found': 'File Not Found'})
+        return validation_record
     logger.info(f'{uuid} file size {true_file_size_bytes} bytes')
     file_format = validation_record.file.file_format
     is_gzipped = validation_record.file.is_zipped
@@ -103,7 +110,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         is_gzipped, file_format)
     validation_record.update_errors(gzipped_format_error)
     validation_record.update_info(
-        {'calculated_md5sum': validation_record.file.md5sum})
+        {'md5sum': validation_record.file.md5sum})
     logger.info(f'{uuid} md5sum is {validation_record.file.md5sum}')
     md5_sum_error = check_md5sum(
         submitted_md5sum, validation_record.file.md5sum)
@@ -144,18 +151,11 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         f'Completed file validation for file uuid {uuid}.')
 
     if validation_record.errors:
-        return {
-            'uuid': uuid,
-            'validation_result': 'failed',
-            'errors': validation_record.errors,
-            'info': validation_record.info
-        }
+        validation_record.validation_success = False
+        return validation_record
     else:
-        return {
-            'uuid': uuid,
-            'info': validation_record.info,
-            'validation_result': 'pass'
-        }
+        validation_record.validation_success = True
+        return validation_record
 
 
 def check_valid_gzipped_file_format(is_gzipped, file_format, zip_file_format=ZIP_FILE_FORMAT):
@@ -219,10 +219,10 @@ def fastq_get_average_read_length_and_number_of_reads(file_path):
     fq = pyfastx.Fastq(temp_file.name)
     count = len(fq)
     avg_len = int(fq.avglen)
-    logger.info(f'number of reads is {count}')
-    logger.info(f'read length is {avg_len}')
-    info['fastq_number_of_reads'] = count
-    info['fastq_read_length'] = avg_len
+    info['read_count'] = count
+    info['mean_read_length'] = avg_len
+    info['minimum_read_length'] = fq.minlen
+    info['maximum_read_length'] = fq.maxlen
     fxi_file_path = temp_file.name + '.fxi'
     if os.path.exists(fxi_file_path):
         os.remove(fxi_file_path)
@@ -315,7 +315,7 @@ def make_local_path_from_s3_uri(s3_uri: str):
 
 def get_file_validation_record_from_metadata(file_metadata: dict, mount_basedir=os.environ.get('HOME')):
     if not ('s3_uri' in file_metadata and 'file_format' in file_metadata and 'uuid' in file_metadata):
-        raise ValueError('Invalid metdata dict')
+        raise ValueError('Invalid metadata dict')
     else:
         path = mount_basedir + \
             make_local_path_from_s3_uri(file_metadata['s3_uri'])
@@ -347,8 +347,28 @@ def fetch_pending_files_metadata(portal_uri: str, portal_auth: PortalAuth) -> li
     return metadata
 
 
+def fetch_etag_for_uuid(portal_uri: str, file_uuid: str, portal_auth: PortalAuth) -> str:
+    request_uri = f'{portal_uri}/{file_uuid}?frame=edit&datastore=database'
+    etag_response = requests.get(request_uri, auth=portal_auth)
+    etag = etag_response.headers['etag']
+    return etag
+
+
 def worker(job):
     return file_validation(*job)
+
+
+def patch_file(portal_uri: str, portal_auth: PortalAuth, validation_record: file.FileValidationRecord) -> dict:
+    headers = {
+        'accept': 'application/json',
+        'Content-Type': 'application/json'
+    }
+    uuid_to_patch = validation_record.uuid
+    payload = validation_record.make_payload()
+    logger.info(f'Patching {uuid_to_patch} on {portal_uri}')
+    response = requests.patch(
+        f'{portal_uri}/{uuid_to_patch}', data=payload, headers=headers, auth=portal_auth)
+    return response.json()
 
 
 def main(args):
@@ -360,6 +380,7 @@ def main(args):
             uuid = args.uuid
             credentials_expired = upload_credentials_are_expired(
                 args.server, uuid, portal_auth)
+
             if not args.ignore_active_credentials:
                 if not credentials_expired:
                     logger.info(
@@ -373,9 +394,26 @@ def main(args):
             submitted_md5sum = file_metadata['md5sum']
             file_validation_record = get_file_validation_record_from_metadata(
                 file_metadata)
-            response = file_validation(args.server, portal_auth, file_validation_record,
-                                       submitted_md5sum, output_type, file_format_type, assembly=assembly)
-            print(json.dumps(response))
+            etag_original = fetch_etag_for_uuid(
+                args.server, args.uuid, portal_auth)
+            file_validation_record.original_etag = etag_original
+            file_validation_complete_record = file_validation(args.server, portal_auth, file_validation_record,
+                                                              submitted_md5sum, output_type, file_format_type, assembly=assembly)
+            if args.patch:
+                # check etag first
+                etag_after = fetch_etag_for_uuid(
+                    args.server, args.uuid, portal_auth)
+                if not etag_after == file_validation_complete_record.original_etag:
+                    logger.warning(
+                        f'etag original {etag_original} does not match etag after validation {etag_after}. Will not patch {args.uuid}.')
+                    return
+                else:
+                    logger.info(
+                        f'etag original {etag_original} matches etag after validation {etag_after}. Will patch {args.uuid}.')
+                    patch_response = patch_file(
+                        args.server, portal_auth, file_validation_complete_record)
+
+            print(json.dumps(patch_response))
         except Exception as err:
             message = f'exception occurred when checking file uuid {args.uuid}: {str(err)}'
             logger.exception(message)
@@ -402,6 +440,9 @@ def main(args):
                 submitted_md5sum = file_metadata['md5sum']
                 file_validation_record = get_file_validation_record_from_metadata(
                     file_metadata)
+                etag_original = fetch_etag_for_uuid(
+                    args.server, uuid, portal_auth)
+                file_validation_record.original_etag = etag_original
                 jobs.append((args.server, portal_auth, file_validation_record,
                             submitted_md5sum, output_type, file_format_type, assembly))
             number_of_cpus = multiprocessing.cpu_count()
@@ -410,9 +451,26 @@ def main(args):
                 results = pool.map(worker, jobs)
 
             print('Validation finished')
-            print(f'Ran {len(results)} jobs. Results:')
-            for result in results:
-                print(json.dumps(result))
+            if args.patch:
+                logger.info('Patch flag was set, attempting to patch.')
+                for result in results:
+                    current_uuid = result.uuid
+                    original_etag = result.original_etag
+                    etag_after = fetch_etag_for_uuid(
+                        args.server, current_uuid, portal_auth)
+                    if not etag_after == original_etag:
+                        logger.warning(
+                            f'etag original {original_etag} does not match etag after validation {etag_after}. Will not patch {current_uuid}.')
+                        return
+                    else:
+                        logger.info(
+                            f'etag original {original_etag} matches etag after validation {etag_after}. Will patch {current_uuid}.')
+                        patch_response = patch_file(
+                            args.server, portal_auth, result)
+                        logger.info(
+                            f'Attempted patching {current_uuid}. patch response:')
+                        logger.info(json.dumps(patch_response))
+                    time.sleep(1)
         except Exception as e:
             logger.exception('Validation failed')
             raise e
@@ -428,6 +486,8 @@ if __name__ == '__main__':
     parser.add_argument('--portal-key-id', type=str, help='Portal key id')
     parser.add_argument('--portal-secret-key', type=str,
                         help='Portal secret key')
+    parser.add_argument('--patch', action='store_true',
+                        help='Patch the checked objects.')
     parser.add_argument('--ignore-active-credentials', action='store_true',
                         help='If this flag is set, then we omit checking if the file has unexpired upload credentials. There be dragons here, someone might change the underlying file after checking.')
 

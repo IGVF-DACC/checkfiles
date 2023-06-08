@@ -45,3 +45,25 @@ def test_update_errors():
     error = {'validationerror': 'validation failed'}
     record.update_errors(error)
     assert 'validationerror' in record.errors
+
+
+def test_cannot_set_original_etag_twice():
+    file = 'not relevant for this test'
+    record = FileValidationRecord(file, uuid='abc')
+    record.original_etag = 'xyz'
+    assert record.original_etag == 'xyz'
+    with pytest.raises(ValueError):
+        record.original_etag = 'foobar'
+    assert record.original_etag == 'xyz'
+
+
+def test_make_payload():
+    file = 'somefile'
+    record = FileValidationRecord(file, uuid='abc')
+    record.validation_success = False
+    record.errors.update(
+        {'error': 'error that was caused by things going wrong'})
+    record.info.update(
+        {'info': 'some stuff calculated before things went wrong'})
+    assert record.make_payload(
+    ) == '{"validation_error_detail": "{\\"error\\": \\"error that was caused by things going wrong\\"}", "upload_status": "invalidated", "info": "some stuff calculated before things went wrong"}'

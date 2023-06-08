@@ -1,5 +1,6 @@
 import gzip
 import hashlib
+import json
 import os
 
 from typing import Optional
@@ -9,7 +10,7 @@ class File:
     def __init__(self, path: str, file_format: str):
         self.file_format = file_format
         self.path = path
-        self.__size = os.path.getsize(path)
+        self.__size = None
         self.__md5sum = None
         self.__content_md5sum = None
         self.__is_zipped = None
@@ -42,7 +43,11 @@ class File:
 
     @property
     def size(self):
-        return self.__size
+        if self.__size is not None:
+            return self.__size
+        else:
+            self.__size = os.path.getsize(self.path)
+            return self.__size
 
     def _calculate_content_md5sum(self):
         return self._calculate_md5sum(open_func=gzip.open)
@@ -72,10 +77,36 @@ class FileValidationRecord:
         self.uuid = uuid
         self.errors = {}
         self.info = {}
-        self.validation_result = None
+        self.file_not_found = False
+        self.validation_success = None
+        self.__original_etag = None
 
     def update_errors(self, error: dict):
         self.errors.update(error)
 
     def update_info(self, info: dict):
         self.info.update(info)
+
+    @property
+    def original_etag(self):
+        return self.__original_etag
+
+    @original_etag.setter
+    def original_etag(self, value):
+        if self.__original_etag is not None:
+            raise ValueError('Cannot set original_etag twice.')
+        self.__original_etag = value
+
+    def make_payload(self):
+        payload = {}
+        if self.errors:
+            payload.update(
+                {'validation_error_detail': json.dumps(self.errors)})
+            payload.update({'upload_status': 'invalidated'})
+        if self.info:
+            payload.update(self.info)
+        if self.validation_success:
+            payload.update({'upload_status': 'validated'})
+        if self.file_not_found:
+            payload.update({'upload_status': 'file not found'})
+        return json.dumps(payload)
