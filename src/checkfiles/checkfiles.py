@@ -364,10 +364,6 @@ def patching_worker(job):
     portal_uri = job[0]
     portal_auth = job[1]
     file_validation_record = job[2]
-    submitted_md5sum = job[3]
-    output_type = job[4]
-    file_format_type = job[5]
-    assembly = job[6]
     current_uuid = file_validation_record.uuid
     result = file_validation(*job)
     original_etag = file_validation_record.original_etag
