@@ -101,7 +101,6 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     except FileNotFoundError:
         logger.warning(f'File not found for {uuid}')
         validation_record.file_not_found = True
-        validation_record.update_errors({'file_not_found': 'File Not Found'})
         return validation_record
     logger.info(f'{uuid} file size {true_file_size_bytes} bytes')
     file_format = validation_record.file.file_format
@@ -361,6 +360,27 @@ def worker(job):
     return file_validation(*job)
 
 
+def patching_worker(job):
+    portal_uri = job[0]
+    portal_auth = job[1]
+    file_validation_record = job[2]
+    current_uuid = file_validation_record.uuid
+    result = file_validation(*job)
+    original_etag = file_validation_record.original_etag
+    etag_after = fetch_etag_for_uuid(portal_uri, current_uuid, portal_auth)
+    if not etag_after == original_etag:
+        logger.warning(
+            f'etag original {original_etag} does not match etag after validation {etag_after}. Will not patch {current_uuid}.')
+        return
+    else:
+        logger.info(
+            f'etag original {original_etag} matches etag after validation {etag_after}. Will patch {current_uuid}.')
+        patch_response = patch_file(portal_uri, portal_auth, result)
+        logger.info(f'Attempted patching {current_uuid}. patch response:')
+        logger.info(json.dumps(patch_response))
+        return patch_response
+
+
 def patch_file(portal_uri: str, portal_auth: PortalAuth, validation_record: file.FileValidationRecord) -> dict:
     headers = {
         'accept': 'application/json',
@@ -450,30 +470,14 @@ def main(args):
                             submitted_md5sum, output_type, file_format_type, assembly))
             number_of_cpus = multiprocessing.cpu_count()
 
-            with multiprocessing.Pool(number_of_cpus) as pool:
-                results = pool.map(worker, jobs)
+            if args.patch:
+                with multiprocessing.Pool(number_of_cpus) as pool:
+                    results = pool.map(patching_worker, jobs)
+            else:
+                with multiprocessing.Pool(number_of_cpus) as pool:
+                    results = pool.map(worker, jobs)
 
             print('Validation finished')
-            if args.patch:
-                logger.info('Patch flag was set, attempting to patch.')
-                for result in results:
-                    current_uuid = result.uuid
-                    original_etag = result.original_etag
-                    etag_after = fetch_etag_for_uuid(
-                        args.server, current_uuid, portal_auth)
-                    if not etag_after == original_etag:
-                        logger.warning(
-                            f'etag original {original_etag} does not match etag after validation {etag_after}. Will not patch {current_uuid}.')
-                        return
-                    else:
-                        logger.info(
-                            f'etag original {original_etag} matches etag after validation {etag_after}. Will patch {current_uuid}.')
-                        patch_response = patch_file(
-                            args.server, portal_auth, result)
-                        logger.info(
-                            f'Attempted patching {current_uuid}. patch response:')
-                        logger.info(json.dumps(patch_response))
-                    time.sleep(1)
         except Exception as e:
             logger.exception('Validation failed')
             raise e
