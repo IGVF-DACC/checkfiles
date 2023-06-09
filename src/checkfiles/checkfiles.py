@@ -101,7 +101,6 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     except FileNotFoundError:
         logger.warning(f'File not found for {uuid}')
         validation_record.file_not_found = True
-        validation_record.update_errors({'file_not_found': 'File Not Found'})
         return validation_record
     logger.info(f'{uuid} file size {true_file_size_bytes} bytes')
     file_format = validation_record.file.file_format
@@ -371,8 +370,9 @@ def patching_worker(job):
     assembly = job[6]
     current_uuid = file_validation_record.uuid
     result = file_validation(*job)
+    original_etag = file_validation_record.original_etag
     etag_after = fetch_etag_for_uuid(portal_uri, current_uuid, portal_auth)
-    if not etag_after == file_validation_record.original_etag:
+    if not etag_after == original_etag:
         logger.warning(
             f'etag original {original_etag} does not match etag after validation {etag_after}. Will not patch {current_uuid}.')
         return
