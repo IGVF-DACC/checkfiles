@@ -33,6 +33,7 @@ jobs:
             cargo build
             sudo cp target/debug/fastq_stats /usr/bin
             sudo chmod 755 /usr/bin/fastq_stats
+            cd ..
             pip install -r src/checkfiles/requirements.txt
             pip install coveralls
             sudo curl -sS -L -o /usr/local/bin/validateFiles http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/validateFiles
