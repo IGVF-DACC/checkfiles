@@ -27,6 +27,7 @@ jobs:
           name: Install dependencies
           command: |
             curl https://sh.rustup.rs -sSf | sh -s -- -y
+            source "$HOME/.cargo/env"
             git clone https://github.com/IGVF-DACC/fastq_stats.git
             cd fastq_stats
             cargo build
