@@ -117,7 +117,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     validation_record.update_errors(md5_sum_error)
     if is_gzipped:
         content_md5_error = check_content_md5sum(
-            validation_record.file.content_md5sum, portal_auth, portal_url)
+            validation_record.file.content_md5sum, uuid, portal_auth, portal_url)
         validation_record.update_info(
             {'content_md5sum': validation_record.file.content_md5sum})
         logger.info(
@@ -175,9 +175,11 @@ def check_md5sum(expected_md5sum, calculated_md5sum):
     return error
 
 
-def check_content_md5sum(content_md5sum, portal_auth: Optional[PortalAuth] = None, portal_url=None):
+def check_content_md5sum(content_md5sum, uuid, portal_auth: Optional[PortalAuth] = None, portal_url=None):
     error = {}
-    url = portal_url + '/search/?type=File&format=json&content_md5sum=' + content_md5sum
+    url = portal_url + \
+        '/search/?type=File&format=json&uuid!={uuid}&content_md5sum=' + \
+        content_md5sum
     session = requests.Session()
     session.auth = portal_auth
     conflict_files = session.get(url).json()['@graph']
