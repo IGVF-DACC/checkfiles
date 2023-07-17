@@ -48,6 +48,12 @@ def test_fastq_get_average_read_length_and_number_of_reads():
     }
 
 
+def test_fastq_get_average_read_length_and_number_of_reads_invalid_fastq():
+    file_path = 'does/not/exist'
+    result = fastq_get_average_read_length_and_number_of_reads(file_path)
+    assert result == {}
+
+
 def test_get_chrom_info_file_human():
     file = get_chrom_info_file('GRCh38')
     assert file == 'src/schemas/genome_builds/human/GRCh38/chrom.sizes'
