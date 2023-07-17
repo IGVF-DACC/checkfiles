@@ -435,8 +435,7 @@ def main(args):
                         f'etag original {etag_original} matches etag after validation {etag_after}. Will patch {args.uuid}.')
                     patch_response = patch_file(
                         args.server, portal_auth, file_validation_complete_record)
-
-            print(json.dumps(patch_response))
+                    print(json.dumps(patch_response))
         except Exception as err:
             message = f'exception occurred when checking file uuid {args.uuid}: {str(err)}'
             logger.exception(message)
