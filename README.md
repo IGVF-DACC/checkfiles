@@ -78,7 +78,7 @@ Note that if `uuid` flag is not set, all the files with `upload_status=pending` 
 In order to deploy a checkfiles EC2 instance (right now it makes most sense to run on igvf-staging account, to easily have access both to sandbox and prod from same machine).
 1. Log into igvf-staging aws console.
 2. Go to EC2 console and in the left tab select `AMIs`
-3. Select the newest `checkfiles__ami` (`ami-02001e7412122509a`)
+3. Select the newest `checkfiles__ami` (`ami-09ef01362aa786ed0`)
 4. Click `Launch instance from AMI`.
 5. Select instance type, and add storage. 200GB should be enough for anything. Instance size depends on the resource requirements. For instance type, t2 family of general purpose instances is good.
 6. Under `Advanced details` IAM instance profile, attach `checkfiles-instance` profile to the machine.

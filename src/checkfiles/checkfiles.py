@@ -4,16 +4,17 @@ import gzip
 import hashlib
 import json
 import logging
+import math
 import multiprocessing
 import os
 import re
 import requests
+import shlex
 import shutil
 import subprocess
 import sys
 import time
 import tempfile
-import traceback
 
 import pyfastx
 import pysam
@@ -212,19 +213,20 @@ def bam_pysam_check(file_path):
 
 
 def fastq_get_average_read_length_and_number_of_reads(file_path):
+    command = shlex.split(f'fastq_stats {file_path}')
+    try:
+        output = subprocess.check_output(command)
+    except subprocess.CalledProcessError as e:
+        message = f'error when calculating stats for fastq in {file_path}: {str(e)}'
+        logger.exception(message)
+        # checker should have updated error by this point
+        return {}
     info = {}
-    temp_file = tempfile.NamedTemporaryFile()
-    shutil.copyfile(file_path, temp_file.name)
-    fq = pyfastx.Fastq(temp_file.name)
-    count = len(fq)
-    avg_len = int(fq.avglen)
-    info['read_count'] = count
-    info['mean_read_length'] = avg_len
-    info['minimum_read_length'] = fq.minlen
-    info['maximum_read_length'] = fq.maxlen
-    fxi_file_path = temp_file.name + '.fxi'
-    if os.path.exists(fxi_file_path):
-        os.remove(fxi_file_path)
+    # b'read_count: 41437223\nminimum_read_length: 28\nmaximum_read_length: 28\nmean_read_length: 28\n' is what output looks like
+    for item in output.decode().strip().split('\n'):
+        split_item = item.split(': ')
+        # mean might not be an integer to begin with, but schema wants integer so floor it
+        info.update({split_item[0]: math.floor(float(split_item[1]))})
     return info
 
 
