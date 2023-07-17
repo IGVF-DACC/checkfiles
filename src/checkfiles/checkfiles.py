@@ -342,7 +342,7 @@ def fetch_pending_files_metadata(portal_uri: str, portal_auth: PortalAuth, numbe
     if number_of_files is not None:
         search = f'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=output_type&limit={number_of_files}'
     else:
-        search = 'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=output_type'
+        search = 'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=output_type&limit=all'
     search_uri = f'{portal_uri}/{search}'
     response = requests.get(search_uri, auth=portal_auth)
     metadata = response.json()['@graph']
@@ -496,7 +496,7 @@ if __name__ == '__main__':
     parser.add_argument('--patch', action='store_true',
                         help='Patch the checked objects.')
     parser.add_argument('--number-of-files', type=str,
-                        help='Use this option to limit the number of pending files to check.')
+                        help='Use this option to limit the number of pending files to check. If unset, all the pending files will be checked.')
     parser.add_argument('--ignore-active-credentials', action='store_true',
                         help='If this flag is set, then we omit checking if the file has unexpired upload credentials. There be dragons here, someone might change the underlying file after checking.')
 

@@ -67,6 +67,8 @@ optional arguments:
   --patch               Patch the checked objects.
   --ignore-active-credentials
                         If this flag is set, then we omit checking if the file has unexpired upload credentials. There be dragons here, someone might change the underlying file after checking.
+  --number-of-files
+                        Use this option to limit the number of pending files to check. If unset, all the pending files will be checked.
 ```
 
 Note that if `uuid` flag is not set, all the files with `upload_status=pending` will be checked. It may be prudent to use `screen` to run because the job can take several hours.
