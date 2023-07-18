@@ -332,6 +332,7 @@ def get_current_utc_time():
 
 
 def upload_credentials_are_expired(portal_uri: str, file_uuid: str, portal_auth: PortalAuth) -> bool:
+    logger.info('Checking upload credential expiration status for {file_uuid}')
     request_uri = f'{portal_uri}/{file_uuid}/@@upload'
     response = requests.get(request_uri, auth=portal_auth)
     expiration = response.json(
