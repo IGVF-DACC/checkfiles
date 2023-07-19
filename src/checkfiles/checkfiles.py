@@ -332,6 +332,8 @@ def get_current_utc_time():
 
 
 def upload_credentials_are_expired(portal_uri: str, file_uuid: str, portal_auth: PortalAuth) -> bool:
+    logger.info(
+        f'Checking upload credential expiration status for {file_uuid}')
     request_uri = f'{portal_uri}/{file_uuid}/@@upload'
     response = requests.get(request_uri, auth=portal_auth)
     expiration = response.json(
@@ -361,14 +363,26 @@ def fetch_etag_for_uuid(portal_uri: str, file_uuid: str, portal_auth: PortalAuth
 
 
 def worker(job):
+    # throw away the active credential info, since we are not patching it does not matter
+    _, *job = job
     return file_validation(*job)
 
 
 def patching_worker(job):
+    ignore_active_credentials, *job = job
     portal_uri = job[0]
     portal_auth = job[1]
     file_validation_record = job[2]
     current_uuid = file_validation_record.uuid
+    credentials_expired = upload_credentials_are_expired(
+        portal_uri, current_uuid, portal_auth)
+    if not credentials_expired and not ignore_active_credentials:
+        logger.info(
+            'Upload credentials for {current_uuid} are not expired yet. Skipping.')
+        return
+    if not credentials_expired and ignore_active_credentials:
+        logger.info(
+            'Upload credentials for {current_uuid} are not expired yet and ignore_active_credentials is set, proceeding to patch.')
     result = file_validation(*job)
     original_etag = file_validation_record.original_etag
     etag_after = fetch_etag_for_uuid(portal_uri, current_uuid, portal_auth)
@@ -454,12 +468,6 @@ def main(args):
             jobs = []
             for file_metadata in pending_files:
                 uuid = file_metadata['uuid']
-                credentials_expired = upload_credentials_are_expired(
-                    args.server, uuid, portal_auth)
-                if not credentials_expired:
-                    logger.info(
-                        'Upload credentials for {uuid} not expired yet, skipping check.')
-                    continue
                 assembly = file_metadata.get('assembly')
                 output_type = file_metadata.get('output_type')
                 file_format_type = file_metadata.get('file_format_type')
@@ -469,7 +477,7 @@ def main(args):
                 etag_original = fetch_etag_for_uuid(
                     args.server, uuid, portal_auth)
                 file_validation_record.original_etag = etag_original
-                jobs.append((args.server, portal_auth, file_validation_record,
+                jobs.append((args.ignore_active_credentials, args.server, portal_auth, file_validation_record,
                             submitted_md5sum, output_type, file_format_type, assembly))
             number_of_cpus = multiprocessing.cpu_count()
 
