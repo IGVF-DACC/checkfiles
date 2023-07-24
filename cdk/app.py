@@ -1,0 +1,23 @@
+import json
+
+from aws_cdk import App
+from aws_cdk import Environment
+
+from checkfiles_runner.stacks.runner import RunCheckfilesStepFunction
+from checkfiles_runnen.config import config
+
+
+ENVIRONMENT = Environment(
+    account=config['account'],
+    region=config['region']
+)
+
+app = App()
+
+
+RunCheckfilesStepFunction(
+    app,
+    'RunCheckfilesStepFunction',
+    env=ENVIRONMENT,
+)
+app.synth()
