@@ -1,13 +1,24 @@
+import os
 import base64
 import boto3
 
 
+def get_ami_id():
+    return os.environ['AMI_ID']
+
+
+def get_instance_name():
+    return os.environ['INSTANCE_NAME']
+
+
+def get_instance_type():
+    return os.environ['INSTANCE_TYPE']
+
+
 def lamdba_handler(event, context):
-    # event that triggers step function will provide:
-    # instance name: name
-    # ami id: ami_id
-    # instance type: instance_type
-    name = event['name']
+    instance_name = get_instance_name()
+    ami_id = get_ami_id()
+    instance_type = get_instance_type()
     # clone checkfiles code and build the virtual environment
     user_data = '''#!/bin/bash
     cd /home/ubuntu
@@ -36,13 +47,20 @@ def lamdba_handler(event, context):
         MinCount=1,
         MaxCount=1,
         BlockDeviceMappings=[boot_disk_volume],
-        InstanceType='t2.micro',
-        ImageId='ami-09ef01362aa786ed0',
+        InstanceType=instance_type,
+        ImageId=ami_id,
         SecurityGroupIds=['sg-045780345c2bdc6d4'],
         IamInstanceProfile={
             'Arn': 'arn:aws:iam::920073238245:instance-profile/checkfiles-instance'
         },
         UserData=user_data,
+        TagSpecifications=[{
+            'ResourceType': 'instance',
+            'Tags': [{
+                'Key': 'Name',
+                'Value': instance_name
+            }]
+        }]
     )
 
     instance = instances[0]

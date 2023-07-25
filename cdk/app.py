@@ -12,6 +12,12 @@ ENVIRONMENT = Environment(
     region=config['region']
 )
 
+AMI_ID = config['ami_id']
+
+INSTANCE_TYPE = config['instance_type']
+
+INSTANCE_NAME = config['instance_name']
+
 app = App()
 
 
