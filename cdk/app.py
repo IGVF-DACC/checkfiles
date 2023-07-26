@@ -24,6 +24,9 @@ app = App()
 RunCheckfilesStepFunction(
     app,
     'RunCheckfilesStepFunction',
+    ami_id=AMI_ID,
+    instance_type=INSTANCE_TYPE,
+    instance_name=INSTANCE_NAME,
     env=ENVIRONMENT,
 )
 app.synth()

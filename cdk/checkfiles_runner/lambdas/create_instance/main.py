@@ -15,7 +15,7 @@ def get_instance_type():
     return os.environ['INSTANCE_TYPE']
 
 
-def lamdba_handler(event, context):
+def create_checkfiles_instance(event, context):
     instance_name = get_instance_name()
     ami_id = get_ami_id()
     instance_type = get_instance_type()

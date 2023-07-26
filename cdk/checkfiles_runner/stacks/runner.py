@@ -41,3 +41,62 @@ class RunCheckfilesStepFunction(Stack):
             **kwargs: Any
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
+        self.ami_id = ami_id
+        self.instance_type = instance_type
+        self.instance_name = instance_name
+
+    create_checkfiles_instance_lambda = PythonFunction(
+        self,
+        'CreateCheckfilesInstanceLambda',
+        entry='checkfiles_runner/lambdas/create_instance',
+        runtime=Runtime.PYTHON_3_9,
+        index='main.py',
+        handler='create_checkfiles_instance',
+        timeout=Duration.seconds(360),
+        environment={
+            'AMI_ID': self.ami_id,
+            'INSTANCE_TYPE': self.instance_type,
+            'INSTANCE_NAME': self.instance_name,
+        }
+    )
+
+    create_checkfiles_instance_lambda.add_to_role_policy(
+        PolicyStatement(
+            actions=[
+                'iam:PassRole',
+            ],
+            resources=['*'],
+        )
+    )
+
+    create_checkfiles_instance_lambda.add_to_role_policy(
+        PolicyStatement(
+            actions=[
+                'ec2:RunInstances',
+                'ec2:AssociateIamInstanceProfile',
+                'ec2:ModifyInstanceAttribute',
+                'ec2:CreateVolume',
+                'ec2:AttachVolume',
+                'ec2:CreateTags',
+            ],
+            resources=['*'],
+        )
+    )
+
+    create_checkfiles_instance = LambdaInvoke(
+        self,
+        'CreateCheckfilesInstance',
+        lamda_function=create_checkfiles_instance_lambda,
+        payload_response_only=True,
+        result_selector={
+            'create_checkfiles_instance.$': '$'
+        }
+    )
+
+    definition = create_checkfiles_instance
+
+    state_machine = StateMachine(
+        self,
+        'StateMachine'
+        definition=definition
+    )
