@@ -97,7 +97,7 @@ class RunCheckfilesStepFunction(Stack):
 
         run_checkfiles_command_lambda = PythonFunction(
             self,
-            'RunChechfilesCommandLambda',
+            'RunCheckfilesCommandLambda',
             entry='checkfiles_runner/lambdas/run_checkfiles',
             runtime=Runtime.PYTHON_3_9,
             index='main.py',
