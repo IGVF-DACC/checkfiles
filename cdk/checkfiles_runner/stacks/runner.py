@@ -107,7 +107,7 @@ class RunCheckfilesStepFunction(Stack):
             self,
             'RunCheckfilesCommandLambda',
             entry='checkfiles_runner/lambdas/run_checkfiles',
-            runtime=Runtime.PYTHON_3_9,
+            runtime=Runtime.PYTHON_3_11,
             index='main.py',
             handler='run_checkfiles_command',
             timeout=Duration.seconds(60),
@@ -133,10 +133,41 @@ class RunCheckfilesStepFunction(Stack):
             }
         )
 
+        wait_for_checkfiles_lambda = PythonFunction(
+            self,
+            'WaitForCheckfilesLambda',
+            entry='checkfiles_runner/lambdas/wait_checkfiles',
+            runtime=Runtime.PYTHON_3_11,
+            index='main.py',
+            handler='wait_checkfiles_command_to_finish',
+            timeout=Duration.seconds(180),
+        )
+
+        wait_for_checkfiles_lambda.add_to_role_policy(
+            PolicyStatement(
+                actions=[
+                    'ssm:GetCommandInvocation'
+                ],
+                resources=['*'],
+            )
+        )
+
+        wait_for_checkfiles = LambdaInvoke(
+            self,
+            'WaitForCheckfiles',
+            lambda_function=wait_for_checkfiles_lambda,
+            payload_response_only=True,
+            result_selector={
+                'checkfiles_command_status.$': '$'
+            }
+        )
+
         definition = create_checkfiles_instance.next(
             wait_instance_ssm_registration
         ).next(
             run_checkfiles_command
+        ).next(
+            wait_for_checkfiles
         )
 
         state_machine = StateMachine(

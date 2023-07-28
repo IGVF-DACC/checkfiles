@@ -8,6 +8,7 @@ def run_checkfiles_command(event, context):
         InstanceIds=[instance_id],
         DocumentName='AWS-RunShellScript',
         Parameters={'commands': [
+            'sleep 60',
             'echo "Hello World" > /home/ubuntu/foo.txt'
         ]
         }
