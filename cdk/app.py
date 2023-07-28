@@ -18,6 +18,10 @@ INSTANCE_TYPE = config['instance_type']
 
 INSTANCE_NAME = config['instance_name']
 
+PORTAL_SECRETS_ARN = config['portal_secrets_arn']
+
+BACKEND_URI = config['backend_uri']
+
 app = App()
 
 
@@ -27,6 +31,8 @@ RunCheckfilesStepFunction(
     ami_id=AMI_ID,
     instance_type=INSTANCE_TYPE,
     instance_name=INSTANCE_NAME,
+    portal_secrets_arn=PORTAL_SECRETS_ARN,
+    backend_uri=BACKEND_URI,
     env=ENVIRONMENT,
 )
 app.synth()

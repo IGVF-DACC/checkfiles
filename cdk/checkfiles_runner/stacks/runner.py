@@ -15,6 +15,8 @@ from aws_cdk.aws_events import Schedule
 
 from aws_cdk.aws_events_targets import SfnStateMachine
 
+from aws_cdk.aws_secretsmanager import Secret as SMSecret
+
 from aws_cdk.aws_stepfunctions import JsonPath
 from aws_cdk.aws_stepfunctions import Pass
 from aws_cdk.aws_stepfunctions import Succeed
@@ -38,18 +40,54 @@ class RunCheckfilesStepFunction(Stack):
             ami_id: str,
             instance_type: str,
             instance_name: str,
+            portal_secrets_arn: str,
+            backend_uri: str,
             **kwargs: Any
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
         self.ami_id = ami_id
         self.instance_type = instance_type
         self.instance_name = instance_name
+        self.portal_secrets_arn = portal_secrets_arn
+        self.backend_uri = backend_uri
+
+        self.portal_secrets = Secret.from_secret_complete_arn(
+            self,
+            id='PortalSecrets',
+            secret_complete_arn=self.portal_secrets_arn
+        )
+
+        check_pending_files_lambda = PythonFunction(
+            self,
+            'CheckPendingFilesLambda',
+            entry='checkfiles_runner/lambdas/check_pending',
+            runtime=Runtime.PYTHON_3_11,
+            index='main.py',
+            handler='check_pending_files',
+            timeout=Duration.seconds(30),
+            environment={
+                'PORTAL_SECRETS_ARN': self.portal_secrets_arn,
+                'BACKEND_URI': self.backend_uri
+            }
+        )
+
+        self.portal_secrets.grant_read(self.check_pending_files_lambda)
+
+        check_pending_files = LambdaInvoke(
+            self,
+            'CheckPendingFiles',
+            lambda_function=check_pending_files_lambda,
+            payload_response_only=True,
+            result_selector={
+                'files_pending.$': '$.files_pending'
+            }
+        )
 
         create_checkfiles_instance_lambda = PythonFunction(
             self,
             'CreateCheckfilesInstanceLambda',
             entry='checkfiles_runner/lambdas/create_instance',
-            runtime=Runtime.PYTHON_3_9,
+            runtime=Runtime.PYTHON_3_11,
             index='main.py',
             handler='create_checkfiles_instance',
             timeout=Duration.seconds(360),
@@ -162,7 +200,9 @@ class RunCheckfilesStepFunction(Stack):
             }
         )
 
-        definition = create_checkfiles_instance.next(
+        definition = check_pending_files.next(
+            create_checkfiles_instance
+        ).next(
             wait_instance_ssm_registration
         ).next(
             run_checkfiles_command
