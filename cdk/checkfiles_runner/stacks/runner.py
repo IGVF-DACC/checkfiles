@@ -51,7 +51,7 @@ class RunCheckfilesStepFunction(Stack):
         self.portal_secrets_arn = portal_secrets_arn
         self.backend_uri = backend_uri
 
-        self.portal_secrets = Secret.from_secret_complete_arn(
+        self.portal_secrets = SMSecret.from_secret_complete_arn(
             self,
             id='PortalSecrets',
             secret_complete_arn=self.portal_secrets_arn
@@ -71,7 +71,7 @@ class RunCheckfilesStepFunction(Stack):
             }
         )
 
-        self.portal_secrets.grant_read(self.check_pending_files_lambda)
+        self.portal_secrets.grant_read(check_pending_files_lambda)
 
         check_pending_files = LambdaInvoke(
             self,

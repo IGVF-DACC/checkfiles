@@ -3,6 +3,7 @@ import json
 import logging
 
 import boto3
+import requests
 
 
 PENDING_FILES_SEARCH = '/search?type=File&upload_status=pending&field=uuid'
