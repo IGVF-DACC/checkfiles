@@ -95,6 +95,14 @@ class RunCheckfilesStepFunction(Stack):
             }
         )
 
+        wait_instance_ssm_registration = Wait(
+            self,
+            'WaitForSSMReg',
+            time=WaitTime.duration(
+                Duration.minutes(2)
+            )
+        )
+
         run_checkfiles_command_lambda = PythonFunction(
             self,
             'RunCheckfilesCommandLambda',
@@ -126,6 +134,8 @@ class RunCheckfilesStepFunction(Stack):
         )
 
         definition = create_checkfiles_instance.next(
+            wait_instance_ssm_registration
+        ).next(
             run_checkfiles_command
         )
 
