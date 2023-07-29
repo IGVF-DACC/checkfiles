@@ -6,6 +6,12 @@ import boto3
 import requests
 
 
+logging.basicConfig(
+    level=logging.INFO,
+    force=True
+)
+
+
 PENDING_FILES_SEARCH = '/search?type=File&upload_status=pending&field=uuid'
 
 
