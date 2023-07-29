@@ -17,6 +17,8 @@ from aws_cdk.aws_events_targets import SfnStateMachine
 
 from aws_cdk.aws_secretsmanager import Secret as SMSecret
 
+from aws_cdk.aws_stepfunctions import Choice
+from aws_cdk.aws_stepfunctions import Condition
 from aws_cdk.aws_stepfunctions import JsonPath
 from aws_cdk.aws_stepfunctions import Pass
 from aws_cdk.aws_stepfunctions import Succeed
@@ -198,14 +200,23 @@ class RunCheckfilesStepFunction(Stack):
             }
         )
 
+        no_files_to_process = Succeed(
+            self,
+            'No files to process.'
+        )
+
         definition = check_pending_files.next(
-            create_checkfiles_instance
-        ).next(
-            wait_instance_ssm_registration
-        ).next(
-            run_checkfiles_command
-        ).next(
-            wait_for_checkfiles
+            Choice(self, 'Pending files?').when(
+                Condition.boolean_equals('$', False), no_files_to_process
+            ).otherwise(
+                create_checkfiles_instance.next(
+                    wait_instance_ssm_registration
+                ).next(
+                    run_checkfiles_command
+                ).next(
+                    wait_for_checkfiles
+                )
+            )
         )
 
         state_machine = StateMachine(

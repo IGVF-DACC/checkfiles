@@ -67,4 +67,4 @@ def create_checkfiles_instance(event, context):
 
     instance.wait_until_running()
 
-    return {**event, 'instance_id': instance.id}
+    return {'instance_id': instance.id}
