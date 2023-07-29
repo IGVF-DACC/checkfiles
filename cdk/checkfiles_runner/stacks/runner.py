@@ -78,9 +78,7 @@ class RunCheckfilesStepFunction(Stack):
             'CheckPendingFiles',
             lambda_function=check_pending_files_lambda,
             payload_response_only=True,
-            result_selector={
-                'files_pending.$': '$.files_pending'
-            }
+            output_path='$.files_pending'
         )
 
         create_checkfiles_instance_lambda = PythonFunction(
