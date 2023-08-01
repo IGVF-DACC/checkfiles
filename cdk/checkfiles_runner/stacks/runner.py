@@ -28,6 +28,7 @@ from aws_cdk.aws_stepfunctions import Wait
 from aws_cdk.aws_stepfunctions import WaitTime
 from aws_cdk.aws_stepfunctions import Fail
 
+from aws_cdk.aws_stepfunctions_tasks import CallAwsService
 from aws_cdk.aws_stepfunctions_tasks import LambdaInvoke
 
 from typing import Any
@@ -129,7 +130,7 @@ class RunCheckfilesStepFunction(Stack):
             lambda_function=create_checkfiles_instance_lambda,
             payload_response_only=True,
             result_selector={
-                'create_checkfiles_instance.$': '$'
+                'instance_id.$': '$.instance_id'
             }
         )
 
@@ -167,7 +168,8 @@ class RunCheckfilesStepFunction(Stack):
             lambda_function=run_checkfiles_command_lambda,
             payload_response_only=True,
             result_selector={
-                'run_checkfiles_command.$': '$'
+                'instance_id.$': '$.instance_id',
+                'command_id.$': '$.command_id'
             }
         )
 
@@ -196,13 +198,35 @@ class RunCheckfilesStepFunction(Stack):
             lambda_function=wait_for_checkfiles_lambda,
             payload_response_only=True,
             result_selector={
-                'checkfiles_command_status.$': '$'
+                'checkfiles_command_status.$': '$.checkfiles_command_status',
+                'instance_id.$': '$.instance_id',
+                'command_id.$': '$.command_id',
+                'instance_id_list.$': '$.instance_id_list'
             }
+        )
+
+        wait_for_checkfiles.add_retry(
+            backoff_rate=1,
+            errors=['CommandInProgress'],
+            interval=Duration.seconds(60),
+            max_attempts=3,
         )
 
         no_files_to_process = Succeed(
             self,
             'No files to process.'
+        )
+
+        terminate_instance = CallAwsService(
+            self,
+            'TerminateInstance',
+            service='ec2',
+            action='terminateInstances',
+            iam_resources=['*'],
+            parameters={
+                'InstanceIds.$': '$.instance_id_list'
+            },
+            result_path=JsonPath.DISCARD,
         )
 
         definition = check_pending_files.next(
@@ -215,6 +239,8 @@ class RunCheckfilesStepFunction(Stack):
                     run_checkfiles_command
                 ).next(
                     wait_for_checkfiles
+                ).next(
+                    terminate_instance
                 )
             )
         )
