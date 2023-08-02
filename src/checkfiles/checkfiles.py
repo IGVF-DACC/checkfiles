@@ -317,6 +317,8 @@ def make_local_path_from_s3_uri(s3_uri: str):
 
 
 def get_file_validation_record_from_metadata(file_metadata: dict, mount_basedir=os.environ.get('HOME')):
+    if mount_basedir is None:
+        mount_basedir = '/home/ubuntu'
     if not ('s3_uri' in file_metadata and 'file_format' in file_metadata and 'uuid' in file_metadata):
         raise ValueError('Invalid metadata dict')
     else:
