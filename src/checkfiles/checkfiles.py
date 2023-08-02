@@ -116,13 +116,22 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         submitted_md5sum, validation_record.file.md5sum)
     validation_record.update_errors(md5_sum_error)
     if is_gzipped:
-        content_md5_error = check_content_md5sum(
-            validation_record.file.content_md5sum, uuid, portal_auth, portal_url)
-        validation_record.update_info(
-            {'content_md5sum': validation_record.file.content_md5sum})
-        logger.info(
-            f'{uuid} content_md5sum is {validation_record.file.content_md5sum}')
-        validation_record.update_errors(content_md5_error)
+        try:
+            content_md5_error = check_content_md5sum(
+                validation_record.file.content_md5sum, uuid, portal_auth, portal_url)
+            validation_record.update_info(
+                {'content_md5sum': validation_record.file.content_md5sum})
+            logger.info(
+                f'{uuid} content_md5sum is {validation_record.file.content_md5sum}')
+            validation_record.update_errors(content_md5_error)
+        except EOFError as e:
+            logger.warning(
+                f'{uuid} the gzipped file is corrupted.'
+            )
+            validation_record.update_errors(
+                {'file_content_error': 'EOFError: Compressed file ended before the end-of-stream marker was reached'}
+            )
+            return validation_record
     if file_format == 'bam':
         bam_check_result = bam_pysam_check(local_file_path)
         if 'bam_error' in bam_check_result:
