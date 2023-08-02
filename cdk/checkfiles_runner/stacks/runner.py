@@ -20,13 +20,10 @@ from aws_cdk.aws_secretsmanager import Secret as SMSecret
 from aws_cdk.aws_stepfunctions import Choice
 from aws_cdk.aws_stepfunctions import Condition
 from aws_cdk.aws_stepfunctions import JsonPath
-from aws_cdk.aws_stepfunctions import Pass
 from aws_cdk.aws_stepfunctions import Succeed
 from aws_cdk.aws_stepfunctions import StateMachine
-from aws_cdk.aws_stepfunctions import TaskInput
 from aws_cdk.aws_stepfunctions import Wait
 from aws_cdk.aws_stepfunctions import WaitTime
-from aws_cdk.aws_stepfunctions import Fail
 
 from aws_cdk.aws_stepfunctions_tasks import CallAwsService
 from aws_cdk.aws_stepfunctions_tasks import LambdaInvoke
