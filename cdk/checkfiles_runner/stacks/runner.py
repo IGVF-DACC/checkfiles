@@ -150,13 +150,31 @@ class RunCheckfilesStepFunction(Stack):
             index='main.py',
             handler='run_checkfiles_command',
             timeout=Duration.seconds(60),
+            environment={
+                'PORTAL_SECRETS_ARN': self.portal_secrets_arn,
+                'BACKEND_URI': self.backend_uri
+            }
         )
+
+        self.portal_secrets.grant_read(run_checkfiles_command_lambda)
 
         run_checkfiles_command_lambda.add_to_role_policy(
             PolicyStatement(
                 actions=[
                     'ssm:SendCommand',
                     'ssm:GetCommandInvocation',
+                ],
+                resources=['*'],
+            )
+        )
+
+        run_checkfiles_command_lambda.add_to_role_policy(
+            PolicyStatement(
+                actions=[
+                    'logs:CreateLogGroup',
+                    'logs:CreateLogStream',
+                    'logs:PutLogEvents',
+                    'logs:DescribeLogStreams',
                 ],
                 resources=['*'],
             )
@@ -208,8 +226,8 @@ class RunCheckfilesStepFunction(Stack):
         wait_for_checkfiles.add_retry(
             backoff_rate=1,
             errors=['CommandInProgress'],
-            interval=Duration.seconds(60),
-            max_attempts=3,
+            interval=Duration.seconds(3600),
+            max_attempts=12,
         )
 
         no_files_to_process = Succeed(
