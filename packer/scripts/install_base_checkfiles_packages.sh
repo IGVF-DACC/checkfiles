@@ -11,4 +11,5 @@ sudo apt-get -y install \
     curl \
     zlib1g-dev \
     libsqlite3-dev \
-    fuse
+    fuse \
+    jq
