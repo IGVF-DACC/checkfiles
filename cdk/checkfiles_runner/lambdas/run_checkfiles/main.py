@@ -13,43 +13,22 @@ def get_backend_uri():
     return os.environ['BACKEND_URI']
 
 
-def get_portal_key(secret):
-    return secret['PORTAL_KEY']
-
-
-def get_portal_secret_key(secret):
-    return secret['PORTAL_SECRET_KEY']
-
-
-def get_secret(secret_arn):
-    session = boto3.session.Session()
-    client = session.client(
-        service_name='secretsmanager'
-    )
-    try:
-        get_secret_value_response = client.get_secret_value(
-            SecretId=secret_arn
-        )
-    except ClientError as e:
-        raise e
-    secret = get_secret_value_response['SecretString']
-    return json.loads(secret)
-
-
 def run_checkfiles_command(event, context):
     instance_id = event['instance_id']
     backend_uri = get_backend_uri()
     secret_arn = get_secret_arn()
     secret = get_secret(secret_arn)
-    portal_key = get_portal_key(secret)
-    portal_secret_key = get_portal_secret_key(secret)
-    command = f'venv/bin/python src/checkfiles/checkfiles.py --server {backend_uri} --portal-key-id {portal_key} --portal-secret-key {portal_secret_key} --patch'
+    put_portal_key_to_env_cmd = f"export PORTAL_KEY=$(aws secretsmanager get-secret-value --secret-id {secret_arn} --output text | awk '{{print $4}}' | jq -r .PORTAL_KEY)"
+    put_secret_key_to_env_cmd = f"export PORTAL_SECRET_KEY=$(aws secretsmanager get-secret-value --secret-id {secret_arn} --output text | awk '{{print $4}}' | jq -r .PORTAL_SECRET_KEY)"
+    run_checkfiles_cmd = f'venv/bin/python src/checkfiles/checkfiles.py --server {backend_uri} --portal-key-id $(echo PORTAL_KEY) --portal-secret-key $(echo PORTAL_SECRET_KEY)'
     ssm = boto3.client('ssm')
     response = ssm.send_command(
         InstanceIds=[instance_id],
         DocumentName='AWS-RunShellScript',
         Parameters={'commands': [
-            command
+            put_portal_key_to_env_cmd,
+            put_secret_key_to_env_cmd,
+            run_checkfiles_cmd,
         ],
             'workingDirectory': ['/home/ubuntu/checkfiles'],
         },
