@@ -1,30 +1,27 @@
-To manually create a virtualenv on MacOS and Linux:
+# CHECKFILES STEP FUNCTION DEPLOYMENT
 
-```
-$ python3 -m venv .venv
-```
+If you are not sure this is what you should be running, you should not be running it.
 
-After the init process completes and the virtualenv is created, you can use the following
-step to activate your virtualenv.
 
-```
-$ source .venv/bin/activate
-```
+## Installation
 
-If you are a Windows platform, you would activate the virtualenv like this:
+Install cdk 2.88.0:
 
-```
-% .venv\Scripts\activate.bat
-```
+```bash
+    npm install aws-cdk@2.88.0
 
-Once the virtualenv is activated, you can install the required dependencies.
+Create python 3.11 virtual environment, and install packages:
 
-```
-$ pip install -r requirements.txt
-```
+```bash
+    python -m venv venv
+    pip install -r requirements.txt -r requirements-dev.txt
 
-At this point you can now synthesize the CloudFormation template for this code.
+Deploy sandbox stack:
 
-```
-$ cdk synth
-```
+```bash
+    cdk deploy RunCheckfilesStepFunctionSandbox --profile igvf-staging
+
+Deploy production stack:
+
+```bash
+    cdk deploy RunCheckfilesStepFunctionProduction --profile igvf-staging
