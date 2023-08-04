@@ -1,6 +1,13 @@
 import os
-import base64
+import logging
+
 import boto3
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    force=True
+)
 
 
 def get_ami_id():
@@ -15,14 +22,19 @@ def get_instance_type():
     return os.environ['INSTANCE_TYPE']
 
 
+def get_checkfiles_branch():
+    return os.environ['CHECKFILES_BRANCH']
+
+
 def create_checkfiles_instance(event, context):
     instance_name = get_instance_name()
     ami_id = get_ami_id()
     instance_type = get_instance_type()
+    branch = get_checkfiles_branch()
     # clone checkfiles code and build the virtual environment
     user_data = '''#!/bin/bash
     cd /home/ubuntu
-    git clone https://github.com/IGVF-DACC/checkfiles.git
+    git clone https://github.com/IGVF-DACC/checkfiles.git --branch {branch} --single-branch
     cd checkfiles
     python3 -m venv venv
     source venv/bin/activate
@@ -42,6 +54,9 @@ def create_checkfiles_instance(event, context):
             'VolumeType': 'gp2',
         }
     }
+
+    logging.info(
+        f'instance_type: {instance_type} ami_id: {ami_id} checkfiles_branch: {branch}')
 
     instances = ec2.create_instances(
         MinCount=1,

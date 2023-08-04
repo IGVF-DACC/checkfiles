@@ -40,6 +40,7 @@ class RunCheckfilesStepFunction(Stack):
             ami_id: str,
             instance_type: str,
             instance_name: str,
+            checkfiles_branch: str,
             portal_secrets_arn: str,
             backend_uri: str,
             **kwargs: Any
@@ -48,6 +49,7 @@ class RunCheckfilesStepFunction(Stack):
         self.ami_id = ami_id
         self.instance_type = instance_type
         self.instance_name = instance_name
+        self.checkfiles_branch = checkfiles_branch
         self.portal_secrets_arn = portal_secrets_arn
         self.backend_uri = backend_uri
 
@@ -93,6 +95,7 @@ class RunCheckfilesStepFunction(Stack):
                 'AMI_ID': self.ami_id,
                 'INSTANCE_TYPE': self.instance_type,
                 'INSTANCE_NAME': self.instance_name,
+                'CHECKFILES_BRANCH': self.checkfiles_branch,
             }
         )
 
@@ -265,3 +268,27 @@ class RunCheckfilesStepFunction(Stack):
             'StateMachine',
             definition=definition
         )
+
+        state_machine_target = SfnStateMachine(
+            state_machine
+        )
+
+        Rule(
+            self,
+            'RunCheckfilesStateMachineCronRule',
+            schedule=Schedule.cron(
+                hour='4',
+                minute='20',
+            ),
+            targets=[
+                state_machine_target
+            ]
+        )
+
+
+class RunCheckfilesStepFunctionSandbox(RunCheckfilesStepFunction):
+    pass
+
+
+class RunCheckfilesStepFunctionProduction(RunCheckfilesStepFunction):
+    pass

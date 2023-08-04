@@ -12,5 +12,5 @@ sudo apt-get -y install \
     zlib1g-dev \
     libsqlite3-dev \
     fuse \
-    aws-cli \
+    awsli \
     jq
