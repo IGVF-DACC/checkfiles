@@ -194,7 +194,7 @@
             "Properties": {
                 "Code": {
                     "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
-                    "S3Key": "841934b462fb162bc88a87c61688e9ae272a053543fdf58e0b23d57fb4be3b17.zip"
+                    "S3Key": "0d57e9526bd09a50541d4d15dfdcaaa1b278b169edc6b4722dd1124f87174526.zip"
                 },
                 "Environment": {
                     "Variables": {
@@ -340,7 +340,7 @@
                                     "Arn"
                                 ]
                             },
-                            "\"},\"WaitForCheckfiles\":{\"Next\":\"TerminateInstance\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2},{\"ErrorEquals\":[\"CommandInProgress\"],\"IntervalSeconds\":3600,\"MaxAttempts\":12,\"BackoffRate\":1}],\"Type\":\"Task\",\"ResultSelector\":{\"checkfiles_command_status.$\":\"$.checkfiles_command_status\",\"instance_id.$\":\"$.instance_id\",\"command_id.$\":\"$.command_id\",\"instance_id_list.$\":\"$.instance_id_list\"},\"Resource\":\"",
+                            "\"},\"WaitForCheckfiles\":{\"Next\":\"TerminateInstance\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2},{\"ErrorEquals\":[\"CommandInProgress\"],\"IntervalSeconds\":3600,\"MaxAttempts\":22,\"BackoffRate\":1}],\"Type\":\"Task\",\"ResultSelector\":{\"checkfiles_command_status.$\":\"$.checkfiles_command_status\",\"instance_id.$\":\"$.instance_id\",\"command_id.$\":\"$.command_id\",\"instance_id_list.$\":\"$.instance_id_list\"},\"Resource\":\"",
                             {
                                 "Fn::GetAtt": [
                                     "WaitForCheckfilesLambdaBCE62619",

@@ -227,7 +227,7 @@ class RunCheckfilesStepFunction(Stack):
             backoff_rate=1,
             errors=['CommandInProgress'],
             interval=Duration.seconds(3600),
-            max_attempts=12,
+            max_attempts=22,
         )
 
         no_files_to_process = Succeed(
