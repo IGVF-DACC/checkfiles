@@ -1,0 +1,652 @@
+{
+    "Parameters": {
+        "BootstrapVersion": {
+            "Default": "/cdk-bootstrap/hnb659fds/version",
+            "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+            "Type": "AWS::SSM::Parameter::Value<String>"
+        }
+    },
+    "Resources": {
+        "CheckPendingFilesLambda618BF2DB": {
+            "DependsOn": [
+                "CheckPendingFilesLambdaServiceRoleDefaultPolicyAF2886EC",
+                "CheckPendingFilesLambdaServiceRoleE77EC8E4"
+            ],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
+                    "S3Key": "6e3c898804d8324c5e968f42845261ba239629c9b7de43ff7e81e9d6d00f5760.zip"
+                },
+                "Environment": {
+                    "Variables": {
+                        "BACKEND_URI": "testing-uri",
+                        "PORTAL_SECRETS_ARN": "arn:aws:secretsmanager:us-west-2:123456:secret:testing-secret-123456"
+                    }
+                },
+                "Handler": "main.check_pending_files",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "CheckPendingFilesLambdaServiceRoleE77EC8E4",
+                        "Arn"
+                    ]
+                },
+                "Runtime": "python3.11",
+                "Timeout": 30
+            },
+            "Type": "AWS::Lambda::Function"
+        },
+        "CheckPendingFilesLambdaServiceRoleDefaultPolicyAF2886EC": {
+            "Properties": {
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "secretsmanager:GetSecretValue",
+                                "secretsmanager:DescribeSecret"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": "arn:aws:secretsmanager:us-west-2:123456:secret:testing-secret-123456"
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "PolicyName": "CheckPendingFilesLambdaServiceRoleDefaultPolicyAF2886EC",
+                "Roles": [
+                    {
+                        "Ref": "CheckPendingFilesLambdaServiceRoleE77EC8E4"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Policy"
+        },
+        "CheckPendingFilesLambdaServiceRoleE77EC8E4": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "ManagedPolicyArns": [
+                    {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "arn:",
+                                {
+                                    "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                            ]
+                        ]
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "CreateCheckfilesInstanceLambda9EE361EE": {
+            "DependsOn": [
+                "CreateCheckfilesInstanceLambdaServiceRoleDefaultPolicyE95BE4C7",
+                "CreateCheckfilesInstanceLambdaServiceRole82FF97FF"
+            ],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
+                    "S3Key": "4881e0e9e524c92c121cbcea678539d4d31d223964ee87630b85efcb8b2cfdae.zip"
+                },
+                "Environment": {
+                    "Variables": {
+                        "AMI_ID": "ami-testing",
+                        "CHECKFILES_BRANCH": "main",
+                        "INSTANCE_NAME": "testing",
+                        "INSTANCE_TYPE": "t2.testing"
+                    }
+                },
+                "Handler": "main.create_checkfiles_instance",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "CreateCheckfilesInstanceLambdaServiceRole82FF97FF",
+                        "Arn"
+                    ]
+                },
+                "Runtime": "python3.11",
+                "Timeout": 360
+            },
+            "Type": "AWS::Lambda::Function"
+        },
+        "CreateCheckfilesInstanceLambdaServiceRole82FF97FF": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "ManagedPolicyArns": [
+                    {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "arn:",
+                                {
+                                    "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                            ]
+                        ]
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "CreateCheckfilesInstanceLambdaServiceRoleDefaultPolicyE95BE4C7": {
+            "Properties": {
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "iam:PassRole",
+                            "Effect": "Allow",
+                            "Resource": "*"
+                        },
+                        {
+                            "Action": [
+                                "ec2:RunInstances",
+                                "ec2:AssociateIamInstanceProfile",
+                                "ec2:ModifyInstanceAttribute",
+                                "ec2:CreateVolume",
+                                "ec2:AttachVolume",
+                                "ec2:CreateTags",
+                                "ec2:DescribeInstances",
+                                "ec2:ReportInstanceStatus"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": "*"
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "PolicyName": "CreateCheckfilesInstanceLambdaServiceRoleDefaultPolicyE95BE4C7",
+                "Roles": [
+                    {
+                        "Ref": "CreateCheckfilesInstanceLambdaServiceRole82FF97FF"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Policy"
+        },
+        "RunCheckfilesCommandLambda7EB09D55": {
+            "DependsOn": [
+                "RunCheckfilesCommandLambdaServiceRoleDefaultPolicyFD908447",
+                "RunCheckfilesCommandLambdaServiceRole3A0C3699"
+            ],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
+                    "S3Key": "0d57e9526bd09a50541d4d15dfdcaaa1b278b169edc6b4722dd1124f87174526.zip"
+                },
+                "Environment": {
+                    "Variables": {
+                        "BACKEND_URI": "testing-uri",
+                        "PORTAL_SECRETS_ARN": "arn:aws:secretsmanager:us-west-2:123456:secret:testing-secret-123456"
+                    }
+                },
+                "Handler": "main.run_checkfiles_command",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "RunCheckfilesCommandLambdaServiceRole3A0C3699",
+                        "Arn"
+                    ]
+                },
+                "Runtime": "python3.11",
+                "Timeout": 60
+            },
+            "Type": "AWS::Lambda::Function"
+        },
+        "RunCheckfilesCommandLambdaServiceRole3A0C3699": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "ManagedPolicyArns": [
+                    {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "arn:",
+                                {
+                                    "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                            ]
+                        ]
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "RunCheckfilesCommandLambdaServiceRoleDefaultPolicyFD908447": {
+            "Properties": {
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "secretsmanager:GetSecretValue",
+                                "secretsmanager:DescribeSecret"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": "arn:aws:secretsmanager:us-west-2:123456:secret:testing-secret-123456"
+                        },
+                        {
+                            "Action": [
+                                "ssm:SendCommand",
+                                "ssm:GetCommandInvocation"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": "*"
+                        },
+                        {
+                            "Action": [
+                                "logs:CreateLogGroup",
+                                "logs:CreateLogStream",
+                                "logs:PutLogEvents",
+                                "logs:DescribeLogStreams"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": "*"
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "PolicyName": "RunCheckfilesCommandLambdaServiceRoleDefaultPolicyFD908447",
+                "Roles": [
+                    {
+                        "Ref": "RunCheckfilesCommandLambdaServiceRole3A0C3699"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Policy"
+        },
+        "RunCheckfilesStateMachineCronRule31359140": {
+            "Properties": {
+                "ScheduleExpression": "cron(20 4 * * ? *)",
+                "State": "ENABLED",
+                "Targets": [
+                    {
+                        "Arn": {
+                            "Ref": "StateMachine2E01A3A5"
+                        },
+                        "Id": "Target0",
+                        "RoleArn": {
+                            "Fn::GetAtt": [
+                                "StateMachineEventsRoleDBCDECD1",
+                                "Arn"
+                            ]
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::Events::Rule"
+        },
+        "StateMachine2E01A3A5": {
+            "DeletionPolicy": "Delete",
+            "DependsOn": [
+                "StateMachineRoleDefaultPolicyDF1E6607",
+                "StateMachineRoleB840431D"
+            ],
+            "Properties": {
+                "DefinitionString": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "{\"StartAt\":\"CheckPendingFiles\",\"States\":{\"CheckPendingFiles\":{\"Next\":\"Pending files?\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"OutputPath\":\"$.files_pending\",\"Resource\":\"",
+                            {
+                                "Fn::GetAtt": [
+                                    "CheckPendingFilesLambda618BF2DB",
+                                    "Arn"
+                                ]
+                            },
+                            "\"},\"Pending files?\":{\"Type\":\"Choice\",\"Choices\":[{\"Variable\":\"$\",\"BooleanEquals\":false,\"Next\":\"No files to process.\"}],\"Default\":\"CreateCheckfilesInstance\"},\"CreateCheckfilesInstance\":{\"Next\":\"WaitForSSMReg\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"instance_id.$\":\"$.instance_id\"},\"Resource\":\"",
+                            {
+                                "Fn::GetAtt": [
+                                    "CreateCheckfilesInstanceLambda9EE361EE",
+                                    "Arn"
+                                ]
+                            },
+                            "\"},\"WaitForSSMReg\":{\"Type\":\"Wait\",\"Seconds\":120,\"Next\":\"RunCheckFilesCommand\"},\"RunCheckFilesCommand\":{\"Next\":\"WaitForCheckfiles\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"instance_id.$\":\"$.instance_id\",\"command_id.$\":\"$.command_id\"},\"Resource\":\"",
+                            {
+                                "Fn::GetAtt": [
+                                    "RunCheckfilesCommandLambda7EB09D55",
+                                    "Arn"
+                                ]
+                            },
+                            "\"},\"WaitForCheckfiles\":{\"Next\":\"TerminateInstance\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2},{\"ErrorEquals\":[\"CommandInProgress\"],\"IntervalSeconds\":3600,\"MaxAttempts\":22,\"BackoffRate\":1}],\"Type\":\"Task\",\"ResultSelector\":{\"checkfiles_command_status.$\":\"$.checkfiles_command_status\",\"instance_id.$\":\"$.instance_id\",\"command_id.$\":\"$.command_id\",\"instance_id_list.$\":\"$.instance_id_list\"},\"Resource\":\"",
+                            {
+                                "Fn::GetAtt": [
+                                    "WaitForCheckfilesLambdaBCE62619",
+                                    "Arn"
+                                ]
+                            },
+                            "\"},\"TerminateInstance\":{\"End\":true,\"Type\":\"Task\",\"ResultPath\":null,\"Resource\":\"arn:",
+                            {
+                                "Ref": "AWS::Partition"
+                            },
+                            ":states:::aws-sdk:ec2:terminateInstances\",\"Parameters\":{\"InstanceIds.$\":\"$.instance_id_list\"}},\"No files to process.\":{\"Type\":\"Succeed\"}}}"
+                        ]
+                    ]
+                },
+                "RoleArn": {
+                    "Fn::GetAtt": [
+                        "StateMachineRoleB840431D",
+                        "Arn"
+                    ]
+                }
+            },
+            "Type": "AWS::StepFunctions::StateMachine",
+            "UpdateReplacePolicy": "Delete"
+        },
+        "StateMachineEventsRoleDBCDECD1": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "events.amazonaws.com"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                }
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "StateMachineEventsRoleDefaultPolicyFB602CA9": {
+            "Properties": {
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "states:StartExecution",
+                            "Effect": "Allow",
+                            "Resource": {
+                                "Ref": "StateMachine2E01A3A5"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "PolicyName": "StateMachineEventsRoleDefaultPolicyFB602CA9",
+                "Roles": [
+                    {
+                        "Ref": "StateMachineEventsRoleDBCDECD1"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Policy"
+        },
+        "StateMachineRoleB840431D": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "states.testing.amazonaws.com"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                }
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "StateMachineRoleDefaultPolicyDF1E6607": {
+            "Properties": {
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "lambda:InvokeFunction",
+                            "Effect": "Allow",
+                            "Resource": [
+                                {
+                                    "Fn::GetAtt": [
+                                        "CheckPendingFilesLambda618BF2DB",
+                                        "Arn"
+                                    ]
+                                },
+                                {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "CheckPendingFilesLambda618BF2DB",
+                                                    "Arn"
+                                                ]
+                                            },
+                                            ":*"
+                                        ]
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Action": "lambda:InvokeFunction",
+                            "Effect": "Allow",
+                            "Resource": [
+                                {
+                                    "Fn::GetAtt": [
+                                        "CreateCheckfilesInstanceLambda9EE361EE",
+                                        "Arn"
+                                    ]
+                                },
+                                {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "CreateCheckfilesInstanceLambda9EE361EE",
+                                                    "Arn"
+                                                ]
+                                            },
+                                            ":*"
+                                        ]
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Action": "lambda:InvokeFunction",
+                            "Effect": "Allow",
+                            "Resource": [
+                                {
+                                    "Fn::GetAtt": [
+                                        "RunCheckfilesCommandLambda7EB09D55",
+                                        "Arn"
+                                    ]
+                                },
+                                {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "RunCheckfilesCommandLambda7EB09D55",
+                                                    "Arn"
+                                                ]
+                                            },
+                                            ":*"
+                                        ]
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Action": "lambda:InvokeFunction",
+                            "Effect": "Allow",
+                            "Resource": [
+                                {
+                                    "Fn::GetAtt": [
+                                        "WaitForCheckfilesLambdaBCE62619",
+                                        "Arn"
+                                    ]
+                                },
+                                {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "WaitForCheckfilesLambdaBCE62619",
+                                                    "Arn"
+                                                ]
+                                            },
+                                            ":*"
+                                        ]
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Action": "ec2:terminateInstances",
+                            "Effect": "Allow",
+                            "Resource": "*"
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "PolicyName": "StateMachineRoleDefaultPolicyDF1E6607",
+                "Roles": [
+                    {
+                        "Ref": "StateMachineRoleB840431D"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Policy"
+        },
+        "WaitForCheckfilesLambdaBCE62619": {
+            "DependsOn": [
+                "WaitForCheckfilesLambdaServiceRoleDefaultPolicyBECFD1FC",
+                "WaitForCheckfilesLambdaServiceRoleC8AEA694"
+            ],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
+                    "S3Key": "f92a633ec6e5b146e9454d259a24b876a0fd4eff383ab07519efdebe75cd4124.zip"
+                },
+                "Handler": "main.wait_checkfiles_command_to_finish",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "WaitForCheckfilesLambdaServiceRoleC8AEA694",
+                        "Arn"
+                    ]
+                },
+                "Runtime": "python3.11",
+                "Timeout": 180
+            },
+            "Type": "AWS::Lambda::Function"
+        },
+        "WaitForCheckfilesLambdaServiceRoleC8AEA694": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "ManagedPolicyArns": [
+                    {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "arn:",
+                                {
+                                    "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                            ]
+                        ]
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "WaitForCheckfilesLambdaServiceRoleDefaultPolicyBECFD1FC": {
+            "Properties": {
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "ssm:GetCommandInvocation",
+                            "Effect": "Allow",
+                            "Resource": "*"
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "PolicyName": "WaitForCheckfilesLambdaServiceRoleDefaultPolicyBECFD1FC",
+                "Roles": [
+                    {
+                        "Ref": "WaitForCheckfilesLambdaServiceRoleC8AEA694"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Policy"
+        }
+    },
+    "Rules": {
+        "CheckBootstrapVersion": {
+            "Assertions": [
+                {
+                    "Assert": {
+                        "Fn::Not": [
+                            {
+                                "Fn::Contains": [
+                                    [
+                                        "1",
+                                        "2",
+                                        "3",
+                                        "4",
+                                        "5"
+                                    ],
+                                    {
+                                        "Ref": "BootstrapVersion"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+                }
+            ]
+        }
+    }
+}

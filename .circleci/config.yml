@@ -41,7 +41,7 @@ jobs:
 
       - run:
           name: Tests
-          command: pytest --cov .
+          command: pytest --ignore=cdk --cov .
       - run:
           name: Upload coverage report
           command:
