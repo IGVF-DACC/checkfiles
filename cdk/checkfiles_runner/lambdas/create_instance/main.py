@@ -32,7 +32,7 @@ def create_checkfiles_instance(event, context):
     instance_type = get_instance_type()
     branch = get_checkfiles_branch()
     # clone checkfiles code and build the virtual environment
-    user_data = '''#!/bin/bash
+    user_data = f'''#!/bin/bash
     cd /home/ubuntu
     git clone https://github.com/IGVF-DACC/checkfiles.git --branch {branch} --single-branch
     cd checkfiles
@@ -57,6 +57,7 @@ def create_checkfiles_instance(event, context):
 
     logging.info(
         f'instance_type: {instance_type} ami_id: {ami_id} checkfiles_branch: {branch}')
+    logging.info(f'user_data: \n {user_data}')
 
     instances = ec2.create_instances(
         MinCount=1,
