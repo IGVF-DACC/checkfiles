@@ -32,7 +32,7 @@ def run_checkfiles_command(event, context):
             'workingDirectory': ['/home/ubuntu/checkfiles'],
         },
         CloudWatchOutputConfig={
-            'CloudWatchLogGroupName': 'checkfiles-test-log',
+            'CloudWatchLogGroupName': 'checkfiles-log',
             'CloudWatchOutputEnabled': True,
         }
     )
