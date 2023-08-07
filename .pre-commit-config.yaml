@@ -10,6 +10,8 @@ repos:
       - id: double-quote-string-fixer
       - id: trailing-whitespace
       - id: end-of-file-fixer
+        exclude: ^cdk/tests/snapshots
       - id: pretty-format-json
         args: ['--autofix', '--no-sort-keys', '--indent=4', '--no-ensure-ascii']
+        exclude: ^cdk/tests/snapshots
       - id: check-yaml
