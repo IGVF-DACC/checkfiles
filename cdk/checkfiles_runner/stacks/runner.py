@@ -40,6 +40,8 @@ class RunCheckfilesStepFunction(Stack):
             ami_id: str,
             instance_type: str,
             instance_name: str,
+            instance_profile_arn: str,
+            instance_security_group_id: str,
             checkfiles_branch: str,
             portal_secrets_arn: str,
             backend_uri: str,
@@ -49,6 +51,8 @@ class RunCheckfilesStepFunction(Stack):
         self.ami_id = ami_id
         self.instance_type = instance_type
         self.instance_name = instance_name
+        self.instance_profile_arn = instance_profile_arn
+        self.instance_security_group_id = instance_security_group_id
         self.checkfiles_branch = checkfiles_branch
         self.portal_secrets_arn = portal_secrets_arn
         self.backend_uri = backend_uri
@@ -95,6 +99,8 @@ class RunCheckfilesStepFunction(Stack):
                 'AMI_ID': self.ami_id,
                 'INSTANCE_TYPE': self.instance_type,
                 'INSTANCE_NAME': self.instance_name,
+                'INSTANCE_PROFILE_ARN': self.instance_profile_arn,
+                'SECURITY_GROUP': self.instance_security_group_id,
                 'CHECKFILES_BRANCH': self.checkfiles_branch,
             }
         )

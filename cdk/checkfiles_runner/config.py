@@ -10,6 +10,8 @@ config = {
     'instance_type_production': 't2.xlarge',
     'instance_name_sandbox': 'checkfiles-sandbox',
     'instance_name_production': 'checkfiles-production',
+    'instance_profile_arn_sandbox': 'arn:aws:iam::920073238245:instance-profile/checkfiles-instance',
+    'instance_profile_arn_production': 'arn:aws:iam::035226225042:instance-profile/checkfiles-instance',
     'instance_security_group_sandbox': 'sg-045780345c2bdc6d4',
     'instance_security_group_production': 'sg-0136bee948bf49fe7',
     'backend_uri_sandbox': 'https://api.sandbox.igvf.org',
