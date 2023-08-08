@@ -389,11 +389,11 @@ def patching_worker(job):
         portal_uri, current_uuid, portal_auth)
     if not credentials_expired and not ignore_active_credentials:
         logger.info(
-            'Upload credentials for {current_uuid} are not expired yet. Skipping.')
+            f'Upload credentials for {current_uuid} are not expired yet. Skipping.')
         return
     if not credentials_expired and ignore_active_credentials:
         logger.info(
-            'Upload credentials for {current_uuid} are not expired yet and ignore_active_credentials is set, proceeding to patch.')
+            f'Upload credentials for {current_uuid} are not expired yet and ignore_active_credentials is set, proceeding to patch.')
     result = file_validation(*job)
     original_etag = file_validation_record.original_etag
     etag_after = fetch_etag_for_uuid(portal_uri, current_uuid, portal_auth)
