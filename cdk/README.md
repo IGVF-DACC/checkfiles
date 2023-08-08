@@ -27,4 +27,5 @@ $ cdk deploy RunCheckfilesStepFunctionSandbox --profile igvf-staging
 Deploy production stack:
 
 ```bash
-$ cdk deploy RunCheckfilesStepFunctionProduction --profile igvf-prod```
+$ cdk deploy RunCheckfilesStepFunctionProduction --profile igvf-prod
+```
