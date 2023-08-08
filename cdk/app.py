@@ -3,37 +3,46 @@ import json
 from aws_cdk import App
 from aws_cdk import Environment
 
+from checkfiles_runner.stacks.runner import RunCheckfilesStepFunctionProps
 from checkfiles_runner.stacks.runner import RunCheckfilesStepFunction
 from checkfiles_runner.stacks.runner import RunCheckfilesStepFunctionSandbox
 from checkfiles_runner.stacks.runner import RunCheckfilesStepFunctionProduction
 from checkfiles_runner.config import config
 
 
-ENVIRONMENT = Environment(
-    account=config['account'],
+ENVIRONMENT_SANDBOX = Environment(
+    account=config['account_staging'],
     region=config['region']
 )
 
-AMI_ID = config['ami_id']
-PORTAL_SECRETS_ARN = config['portal_secrets_arn']
+ENVIRONMENT_PRODUCTION = Environment(
+    account=config['account_production'],
+    region=config['region']
+)
+
+sandbox_props = RunCheckfilesStepFunctionProps(
+    ami_id=config['ami_id_sandbox'],
+    instance_type=config['instance_type_sandbox'],
+    instance_name=config['instance_name_sandbox'],
+    instance_profile_arn=config['instance_profile_arn_sandbox'],
+    instance_security_group_id=config['instance_security_group_sandbox'],
+    checkfiles_branch=config['checkfiles_branch_sandbox'],
+    portal_secrets_arn=config['portal_secrets_arn_sandbox'],
+    backend_uri=config['backend_uri_sandbox'],
+)
 
 
-INSTANCE_TYPE_SANDBOX = config['instance_type_sandbox']
+production_props = RunCheckfilesStepFunctionProps(
+    ami_id=config['ami_id_production'],
+    instance_type=config['instance_type_production'],
+    instance_name=config['instance_name_production'],
+    instance_profile_arn=config['instance_profile_arn_production'],
+    instance_security_group_id=config['instance_security_group_production'],
+    checkfiles_branch=config['checkfiles_branch_production'],
+    portal_secrets_arn=config['portal_secrets_arn_production'],
+    backend_uri=config['backend_uri_production'],
+)
 
-INSTANCE_NAME_SANDBOX = config['instance_name_sandbox']
-
-CHECKFILES_BRANCH_SANDBOX = config['checkfiles_branch_sandbox']
-
-BACKEND_URI_SANDBOX = config['backend_uri_sandbox']
-
-
-INSTANCE_TYPE_PRODUCTION = config['instance_type_production']
-
-INSTANCE_NAME_PRODUCTION = config['instance_name_production']
-
-CHECKFILES_BRANCH_PRODUCTION = config['checkfiles_branch_production']
-
-BACKEND_URI_PRODUCTION = config['backend_uri_production']
 
 app = App()
 
@@ -41,25 +50,15 @@ app = App()
 RunCheckfilesStepFunctionSandbox(
     app,
     'RunCheckfilesStepFunctionSandbox',
-    ami_id=AMI_ID,
-    instance_type=INSTANCE_TYPE_SANDBOX,
-    instance_name=INSTANCE_NAME_SANDBOX,
-    checkfiles_branch=CHECKFILES_BRANCH_SANDBOX,
-    portal_secrets_arn=PORTAL_SECRETS_ARN,
-    backend_uri=BACKEND_URI_SANDBOX,
-    env=ENVIRONMENT,
+    props=sandbox_props,
+    env=ENVIRONMENT_SANDBOX,
 )
 
 
 RunCheckfilesStepFunctionProduction(
     app,
     'RunCheckfilesStepFunctionProduction',
-    ami_id=AMI_ID,
-    instance_type=INSTANCE_TYPE_PRODUCTION,
-    instance_name=INSTANCE_NAME_PRODUCTION,
-    checkfiles_branch=CHECKFILES_BRANCH_PRODUCTION,
-    portal_secrets_arn=PORTAL_SECRETS_ARN,
-    backend_uri=BACKEND_URI_PRODUCTION,
-    env=ENVIRONMENT,
+    props=production_props,
+    env=ENVIRONMENT_PRODUCTION,
 )
 app.synth()

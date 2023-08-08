@@ -22,6 +22,14 @@ def get_instance_type():
     return os.environ['INSTANCE_TYPE']
 
 
+def get_instance_profile_arn():
+    return os.environ['INSTANCE_PROFILE_ARN']
+
+
+def get_security_group():
+    return os.environ['SECURITY_GROUP']
+
+
 def get_checkfiles_branch():
     return os.environ['CHECKFILES_BRANCH']
 
@@ -30,6 +38,8 @@ def create_checkfiles_instance(event, context):
     instance_name = get_instance_name()
     ami_id = get_ami_id()
     instance_type = get_instance_type()
+    instance_profile_arn = get_instance_profile_arn()
+    security_group = get_security_group()
     branch = get_checkfiles_branch()
     # clone checkfiles code and build the virtual environment
     user_data = f'''#!/bin/bash
@@ -65,9 +75,9 @@ def create_checkfiles_instance(event, context):
         BlockDeviceMappings=[boot_disk_volume],
         InstanceType=instance_type,
         ImageId=ami_id,
-        SecurityGroupIds=['sg-045780345c2bdc6d4'],
+        SecurityGroupIds=[security_group],
         IamInstanceProfile={
-            'Arn': 'arn:aws:iam::920073238245:instance-profile/checkfiles-instance'
+            'Arn': instance_profile_arn
         },
         UserData=user_data,
         TagSpecifications=[{

@@ -1,11 +1,11 @@
 {
     "aws_region": "us-west-2",
-    "aws_profile_name": "igvf-staging",
-    "name_tag": "checkfiles__ami",
+    "aws_profile_name": "igvf-prod",
+    "name_tag": "checkfiles_ami",
     "installation_scripts": [
         "../scripts/install_base_checkfiles_packages.sh",
         "../scripts/install_goofys_and_validatefiles.sh",
-        "../scripts/goofys_mount.sh",
+        "../scripts/goofys_mount_prod.sh",
         "../scripts/install_fastq_stats.sh"
     ],
     "ami_type": "checkfiles_jammy_ami",

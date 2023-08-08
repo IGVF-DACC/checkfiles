@@ -42,26 +42,17 @@ variable "source_ami_name" {
   description = "Source AMI used to search for the source"
 }
 
-variable "prod_or_dev" {
-  type = string
-  default = ""
-  description = "This will be concatenated to the end of the ami_name to mitigate any naming conflicts."
-}
-
 locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
 
 source "amazon-ebs" "builder" {
-  #access_key    = "${var.aws_access_key}"
-  #secret_key    = "${var.aws_secret_key}"
   profile       = "${var.aws_profile_name}"
-  ami_name      = "packer-ami-build ${local.timestamp} ${var.prod_or_dev}"
+  ami_name      = "packer-ami-build ${local.timestamp}"
   instance_type = "m3.medium"
   region        = "${var.aws_region}"
   ssh_username  = "${var.ssh_username}"
   tags = {
     Name = "${var.name_tag}"
   }
-  #  iam_instance_profile = "packerbuilderrole"
   source_ami_filter {
     filters = {
       virtualization-type = "hvm"
