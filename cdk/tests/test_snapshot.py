@@ -20,10 +20,9 @@ ENVIRONMENT = Environment(
 
 def test_match_with_snapshot(snapshot):
     from checkfiles_runner.stacks.runner import RunCheckfilesStepFunction
-    app = App()
-    stack = RunCheckfilesStepFunction(
-        app,
-        'RunCheckfilesStepFunction',
+    from checkfiles_runner.stacks.runner import RunCheckfilesStepFunctionProps
+
+    test_props = RunCheckfilesStepFunctionProps(
         ami_id='ami-testing',
         instance_type='t2.testing',
         instance_name='testing',
@@ -32,6 +31,13 @@ def test_match_with_snapshot(snapshot):
         checkfiles_branch='main',
         portal_secrets_arn=PORTAL_SECRETS_ARN,
         backend_uri='testing-uri',
+    )
+
+    app = App()
+    stack = RunCheckfilesStepFunction(
+        app,
+        'RunCheckfilesStepFunction',
+        props=test_props,
         env=ENVIRONMENT,
     )
     template = Template.from_stack(stack)
