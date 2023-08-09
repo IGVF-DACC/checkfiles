@@ -26,7 +26,7 @@ from aws_cdk.aws_stepfunctions import JsonPath
 from aws_cdk.aws_stepfunctions import Pass
 from aws_cdk.aws_stepfunctions import Succeed
 from aws_cdk.aws_stepfunctions import StateMachine
-from aws_cdk.aws_stepfumctioms import TaskInput
+from aws_cdk.aws_stepfunctions import TaskInput
 from aws_cdk.aws_stepfunctions import Wait
 from aws_cdk.aws_stepfunctions import WaitTime
 
@@ -294,6 +294,8 @@ class RunCheckfilesStepFunction(Stack):
         )
 
         definition = check_pending_files.next(
+            make_pending_files_checked_message
+        ).next(
             send_slack_notification
         ).next(
             Choice(self, 'Pending files?')
