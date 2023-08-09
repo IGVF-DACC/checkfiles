@@ -23,12 +23,16 @@ from aws_cdk.aws_secretsmanager import Secret as SMSecret
 from aws_cdk.aws_stepfunctions import Choice
 from aws_cdk.aws_stepfunctions import Condition
 from aws_cdk.aws_stepfunctions import JsonPath
+from aws_cdk.aws_stepfunctions import Pass
 from aws_cdk.aws_stepfunctions import Succeed
 from aws_cdk.aws_stepfunctions import StateMachine
+from aws_cdk.aws_stepfumctioms import TaskInput
 from aws_cdk.aws_stepfunctions import Wait
 from aws_cdk.aws_stepfunctions import WaitTime
 
 from aws_cdk.aws_stepfunctions_tasks import CallAwsService
+from aws_cdk.aws_stepfunctions_tasks import EventBridgePutEvents
+from aws_cdk.aws_stepfunctions_tasks import EventBridgePutEventsEntry
 from aws_cdk.aws_stepfunctions_tasks import LambdaInvoke
 
 from typing import Any
@@ -63,6 +67,40 @@ class RunCheckfilesStepFunction(Stack):
             self,
             id='PortalSecrets',
             secret_complete_arn=self.props.portal_secrets_arn
+        )
+
+        make_pending_files_checked_message = Pass(
+            self,
+            'MakePendingFilesCheckedMessage',
+            parameters={
+                'detailType': 'PendingFilesChecked',
+                'source': 'CheckfilesRunnerStepFunction',
+                'detail': {
+                    'metadata': {
+                        'includes_slack_notification': True
+                    },
+                    'data': {
+                        'slack': {
+                            'text': JsonPath.format(
+                                ':white_check_mark: Pending files checked'
+                            )
+                        }
+                    }
+                }
+            },
+        )
+
+        send_slack_notification = EventBridgePutEvents(
+            self,
+            'SendSlackNotification',
+            entries=[
+                EventBridgePutEventsEntry(
+                    detail_type=JsonPath.string_at('$.detailType'),
+                    detail=TaskInput.from_json_path_at('$.detail'),
+                    source=JsonPath.string_at('$.source')
+                )
+            ],
+            result_path=JsonPath.DISCARD,
         )
 
         check_pending_files_lambda = PythonFunction(
@@ -256,7 +294,10 @@ class RunCheckfilesStepFunction(Stack):
         )
 
         definition = check_pending_files.next(
-            Choice(self, 'Pending files?').when(
+            send_slack_notification
+        ).next(
+            Choice(self, 'Pending files?')
+            .when(
                 Condition.boolean_equals('$', False), no_files_to_process
             ).otherwise(
                 create_checkfiles_instance.next(
