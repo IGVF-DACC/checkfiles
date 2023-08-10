@@ -23,12 +23,16 @@ from aws_cdk.aws_secretsmanager import Secret as SMSecret
 from aws_cdk.aws_stepfunctions import Choice
 from aws_cdk.aws_stepfunctions import Condition
 from aws_cdk.aws_stepfunctions import JsonPath
+from aws_cdk.aws_stepfunctions import Pass
 from aws_cdk.aws_stepfunctions import Succeed
 from aws_cdk.aws_stepfunctions import StateMachine
+from aws_cdk.aws_stepfunctions import TaskInput
 from aws_cdk.aws_stepfunctions import Wait
 from aws_cdk.aws_stepfunctions import WaitTime
 
 from aws_cdk.aws_stepfunctions_tasks import CallAwsService
+from aws_cdk.aws_stepfunctions_tasks import EventBridgePutEvents
+from aws_cdk.aws_stepfunctions_tasks import EventBridgePutEventsEntry
 from aws_cdk.aws_stepfunctions_tasks import LambdaInvoke
 
 from typing import Any
@@ -65,6 +69,54 @@ class RunCheckfilesStepFunction(Stack):
             secret_complete_arn=self.props.portal_secrets_arn
         )
 
+        make_pending_files_checked_message = Pass(
+            self,
+            'MakePendingFilesCheckedMessage',
+            parameters={
+                'detailType': 'PendingFilesChecked',
+                'source': 'RunCheckfilesStepFunction',
+                'detail': {
+                    'metadata': {
+                        'includes_slack_notification': True
+                    },
+                    'data': {
+                        'slack': {
+                            'text': JsonPath.format(
+                                ':white_check_mark: *CheckFilesStarted* | Found {} files in upload_status: pending',
+                                JsonPath.string_at('$.number_of_files_pending')
+                            )
+                        }
+                    }
+                },
+                'files_pending.$': '$.files_pending',
+                'number_of_files_pending.$': '$.number_of_files_pending',
+            },
+        )
+
+        make_checkfiles_finished_message = Pass(
+            self,
+            'MakeCheckfilesFinishedMessage',
+            parameters={
+                'detailType': 'CheckfilesFinished',
+                'source': 'RunCheckfilesStepFunction',
+                'detail': {
+                    'metadata': {
+                        'includes_slack_notification': True
+                    },
+                    'data': {
+                        'slack': {
+                            'text': JsonPath.format(
+                                ':white_check_mark: *CheckFilesFinished* | command_status: {} | See log group checkfiles-log for details',
+                                JsonPath.string_at(
+                                    '$.checkfiles_command_status')
+                            )
+                        }
+                    }
+                },
+                'instance_id_list.$': '$.instance_id_list'
+            },
+        )
+
         check_pending_files_lambda = PythonFunction(
             self,
             'CheckPendingFilesLambda',
@@ -86,7 +138,10 @@ class RunCheckfilesStepFunction(Stack):
             'CheckPendingFiles',
             lambda_function=check_pending_files_lambda,
             payload_response_only=True,
-            output_path='$.files_pending'
+            result_selector={
+                'files_pending.$': '$.files_pending',
+                'number_of_files_pending.$': '$.number_of_files_pending'
+            }
         )
 
         create_checkfiles_instance_lambda = PythonFunction(
@@ -255,9 +310,20 @@ class RunCheckfilesStepFunction(Stack):
             result_path=JsonPath.DISCARD,
         )
 
+        send_pending_files_slack_notification = self.make_slack_notification_task(
+            'SendPendingFilesCheckedSlackNotification')
+        send_checkfiles_finished_slack_notification = self.make_slack_notification_task(
+            'SendCheckfilesFinishedSlackNotification')
+
         definition = check_pending_files.next(
-            Choice(self, 'Pending files?').when(
-                Condition.boolean_equals('$', False), no_files_to_process
+            make_pending_files_checked_message
+        ).next(
+            send_pending_files_slack_notification
+        ).next(
+            Choice(self, 'Pending files?')
+            .when(
+                Condition.boolean_equals(
+                    '$.files_pending', False), no_files_to_process
             ).otherwise(
                 create_checkfiles_instance.next(
                     wait_instance_ssm_registration
@@ -265,6 +331,10 @@ class RunCheckfilesStepFunction(Stack):
                     run_checkfiles_command
                 ).next(
                     wait_for_checkfiles
+                ).next(
+                    make_checkfiles_finished_message
+                ).next(
+                    send_checkfiles_finished_slack_notification
                 ).next(
                     terminate_instance
                 )
@@ -292,6 +362,21 @@ class RunCheckfilesStepFunction(Stack):
                 state_machine_target
             ]
         )
+
+    def make_slack_notification_task(self, task_id: str) -> EventBridgePutEvents:
+        task = EventBridgePutEvents(
+            self,
+            task_id,
+            entries=[
+                EventBridgePutEventsEntry(
+                    detail_type=JsonPath.string_at('$.detailType'),
+                    detail=TaskInput.from_json_path_at('$.detail'),
+                    source=JsonPath.string_at('$.source')
+                )
+            ],
+            result_path=JsonPath.DISCARD,
+        )
+        return task
 
 
 class RunCheckfilesStepFunctionSandbox(RunCheckfilesStepFunction):

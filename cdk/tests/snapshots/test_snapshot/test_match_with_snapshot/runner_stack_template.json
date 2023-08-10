@@ -15,7 +15,7 @@
             "Properties": {
                 "Code": {
                     "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
-                    "S3Key": "6e3c898804d8324c5e968f42845261ba239629c9b7de43ff7e81e9d6d00f5760.zip"
+                    "S3Key": "49cee5436029b564afb714446b11f66c26c475a9e656813df2efa9a7cb0177ae.zip"
                 },
                 "Environment": {
                     "Variables": {
@@ -321,14 +321,18 @@
                     "Fn::Join": [
                         "",
                         [
-                            "{\"StartAt\":\"CheckPendingFiles\",\"States\":{\"CheckPendingFiles\":{\"Next\":\"Pending files?\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"OutputPath\":\"$.files_pending\",\"Resource\":\"",
+                            "{\"StartAt\":\"CheckPendingFiles\",\"States\":{\"CheckPendingFiles\":{\"Next\":\"MakePendingFilesCheckedMessage\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"files_pending.$\":\"$.files_pending\",\"number_of_files_pending.$\":\"$.number_of_files_pending\"},\"Resource\":\"",
                             {
                                 "Fn::GetAtt": [
                                     "CheckPendingFilesLambda618BF2DB",
                                     "Arn"
                                 ]
                             },
-                            "\"},\"Pending files?\":{\"Type\":\"Choice\",\"Choices\":[{\"Variable\":\"$\",\"BooleanEquals\":false,\"Next\":\"No files to process.\"}],\"Default\":\"CreateCheckfilesInstance\"},\"CreateCheckfilesInstance\":{\"Next\":\"WaitForSSMReg\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"instance_id.$\":\"$.instance_id\"},\"Resource\":\"",
+                            "\"},\"MakePendingFilesCheckedMessage\":{\"Type\":\"Pass\",\"Parameters\":{\"detailType\":\"PendingFilesChecked\",\"source\":\"RunCheckfilesStepFunction\",\"detail\":{\"metadata\":{\"includes_slack_notification\":true},\"data\":{\"slack\":{\"text.$\":\"States.Format(':white_check_mark: *CheckFilesStarted* | Found {} files in upload_status: pending', $.number_of_files_pending)\"}}},\"files_pending.$\":\"$.files_pending\",\"number_of_files_pending.$\":\"$.number_of_files_pending\"},\"Next\":\"SendPendingFilesCheckedSlackNotification\"},\"SendPendingFilesCheckedSlackNotification\":{\"Next\":\"Pending files?\",\"Type\":\"Task\",\"ResultPath\":null,\"Resource\":\"arn:",
+                            {
+                                "Ref": "AWS::Partition"
+                            },
+                            ":states:::events:putEvents\",\"Parameters\":{\"Entries\":[{\"Detail.$\":\"$.detail\",\"DetailType.$\":\"$.detailType\",\"Source.$\":\"$.source\"}]}},\"Pending files?\":{\"Type\":\"Choice\",\"Choices\":[{\"Variable\":\"$.files_pending\",\"BooleanEquals\":false,\"Next\":\"No files to process.\"}],\"Default\":\"CreateCheckfilesInstance\"},\"CreateCheckfilesInstance\":{\"Next\":\"WaitForSSMReg\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"instance_id.$\":\"$.instance_id\"},\"Resource\":\"",
                             {
                                 "Fn::GetAtt": [
                                     "CreateCheckfilesInstanceLambda9EE361EE",
@@ -342,14 +346,18 @@
                                     "Arn"
                                 ]
                             },
-                            "\"},\"WaitForCheckfiles\":{\"Next\":\"TerminateInstance\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2},{\"ErrorEquals\":[\"CommandInProgress\"],\"IntervalSeconds\":3600,\"MaxAttempts\":22,\"BackoffRate\":1}],\"Type\":\"Task\",\"ResultSelector\":{\"checkfiles_command_status.$\":\"$.checkfiles_command_status\",\"instance_id.$\":\"$.instance_id\",\"command_id.$\":\"$.command_id\",\"instance_id_list.$\":\"$.instance_id_list\"},\"Resource\":\"",
+                            "\"},\"WaitForCheckfiles\":{\"Next\":\"MakeCheckfilesFinishedMessage\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2},{\"ErrorEquals\":[\"CommandInProgress\"],\"IntervalSeconds\":3600,\"MaxAttempts\":22,\"BackoffRate\":1}],\"Type\":\"Task\",\"ResultSelector\":{\"checkfiles_command_status.$\":\"$.checkfiles_command_status\",\"instance_id.$\":\"$.instance_id\",\"command_id.$\":\"$.command_id\",\"instance_id_list.$\":\"$.instance_id_list\"},\"Resource\":\"",
                             {
                                 "Fn::GetAtt": [
                                     "WaitForCheckfilesLambdaBCE62619",
                                     "Arn"
                                 ]
                             },
-                            "\"},\"TerminateInstance\":{\"End\":true,\"Type\":\"Task\",\"ResultPath\":null,\"Resource\":\"arn:",
+                            "\"},\"MakeCheckfilesFinishedMessage\":{\"Type\":\"Pass\",\"Parameters\":{\"detailType\":\"CheckfilesFinished\",\"source\":\"RunCheckfilesStepFunction\",\"detail\":{\"metadata\":{\"includes_slack_notification\":true},\"data\":{\"slack\":{\"text.$\":\"States.Format(':white_check_mark: *CheckFilesFinished* | command_status: {} | See log group checkfiles-log for details', $.checkfiles_command_status)\"}}},\"instance_id_list.$\":\"$.instance_id_list\"},\"Next\":\"SendCheckfilesFinishedSlackNotification\"},\"SendCheckfilesFinishedSlackNotification\":{\"Next\":\"TerminateInstance\",\"Type\":\"Task\",\"ResultPath\":null,\"Resource\":\"arn:",
+                            {
+                                "Ref": "AWS::Partition"
+                            },
+                            ":states:::events:putEvents\",\"Parameters\":{\"Entries\":[{\"Detail.$\":\"$.detail\",\"DetailType.$\":\"$.detailType\",\"Source.$\":\"$.source\"}]}},\"TerminateInstance\":{\"End\":true,\"Type\":\"Task\",\"ResultPath\":null,\"Resource\":\"arn:",
                             {
                                 "Ref": "AWS::Partition"
                             },
@@ -453,6 +461,22 @@
                                     ]
                                 }
                             ]
+                        },
+                        {
+                            "Action": "events:PutEvents",
+                            "Effect": "Allow",
+                            "Resource": {
+                                "Fn::Join": [
+                                    "",
+                                    [
+                                        "arn:",
+                                        {
+                                            "Ref": "AWS::Partition"
+                                        },
+                                        ":events:testing:testing:event-bus/default"
+                                    ]
+                                ]
+                            }
                         },
                         {
                             "Action": "lambda:InvokeFunction",
