@@ -6,8 +6,6 @@ config = {
     'ami_id_production': 'ami-0af99db6419744f44',
     'portal_secrets_arn_sandbox': 'arn:aws:secretsmanager:us-west-2:920073238245:secret:checkfiles-portal-secret-u9aeGR',
     'portal_secrets_arn_production': 'arn:aws:secretsmanager:us-west-2:035226225042:secret:checkfiles-portal-secret-GWpoIK',
-    'instance_type_sandbox': 't2.2xlarge',
-    'instance_type_production': 't2.xlarge',
     'instance_name_sandbox': 'checkfiles-sandbox',
     'instance_name_production': 'checkfiles-production',
     'instance_profile_arn_sandbox': 'arn:aws:iam::920073238245:instance-profile/checkfiles-instance',

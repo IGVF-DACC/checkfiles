@@ -22,7 +22,6 @@ ENVIRONMENT_PRODUCTION = Environment(
 
 sandbox_props = RunCheckfilesStepFunctionProps(
     ami_id=config['ami_id_sandbox'],
-    instance_type=config['instance_type_sandbox'],
     instance_name=config['instance_name_sandbox'],
     instance_profile_arn=config['instance_profile_arn_sandbox'],
     instance_security_group_id=config['instance_security_group_sandbox'],
@@ -34,7 +33,6 @@ sandbox_props = RunCheckfilesStepFunctionProps(
 
 production_props = RunCheckfilesStepFunctionProps(
     ami_id=config['ami_id_production'],
-    instance_type=config['instance_type_production'],
     instance_name=config['instance_name_production'],
     instance_profile_arn=config['instance_profile_arn_production'],
     instance_security_group_id=config['instance_security_group_production'],

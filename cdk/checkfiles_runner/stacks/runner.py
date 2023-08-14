@@ -41,7 +41,6 @@ from typing import Any
 @dataclass
 class RunCheckfilesStepFunctionProps:
     ami_id: str
-    instance_type: str
     instance_name: str
     instance_profile_arn: str
     instance_security_group_id: str
@@ -154,7 +153,6 @@ class RunCheckfilesStepFunction(Stack):
             timeout=Duration.seconds(360),
             environment={
                 'AMI_ID': self.props.ami_id,
-                'INSTANCE_TYPE': self.props.instance_type,
                 'INSTANCE_NAME': self.props.instance_name,
                 'INSTANCE_PROFILE_ARN': self.props.instance_profile_arn,
                 'SECURITY_GROUP': self.props.instance_security_group_id,
@@ -193,7 +191,8 @@ class RunCheckfilesStepFunction(Stack):
             lambda_function=create_checkfiles_instance_lambda,
             payload_response_only=True,
             result_selector={
-                'instance_id.$': '$.instance_id'
+                'instance_id.$': '$.instance_id',
+                'instance_type.$': '$.instance_type'
             }
         )
 
