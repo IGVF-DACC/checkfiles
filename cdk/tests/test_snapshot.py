@@ -24,7 +24,6 @@ def test_match_with_snapshot(snapshot):
 
     test_props = RunCheckfilesStepFunctionProps(
         ami_id='ami-testing',
-        instance_type='t2.testing',
         instance_name='testing',
         instance_profile_arn=INSTANCE_PROFILE_ARN,
         instance_security_group_id='sg-123456',

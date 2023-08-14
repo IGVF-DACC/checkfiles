@@ -98,7 +98,7 @@
             "Properties": {
                 "Code": {
                     "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
-                    "S3Key": "8acb0bcecac811c3eaf0623c347b1953d489ad8a5695bab9450d737af22accaf.zip"
+                    "S3Key": "d1bfd2bdcef8438eb258277c7e06f8c604ab94f9c59ee9d2c37d77fd636d0a54.zip"
                 },
                 "Environment": {
                     "Variables": {
@@ -106,7 +106,6 @@
                         "CHECKFILES_BRANCH": "main",
                         "INSTANCE_NAME": "testing",
                         "INSTANCE_PROFILE_ARN": "arn:aws:iam::123456:instance-profile/checkfiles-instance",
-                        "INSTANCE_TYPE": "t2.testing",
                         "SECURITY_GROUP": "sg-123456"
                     }
                 },
@@ -332,7 +331,7 @@
                             {
                                 "Ref": "AWS::Partition"
                             },
-                            ":states:::events:putEvents\",\"Parameters\":{\"Entries\":[{\"Detail.$\":\"$.detail\",\"DetailType.$\":\"$.detailType\",\"Source.$\":\"$.source\"}]}},\"Pending files?\":{\"Type\":\"Choice\",\"Choices\":[{\"Variable\":\"$.files_pending\",\"BooleanEquals\":false,\"Next\":\"No files to process.\"}],\"Default\":\"CreateCheckfilesInstance\"},\"CreateCheckfilesInstance\":{\"Next\":\"WaitForSSMReg\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"instance_id.$\":\"$.instance_id\"},\"Resource\":\"",
+                            ":states:::events:putEvents\",\"Parameters\":{\"Entries\":[{\"Detail.$\":\"$.detail\",\"DetailType.$\":\"$.detailType\",\"Source.$\":\"$.source\"}]}},\"Pending files?\":{\"Type\":\"Choice\",\"Choices\":[{\"Variable\":\"$.files_pending\",\"BooleanEquals\":false,\"Next\":\"No files to process.\"}],\"Default\":\"CreateCheckfilesInstance\"},\"CreateCheckfilesInstance\":{\"Next\":\"WaitForSSMReg\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"instance_id.$\":\"$.instance_id\",\"instance_type.$\":\"$.instance_type\"},\"Resource\":\"",
                             {
                                 "Fn::GetAtt": [
                                     "CreateCheckfilesInstanceLambda9EE361EE",

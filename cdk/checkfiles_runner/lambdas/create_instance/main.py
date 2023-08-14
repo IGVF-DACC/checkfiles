@@ -18,10 +18,6 @@ def get_instance_name():
     return os.environ['INSTANCE_NAME']
 
 
-def get_instance_type():
-    return os.environ['INSTANCE_TYPE']
-
-
 def get_instance_profile_arn():
     return os.environ['INSTANCE_PROFILE_ARN']
 
@@ -34,10 +30,25 @@ def get_checkfiles_branch():
     return os.environ['CHECKFILES_BRANCH']
 
 
+def get_instance_type_from_number_of_files_pending(number_of_files_pending: int):
+    if number_of_files_pending <= 2:
+        return 'c6a.large'
+    elif number_of_files_pending <= 4:
+        return 'c6a.xlarge'
+    elif number_of_files_pending <= 8:
+        return 'c6a.2xlarge'
+    elif number_of_files_pending <= 16:
+        return 'c6a.4xlarge'
+    else:
+        return 'c6a.8xlarge'
+
+
 def create_checkfiles_instance(event, context):
+    number_of_files_pending = event['number_of_files_pending']
     instance_name = get_instance_name()
     ami_id = get_ami_id()
-    instance_type = get_instance_type()
+    instance_type = get_instance_type_from_number_of_files_pending(
+        number_of_files_pending)
     instance_profile_arn = get_instance_profile_arn()
     security_group = get_security_group()
     branch = get_checkfiles_branch()
@@ -93,4 +104,6 @@ def create_checkfiles_instance(event, context):
 
     instance.wait_until_running()
 
-    return {'instance_id': instance.id}
+    return {'instance_id': instance.id,
+            'instance_type': instance.instance_type,
+            }
