@@ -5,6 +5,9 @@ import os
 import boto3
 
 
+TWENTY_THREE__HOURS_IN_SECONDS = 23 * 3600
+
+
 def get_secret_arn():
     return os.environ['PORTAL_SECRETS_ARN']
 
@@ -30,6 +33,7 @@ def run_checkfiles_command(event, context):
             run_checkfiles_cmd,
         ],
             'workingDirectory': ['/home/ubuntu/checkfiles'],
+            'executionTimeout': [TWENTY_THREE__HOURS_IN_SECONDS],
         },
         CloudWatchOutputConfig={
             'CloudWatchLogGroupName': 'checkfiles-log',
