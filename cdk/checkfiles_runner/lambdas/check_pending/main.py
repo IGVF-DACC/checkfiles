@@ -12,7 +12,7 @@ logging.basicConfig(
 )
 
 
-PENDING_FILES_SEARCH = '/search?type=File&upload_status=pending&field=uuid'
+PENDING_FILES_SEARCH = '/search?type=File&upload_status=pending'
 
 
 def get_secret_arn():
@@ -51,7 +51,7 @@ def get_secret(secret_arn):
     return json.loads(secret)
 
 
-def get_pending_files(secret, backend_uri):
+def get_number_of_pending_files(secret, backend_uri):
     headers = {'accept': 'application/json'}
     auth = get_auth(secret)
     response = requests.get(
@@ -59,12 +59,12 @@ def get_pending_files(secret, backend_uri):
         headers=headers,
         auth=auth,
     )
-    pending_files = response.json()['@graph']
+    pending_files = response.json()['total']
     return pending_files
 
 
 def files_are_pending(pending_files):
-    return len(pending_files) > 0
+    return pending_files > 0
 
 
 def check_pending_files(event, context):
@@ -72,12 +72,11 @@ def check_pending_files(event, context):
     secret_arn = get_secret_arn()
     secret = get_secret(secret_arn)
     logging.info(f'looking for pending files in backend: {backend_uri}')
-    pending_files = get_pending_files(secret, backend_uri)
-    files_pending = files_are_pending(pending_files)
-    number_of_files_pending = len(pending_files)
+    number_of_files_pending = get_number_of_pending_files(secret, backend_uri)
+    files_pending = files_are_pending(number_of_files_pending)
     if files_pending:
         logging.info(
-            f'found {len(pending_files)} files pending for check in {backend_uri}.')
+            f'found {number_of_files_pending} files pending for check in {backend_uri}.')
     else:
         logging.info(f'no files in upload_status pending in {backend_uri}')
     return {

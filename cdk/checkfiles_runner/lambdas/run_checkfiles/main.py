@@ -5,7 +5,7 @@ import os
 import boto3
 
 
-TWENTY_THREE__HOURS_IN_SECONDS = 23 * 3600
+TWENTY_THREE__HOURS_IN_SECONDS = str(23 * 3600)
 
 
 def get_secret_arn():
