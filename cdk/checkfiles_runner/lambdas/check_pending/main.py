@@ -76,7 +76,7 @@ def check_pending_files(event, context):
     files_pending = files_are_pending(number_of_files_pending)
     if files_pending:
         logging.info(
-            f'found {len(number_of_files_pending)} files pending for check in {backend_uri}.')
+            f'found {number_of_files_pending} files pending for check in {backend_uri}.')
     else:
         logging.info(f'no files in upload_status pending in {backend_uri}')
     return {
