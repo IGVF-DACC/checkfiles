@@ -1,7 +1,7 @@
 import datetime
 
 from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check
-from checkfiles.checkfiles import check_md5sum, check_content_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, file_validation
+from checkfiles.checkfiles import make_content_md5sum_search_url, check_md5sum, check_content_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, file_validation
 from checkfiles.checkfiles import get_chrom_info_file, get_validate_files_args, validate_files_check, validate_files_fastq_check
 from checkfiles.checkfiles import PortalAuth
 from checkfiles.checkfiles import upload_credentials_are_expired
@@ -356,3 +356,12 @@ def test_upload_credentials_are_expired_not_expired(mocker):
                  return_value=mock_response)
     assert upload_credentials_are_expired(
         'uri_to_portal', 'file_uuid', PortalAuth('fake', 'creds')) == False
+
+
+def test_make_content_md5sum_search_url():
+    portal_url = 'https://api.data.igvf.org'
+    content_md5sum = '123456'
+    uuid = 'unique-id-123'
+    search_url = make_content_md5sum_search_url(
+        content_md5sum, uuid, portal_url)
+    assert search_url == 'https://api.data.igvf.org/search/?type=File&format=json&uuid!=unique-id-123&content_md5sum=123456'

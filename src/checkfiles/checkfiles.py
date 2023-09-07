@@ -184,11 +184,15 @@ def check_md5sum(expected_md5sum, calculated_md5sum):
     return error
 
 
+def make_content_md5sum_search_url(content_md5sum, uuid, portal_url):
+    search_url = f'{portal_url}/search/?type=File&format=json&uuid!={uuid}&content_md5sum={content_md5sum}'
+    logger.info(f'content_md5sum search url: {search_url}')
+    return search_url
+
+
 def check_content_md5sum(content_md5sum, uuid, portal_auth: Optional[PortalAuth] = None, portal_url=None):
     error = {}
-    url = portal_url + \
-        '/search/?type=File&format=json&uuid!={uuid}&content_md5sum=' + \
-        content_md5sum
+    url = make_content_md5sum_search_url(content_md5sum, uuid, portal_url)
     session = requests.Session()
     session.auth = portal_auth
     conflict_files = session.get(url).json()['@graph']
