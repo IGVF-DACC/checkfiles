@@ -286,12 +286,23 @@ def tabular_file_check(output_type, file_path, schemas=TABULAR_FILE_SCHEMAS, max
     return error
 
 
+def get_validate_files_args(file_format, file_format_type, chrom_info_file, schema=VALIDATE_FILES_ARGS):
+    args = schema[(file_format, file_format_type)]
+    chrom_info_arg = 'chromInfo=' + chrom_info_file
+    args.append(chrom_info_arg)
+    return args
+
+
 def validate_files_check(file_path, file_format, file_format_type, assembly):
     error = {}
     chrom_info_file = get_chrom_info_file(assembly)
-
-    validate_args = get_validate_files_args(
-        file_format, file_format_type, chrom_info_file)
+    try:
+        validate_args = get_validate_files_args(
+            file_format, file_format_type, chrom_info_file)
+    except KeyError:
+        error_message = f'file_format: {file_format} file_format_type: {file_format_type} combination not allowed.'
+        error['validate_files'] = error_message
+        return error
     command = ['validateFiles'] + validate_args + [file_path]
     try:
         output = subprocess.check_output(command, stderr=subprocess.STDOUT)
@@ -310,13 +321,6 @@ def validate_files_fastq_check(file_path):
         error['validate_files'] = e.output.decode(
             errors='replace').rstrip('\n')
     return error
-
-
-def get_validate_files_args(file_format, file_format_type, chrom_info_file, schema=VALIDATE_FILES_ARGS):
-    args = schema.get((file_format, file_format_type))
-    chrom_info_arg = 'chromInfo=' + chrom_info_file
-    args.append(chrom_info_arg)
-    return args
 
 
 def get_chrom_info_file(assembly, chrom_info_dir=CHROM_INFO_DIR):
