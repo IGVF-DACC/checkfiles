@@ -38,13 +38,21 @@ MAX_NUM_ERROR_FOR_TABULAR_FILE = 10
 
 ZIP_FILE_FORMAT = [
     'bam',
-    'fastq',
-    'txt',
-    'tsv',
     'bed',
     'bedpe',
+    'csfasta',
+    'csqual',
+    'csv',
     'fasta',
-    'gtf'
+    'fastq',
+    'gff',
+    'gtf',
+    'tar',
+    'tsv',
+    'txt',
+    'vcf',
+    'xml',
+    'yaml',
 ]
 
 TABULAR_FORMAT = [
