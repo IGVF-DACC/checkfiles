@@ -51,8 +51,6 @@ ZIP_FILE_FORMAT = [
     'gtf',
     'obo',
     'owl',
-    'pairs',
-    'sam',
     'tagAlign',
     'tar',
     'tsv',
