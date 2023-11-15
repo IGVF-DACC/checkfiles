@@ -43,6 +43,7 @@ ZIP_FILE_FORMAT = [
     'csfasta',
     'csqual',
     'csv',
+    'dat',
     'fasta',
     'fastq',
     'gaf',
@@ -72,8 +73,14 @@ TABULAR_FILE_SCHEMAS = {
 
 VALIDATE_FILES_ARGS = {
     ('bed', 'bed3'): ['-type=bed3'],
-    ('bed', 'CRISPR element quantifications'): ['-type=bed3+22', '-as=src/schemas/file_formats/as/element_quant_format.as'],
     ('bed', 'bed3+'): ['-tab', '-type=bed3+'],
+    ('bed', 'bed5'): ['-type=bed5'],
+    ('bed', 'bed6'): ['-type=bed6'],
+    ('bed', 'bed6+'): ['-tab', '-type=bed6+'],
+    ('bed', 'bed9'): ['-type=bed9'],
+    ('bed', 'bed9+'): ['-tab', '-type=bed9+'],
+    ('bed', 'bed12'): ['-type=bed12'],
+    ('bed', 'CRISPR element quantifications'): ['-type=bed3+22', '-as=src/schemas/file_formats/as/element_quant_format.as'],
     ('bed', 'bedGraph'): ['-type=bedGraph'],
     ('bedpe', None): ['-type=bed3+'],
     ('bigBed', 'bed3'): ['-type=bigBed3'],
