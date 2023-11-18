@@ -19,6 +19,8 @@ import tempfile
 import pyfastx
 import pysam
 
+import file
+
 from collections import namedtuple
 from typing import Optional
 
@@ -26,8 +28,6 @@ from FastaValidator import fasta_validator
 
 from frictionless import system
 from frictionless import validate
-
-import file
 
 import logformatter
 
@@ -125,7 +125,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         validation_record.file_not_found = True
         return validation_record
     logger.info(f'{uuid} file size {true_file_size_bytes} bytes')
-    file_format = validation_record.file.file_format
+    file_format = validation_record.file_format
     is_gzipped = validation_record.file.is_zipped
     gzipped_format_error = check_valid_gzipped_file_format(
         is_gzipped, file_format)
@@ -361,7 +361,7 @@ def get_file_validation_record_from_metadata(file_metadata: dict, mount_basedir=
             make_local_path_from_s3_uri(file_metadata['s3_uri'])
         uuid = file_metadata['uuid']
         file_format = file_metadata['file_format']
-        return file.FileValidationRecord(file.get_file(path, file_format), uuid)
+        return file.FileValidationRecord(file=file.get_file(path), file_format=file_format, uuid=uuid)
 
 
 def get_current_utc_time():

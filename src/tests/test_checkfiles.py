@@ -1,10 +1,12 @@
 import datetime
+import pytest
 
 from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check
 from checkfiles.checkfiles import make_content_md5sum_search_url, check_md5sum, check_content_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, file_validation
 from checkfiles.checkfiles import get_validate_files_args, validate_files_check, validate_files_fastq_check
 from checkfiles.checkfiles import PortalAuth
 from checkfiles.checkfiles import upload_credentials_are_expired
+from checkfiles.checkfiles import get_file_validation_record_from_metadata
 from checkfiles.file import File
 from checkfiles.file import FileValidationRecord
 from checkfiles.file import get_file
@@ -159,8 +161,9 @@ def test_main_fastq(mocker):
     assembly = None
     portal_auth = None
 
-    file = get_file(file_path, file_format)
-    validation_record = FileValidationRecord(file, uuid)
+    file = get_file(file_path)
+    validation_record = FileValidationRecord(
+        file=file, file_format=file_format, uuid=uuid)
     validation_record.original_etag = 'foobar'
     mock_response_session = mocker.Mock()
     mock_response_session.json.return_value = {
@@ -203,8 +206,9 @@ def test_main_bam(mocker):
     assembly = None
     portal_auth = None
 
-    file = get_file(file_path, file_format)
-    validation_record = FileValidationRecord(file, uuid)
+    file = get_file(file_path)
+    validation_record = FileValidationRecord(
+        file=file, file_format=file_format, uuid=uuid)
     validation_record.original_etag = 'foobar'
 
     mock_response_session = mocker.Mock()
@@ -237,8 +241,9 @@ def test_main_tabular(mocker):
     assembly = None
     portal_auth = None
 
-    file = get_file(file_path, file_format)
-    validation_record = FileValidationRecord(file, uuid)
+    file = get_file(file_path)
+    validation_record = FileValidationRecord(
+        file=file, file_format=file_format, uuid=uuid)
     validation_record.original_etag = 'foobar'
 
     mock_response_get_local_file_path = mocker.Mock()
@@ -274,8 +279,9 @@ def test_main_bed(mocker):
     assembly = 'GRCh38'
     portal_auth = None
 
-    file = get_file(file_path, file_format)
-    validation_record = FileValidationRecord(file, uuid)
+    file = get_file(file_path)
+    validation_record = FileValidationRecord(
+        file=file, file_format=file_format, uuid=uuid)
     validation_record.original_etag = 'foobar'
 
     mock_response_session = mocker.Mock()
@@ -355,3 +361,9 @@ def test_make_content_md5sum_search_url():
     search_url = make_content_md5sum_search_url(
         content_md5sum, uuid, portal_url)
     assert search_url == 'https://api.data.igvf.org/search/?type=File&format=json&uuid!=unique-id-123&content_md5sum=123456'
+
+
+def test_get_file_validation_record_from_metadata_invalid_metadata():
+    with pytest.raises(ValueError):
+        record = get_file_validation_record_from_metadata(
+            file_metadata={}, mount_basedir='foo')

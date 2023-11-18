@@ -5,11 +5,11 @@ from checkfiles.file import FileValidationRecord
 
 
 def get_gzipped_file():
-    return File('src/tests/data/ENCFF594AYI.fastq.gz', 'fastq')
+    return File('src/tests/data/ENCFF594AYI.fastq.gz')
 
 
 def get_non_gzipped_file():
-    return File('src/tests/data/ENCFF080HPN.tsv', 'tsv')
+    return File('src/tests/data/ENCFF080HPN.tsv')
 
 
 def test_is_zipped():
@@ -40,7 +40,7 @@ def test_content_md5sum():
 
 def test_update_errors():
     file = get_gzipped_file()
-    record = FileValidationRecord(file, uuid='abc')
+    record = FileValidationRecord(file, uuid='abc', file_format='fastq')
     assert record.errors == {}
     error = {'validationerror': 'validation failed'}
     record.update_errors(error)
@@ -49,7 +49,7 @@ def test_update_errors():
 
 def test_cannot_set_original_etag_twice():
     file = 'not relevant for this test'
-    record = FileValidationRecord(file, uuid='abc')
+    record = FileValidationRecord(file, uuid='abc', file_format='foo')
     record.original_etag = 'xyz'
     assert record.original_etag == 'xyz'
     with pytest.raises(ValueError):
@@ -59,7 +59,7 @@ def test_cannot_set_original_etag_twice():
 
 def test_make_payload():
     file = 'somefile'
-    record = FileValidationRecord(file, uuid='abc')
+    record = FileValidationRecord(file, uuid='abc', file_format='spam')
     record.validation_success = False
     record.errors.update(
         {'error': 'error that was caused by things going wrong'})

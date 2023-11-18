@@ -7,8 +7,7 @@ from typing import Optional
 
 
 class File:
-    def __init__(self, path: str, file_format: str):
-        self.file_format = file_format
+    def __init__(self, path: str):
         self.path = path
         self.__size = None
         self.__md5sum = None
@@ -67,13 +66,15 @@ class File:
             return False
 
 
-def get_file(path, file_format):
-    return File(path, file_format)
+def get_file(path):
+    return File(path)
 
 
 class FileValidationRecord:
-    def __init__(self, file: File, uuid: Optional[str] = None):
+    def __init__(self, file: File, file_format: str, file_format_type: Optional[str] = None, uuid: Optional[str] = None):
         self.file = file
+        self.file_format = file_format
+        self.file_format_type = file_format_type
         self.uuid = uuid
         self.errors = {}
         self.info = {}
