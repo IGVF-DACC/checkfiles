@@ -113,11 +113,14 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file.FileValidationRecord, submitted_md5sum, output_type, file_format_type, assembly):
+def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file.FileValidationRecord, assembly):
     uuid = validation_record.uuid
+    output_type = validation_record.output_type
     file_format = validation_record.file_format
+    file_format_type = validation_record.file_format_type
     is_gzipped = validation_record.file.is_zipped
     local_file_path = validation_record.file.path
+    submitted_md5sum = validation_record.submitted_md5sum
     logger.info(f'Checking file uuid {uuid}')
     try:
         true_file_size_bytes = validation_record.file.size
@@ -361,7 +364,8 @@ def get_file_validation_record_from_metadata(file_metadata: dict, mount_basedir=
             make_local_path_from_s3_uri(file_metadata['s3_uri'])
         uuid = file_metadata['uuid']
         file_format = file_metadata['file_format']
-        return file.FileValidationRecord(file=file.get_file(path), file_format=file_format, uuid=uuid)
+        submitted_md5sum = file_metadata['submitted_md5sum']
+        return file.FileValidationRecord(file=file.get_file(path), file_format=file_format, submitted_md5sum=submitted_md5sum, uuid=uuid)
 
 
 def get_current_utc_time():

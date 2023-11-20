@@ -3,16 +3,26 @@ import hashlib
 import json
 import os
 
+from pathlib import Path
 from typing import Optional
 
 
 class File:
     def __init__(self, path: str):
         self.path = path
+        self.__exists = None
         self.__size = None
         self.__md5sum = None
         self.__content_md5sum = None
         self.__is_zipped = None
+
+    @property
+    def exists(self):
+        if self.__exists is not None:
+            return self.__exists
+        else:
+            self.__exists = Path(self.path).is_file()
+            return self.__exists
 
     @property
     def md5sum(self):
@@ -71,10 +81,12 @@ def get_file(path):
 
 
 class FileValidationRecord:
-    def __init__(self, file: File, file_format: str, file_format_type: Optional[str] = None, uuid: Optional[str] = None):
+    def __init__(self, file: File, file_format: str, submitted_md5sum: str, file_format_type: Optional[str] = None, output_type: Optional[str] = None, uuid: Optional[str] = None):
         self.file = file
         self.file_format = file_format
         self.file_format_type = file_format_type
+        self.output_type = output_type
+        self.submitted_md5sum = submitted_md5sum
         self.uuid = uuid
         self.errors = {}
         self.info = {}
