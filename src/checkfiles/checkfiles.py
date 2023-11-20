@@ -115,8 +115,10 @@ logger.setLevel(logging.INFO)
 
 def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file.FileValidationRecord, submitted_md5sum, output_type, file_format_type, assembly):
     uuid = validation_record.uuid
-    logger.info(f'Checking file uuid {uuid}')
+    file_format = validation_record.file_format
+    is_gzipped = validation_record.file.is_zipped
     local_file_path = validation_record.file.path
+    logger.info(f'Checking file uuid {uuid}')
     try:
         true_file_size_bytes = validation_record.file.size
         validation_record.update_info({'file_size': true_file_size_bytes})
@@ -125,8 +127,6 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         validation_record.file_not_found = True
         return validation_record
     logger.info(f'{uuid} file size {true_file_size_bytes} bytes')
-    file_format = validation_record.file_format
-    is_gzipped = validation_record.file.is_zipped
     gzipped_format_error = check_valid_gzipped_file_format(
         is_gzipped, file_format)
     validation_record.update_errors(gzipped_format_error)
