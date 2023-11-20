@@ -364,8 +364,11 @@ def get_file_validation_record_from_metadata(file_metadata: dict, mount_basedir=
             make_local_path_from_s3_uri(file_metadata['s3_uri'])
         uuid = file_metadata['uuid']
         file_format = file_metadata['file_format']
-        submitted_md5sum = file_metadata['submitted_md5sum']
-        return file.FileValidationRecord(file=file.get_file(path), file_format=file_format, submitted_md5sum=submitted_md5sum, uuid=uuid)
+        submitted_md5sum = file_metadata['md5sum']
+        assembly = file_metadata.get('assembly')
+        file_format_type = file_metadata.get('file_format_type')
+        output_type = file_metadata.get('output_type')
+        return file.FileValidationRecord(file=file.get_file(path), file_format=file_format, submitted_md5sum=submitted_md5sum, assembly=assembly, file_format_type=file_format_type, output_type=output_type, uuid=uuid)
 
 
 def get_current_utc_time():

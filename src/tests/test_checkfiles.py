@@ -364,3 +364,15 @@ def test_get_file_validation_record_from_metadata_invalid_metadata():
     with pytest.raises(ValueError):
         record = get_file_validation_record_from_metadata(
             file_metadata={}, mount_basedir='foo')
+
+
+def test_get_file_validation_record_from_metadata_creates():
+    file_metadata = {
+        's3_uri': 's3:uri',
+        'uuid': 'foo',
+        'file_format': 'bar',
+        'md5sum': 'baz'
+    }
+    record = get_file_validation_record_from_metadata(
+        file_metadata, mount_basedir='/my/home')
+    assert record is not None

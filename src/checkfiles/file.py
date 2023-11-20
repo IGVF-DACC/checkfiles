@@ -81,8 +81,9 @@ def get_file(path):
 
 
 class FileValidationRecord:
-    def __init__(self, file: File, file_format: str, submitted_md5sum: str, file_format_type: Optional[str] = None, output_type: Optional[str] = None, uuid: Optional[str] = None):
+    def __init__(self, file: File, file_format: str, submitted_md5sum: str, uuid: str, assembly: Optional[str] = None, file_format_type: Optional[str] = None, output_type: Optional[str] = None):
         self.file = file
+        self.assembly = assembly
         self.file_format = file_format
         self.file_format_type = file_format_type
         self.output_type = output_type
