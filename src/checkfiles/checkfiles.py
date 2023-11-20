@@ -113,7 +113,8 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file.FileValidationRecord, assembly):
+def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file.FileValidationRecord):
+    assembly = validation_record.assembly
     uuid = validation_record.uuid
     output_type = validation_record.output_type
     file_format = validation_record.file_format

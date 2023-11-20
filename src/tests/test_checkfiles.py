@@ -157,7 +157,6 @@ def test_main_fastq(mocker):
     md5sum = '3e814f4af7a4c13460584b26fbe32dc4'
     file_format = 'fastq'
     output_type = 'reads'
-    assembly = None
     portal_auth = None
 
     file = get_file(file_path)
@@ -174,8 +173,7 @@ def test_main_fastq(mocker):
     }
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_session)
-    result = file_validation(portal_url, portal_auth,
-                             validation_record, assembly)
+    result = file_validation(portal_url, portal_auth, validation_record)
 
     assert result.validation_success == False
     assert result.original_etag == 'foobar'
@@ -201,7 +199,6 @@ def test_main_bam(mocker):
     md5sum = '2d3b7df013d257c7052c084d93ff9026'
     file_format = 'bam'
     output_type = 'alignments'
-    assembly = None
     portal_auth = None
 
     file = get_file(file_path)
@@ -216,8 +213,7 @@ def test_main_bam(mocker):
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_session)
 
-    result = file_validation(portal_url, portal_auth,
-                             validation_record, assembly)
+    result = file_validation(portal_url, portal_auth, validation_record)
     assert result.validation_success == True
     assert result.info == {
         'md5sum': '2d3b7df013d257c7052c084d93ff9026',
@@ -235,7 +231,6 @@ def test_main_tabular(mocker):
     md5sum = '4b0b3c68fafc5a26d0fc6150baadaa5b'
     file_format = 'tsv'
     output_type = 'element quantifications'
-    assembly = None
     portal_auth = None
 
     file = get_file(file_path)
@@ -250,8 +245,7 @@ def test_main_tabular(mocker):
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_get_local_file_path)
 
-    result = file_validation(portal_url, portal_auth,
-                             validation_record, assembly)
+    result = file_validation(portal_url, portal_auth, validation_record)
     assert result.validation_success == False
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.info == {
@@ -278,7 +272,7 @@ def test_main_bed(mocker):
 
     file = get_file(file_path)
     validation_record = FileValidationRecord(
-        file=file, file_format=file_format, file_format_type=file_format_type, submitted_md5sum=md5sum, output_type=output_type, uuid=uuid)
+        file=file, file_format=file_format, file_format_type=file_format_type, assembly=assembly, submitted_md5sum=md5sum, output_type=output_type, uuid=uuid)
     validation_record.original_etag = 'foobar'
 
     mock_response_session = mocker.Mock()
@@ -291,8 +285,7 @@ def test_main_bed(mocker):
     }
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_session)
-    result = file_validation(portal_url, portal_auth,
-                             validation_record, assembly)
+    result = file_validation(portal_url, portal_auth, validation_record)
     assert result.validation_success == False
     assert result.uuid == 'a3c64b51-5838-4ad2-a6c3-dc289786f626'
     assert result.info == {
