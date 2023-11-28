@@ -2,7 +2,7 @@ import datetime
 
 from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check
 from checkfiles.checkfiles import make_content_md5sum_search_url, check_md5sum, check_content_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, file_validation
-from checkfiles.checkfiles import get_chrom_info_file, get_validate_files_args, validate_files_check, validate_files_fastq_check
+from checkfiles.checkfiles import get_validate_files_args, validate_files_check, validate_files_fastq_check
 from checkfiles.checkfiles import PortalAuth
 from checkfiles.checkfiles import upload_credentials_are_expired
 from checkfiles.file import File
@@ -52,16 +52,6 @@ def test_fastq_get_average_read_length_and_number_of_reads_invalid_fastq():
     file_path = 'does/not/exist'
     result = fastq_get_average_read_length_and_number_of_reads(file_path)
     assert result == {}
-
-
-def test_get_chrom_info_file_human():
-    file = get_chrom_info_file('GRCh38')
-    assert file == 'src/schemas/genome_builds/human/GRCh38/chrom.sizes'
-
-
-def test_get_chrom_info_file_rodent():
-    file = get_chrom_info_file('GRCm39')
-    assert file == 'src/schemas/genome_builds/rodent/GRCm39/chrom.sizes'
 
 
 def test_get_validate_files_args():

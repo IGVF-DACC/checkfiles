@@ -90,10 +90,10 @@ VALIDATE_FILES_ARGS = {
 
 }
 
-HUMAN_ASSEMBLIES = ['GRCh38', 'hg19']
-
-RODENT_ASSEMBLIES = ['GRCm39', 'GRCm38', 'MGSCv37']
-
+ASSEMBLY_TO_CHROMINFO_PATH_MAP = {
+    'GRCh38': 'src/schemas/genome_builds/chrom_sizes/GRCh38_EBV.chrom.sizes.tsv',
+    'GRCm39': 'src/schemas/genome_builds/chrom_sizes/mm39.chrom.sizes',
+}
 
 FASTA_VALIDATION_INFO = {
     0: 'this is a valid fasta file',
@@ -306,12 +306,17 @@ def get_validate_files_args(file_format, file_format_type, chrom_info_file, sche
     return args
 
 
-def validate_files_check(file_path, file_format, file_format_type, assembly):
+def validate_files_check(file_path, file_format, file_format_type, assembly, chrominfo_file_paths=ASSEMBLY_TO_CHROMINFO_PATH_MAP):
     error = {}
-    chrom_info_file = get_chrom_info_file(assembly)
+    try:
+        chrom_info_file_path = chrominfo_file_paths[assembly]
+    except KeyError:
+        error_message = f'{assembly} is not a valid assembly. Valid assemblies: {list(chrominfo_file_paths.keys())}'
+        error['validate_files'] = error_message
+        return error
     try:
         validate_args = get_validate_files_args(
-            file_format, file_format_type, chrom_info_file)
+            file_format, file_format_type, chrom_info_file_path)
     except KeyError:
         error_message = f'file_format: {file_format} file_format_type: {file_format_type} combination not allowed.'
         error['validate_files'] = error_message
@@ -334,14 +339,6 @@ def validate_files_fastq_check(file_path):
         error['validate_files'] = e.output.decode(
             errors='replace').rstrip('\n')
     return error
-
-
-def get_chrom_info_file(assembly, chrom_info_dir=CHROM_INFO_DIR):
-    if assembly in HUMAN_ASSEMBLIES:
-        organism = 'human'
-    elif assembly in RODENT_ASSEMBLIES:
-        organism = 'rodent'
-    return f'{chrom_info_dir}/{organism}/{assembly}/chrom.sizes'
 
 
 def fetch_file_metadata_by_uuid(uuid: str, server: str, portal_auth: PortalAuth):
