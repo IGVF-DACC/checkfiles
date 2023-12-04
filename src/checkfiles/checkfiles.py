@@ -201,7 +201,7 @@ def check_md5sum(expected_md5sum, calculated_md5sum):
     error = {}
     if expected_md5sum != calculated_md5sum:
         error = {
-            'md5sum': f'submitted file md5sum {expected_md5sum} does not match calculated md5sum {calculated_md5sum}.'}
+            'md5sum': f'original md5sum {expected_md5sum} does not match newly calculated md5sum {calculated_md5sum}.'}
     return error
 
 
