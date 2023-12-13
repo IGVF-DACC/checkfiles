@@ -354,4 +354,4 @@ def test_make_content_md5sum_search_url():
     uuid = 'unique-id-123'
     search_url = make_content_md5sum_search_url(
         content_md5sum, uuid, portal_url)
-    assert search_url == 'https://api.data.igvf.org/search/?type=File&format=json&uuid!=unique-id-123&content_md5sum=123456'
+    assert search_url == 'https://api.data.igvf.org/search/?type=File&format=json&status!=replaced&status!=deleted&uuid!=unique-id-123&content_md5sum=123456'
