@@ -135,7 +135,8 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         submitted_md5sum, validation_record.file.md5sum)
     validation_record.update_errors(md5_sum_error)
     if md5_sum_error:
-        logger.info(f'{uuid} calculated md5sum {validation_record.file.md5sum} does not match submitted md5sum {submitted_md5sum}')
+        logger.info(
+            f'{uuid} calculated md5sum {validation_record.file.md5sum} does not match submitted md5sum {submitted_md5sum}')
     if is_gzipped:
         try:
             content_md5_error = check_content_md5sum(
