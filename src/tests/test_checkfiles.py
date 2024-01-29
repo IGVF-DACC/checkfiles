@@ -178,7 +178,6 @@ def test_main_fastq(mocker):
     assert result.validation_success == False
     assert result.original_etag == 'foobar'
     assert result.info == {
-        'md5sum': '3e814f4af7a4c13460584b26fbe32dc4',
         'content_md5sum': '1fa9f74aa895c4c938e1712bedf044ec',
         'file_size': 1371,
         'read_count': 25,
@@ -218,7 +217,6 @@ def test_main_bam(mocker):
                              md5sum, output_type, file_format_type, assembly)
     assert result.validation_success == True
     assert result.info == {
-        'md5sum': '2d3b7df013d257c7052c084d93ff9026',
         'content_md5sum': '9095bad36672afefd7bf9165d89b4eb5',
         'file_size': 118126,
         'bam_number_of_reads': 1709
@@ -253,7 +251,6 @@ def test_main_tabular(mocker):
     assert result.validation_success == False
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.info == {
-        'md5sum': '4b0b3c68fafc5a26d0fc6150baadaa5b',
         'file_size': 22585
     }
     assert result.errors == {
@@ -293,7 +290,6 @@ def test_main_bed(mocker):
     assert result.validation_success == False
     assert result.uuid == 'a3c64b51-5838-4ad2-a6c3-dc289786f626'
     assert result.info == {
-        'md5sum': 'd1bae8af8fec54424cff157134652d26',
         'content_md5sum': '16a792c57f2de7877b1a09e5bef7cb5c',
         'file_size': 5751
     }
