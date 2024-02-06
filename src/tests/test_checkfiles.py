@@ -2,7 +2,7 @@ import datetime
 
 from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check
 from checkfiles.checkfiles import make_content_md5sum_search_url, check_md5sum, check_content_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, file_validation
-from checkfiles.checkfiles import get_validate_files_args, validate_files_check, validate_files_fastq_check
+from checkfiles.checkfiles import get_validate_files_args, validate_files_check, validate_files_fastq_check, tabular_file_check
 from checkfiles.checkfiles import PortalAuth
 from checkfiles.checkfiles import upload_credentials_are_expired
 from checkfiles.file import File
@@ -145,6 +145,26 @@ def test_validate_files_fastq_check_pass():
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
     error = validate_files_fastq_check(file_path)
     assert error == {}
+
+
+def test_tabular_file_check_guide_rna_sequences_valid():
+    file_path = 'src/tests/data/guide_rna_sequences_valid.tsv'
+    error = tabular_file_check('guide RNA sequences', file_path)
+    assert error == {}
+
+
+def test_tabular_file_check_guide_rna_sequences_invalid():
+    file_path = 'src/tests/data/guide_rna_sequences_invalid.tsv'
+    error = tabular_file_check('guide RNA sequences', file_path)
+    assert error == {
+        'tabular_file_error': [
+            [2, 1, 'constraint-error', 'constraint "required" is "True"'],
+            [2, 3, 'constraint-error', 'constraint "enum" is "[\'safe-targeting\', '"'non-targeting', 'targeting', 'positive control', "'\'negative control\', \'variant\']"'],
+            [2, 5, 'type-error', 'type is "integer/default"'],
+            [2, 7, 'constraint-error', 'constraint "enum" is "[\'+\', \'-\']"'],
+            [2, 14, 'type-error', 'type is "array/default"']
+        ]
+    }
 
 
 def test_main_fastq(mocker):

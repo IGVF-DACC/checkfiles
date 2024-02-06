@@ -9,9 +9,9 @@ repos:
     hooks:
       - id: double-quote-string-fixer
       - id: trailing-whitespace
-        exclude: ^cdk/tests/snapshots
+        exclude: ^cdk/tests/snapshots|^src/tests/data
       - id: end-of-file-fixer
-        exclude: ^cdk/tests/snapshots
+        exclude: ^cdk/tests/snapshots|^src/tests/data
       - id: pretty-format-json
         args: ['--autofix', '--no-sort-keys', '--indent=4', '--no-ensure-ascii']
         exclude: ^cdk/tests/snapshots

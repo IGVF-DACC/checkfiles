@@ -1,0 +1,123 @@
+{
+    "fields": [
+        {
+            "name": "protospacer",
+            "type": "string",
+            "description": "sequence of protospacer",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "targeting",
+            "type": "boolean",
+            "description": "'TRUE' or 'FALSE', depending on whether or not the guide is targeting a locus of the genome relevant to the experiment. If guide is safe-targeting or non-targeting, targeting = False. 'safe-targeting' refers to guides designed to target genomic sites with no annotated function, used as negative controls, if targeting == False, guide_chr, guide_start, guide_end, strand, and pam can be set to NaN",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "type",
+            "type": "string",
+            "description": "flexible tag describing the role of the guide in the experiment",
+            "constraints": {
+                "required": true,
+                "enum": [
+                    "safe-targeting",
+                    "non-targeting",
+                    "targeting",
+                    "positive control",
+                    "negative control",
+                    "variant"
+                ]
+            }
+        },
+        {
+            "name": "guide_chr",
+            "type": "string",
+            "description": "chromosome of guide, ex. chrX, chr2, chr10"
+        },
+        {
+            "name": "guide_start",
+            "type": "integer",
+            "description": "base start position of guide",
+            "constraints": {
+                "minimum": 0
+            }
+        },
+        {
+            "name": "guide_end",
+            "type": "integer",
+            "description": "base end position of guide",
+            "constraints": {
+                "minimum": 0
+            }
+        },
+        {
+            "name": "strand",
+            "type": "string",
+            "description": "Strand of guide, + or -. If strandedness is unclear or unnecessary, use 'NaN' for the strand",
+            "constraints": {
+                "enum": [
+                    "+",
+                    "-"
+                ]
+            }
+        },
+        {
+            "name": "pam",
+            "type": "string",
+            "description": "protospacer adjacent motif"
+        },
+        {
+            "name": "genomic_element",
+            "type": "string",
+            "description": "type of the genomic element being targeted, ex. gene, enhancer, promoter, insulator"
+        },
+        {
+            "name": "intended_target_name",
+            "type": "string",
+            "description": "name of target element, should use existing conventions whenever possible: SPDI_id, ensembl_id, HGNC_id. If intended_target_name == NaN, then the target element will be referenced using its coordinates"
+        },
+        {
+            "name": "intended_target_chr",
+            "type": "string",
+            "description": "chromosome of target"
+        },
+        {
+            "name": "intended_target_start",
+            "type": "integer",
+            "description": "base start position of target. For CRISPRa, CRISPRi and CRISPR KO screens, coordinates should reference the targeted element. For base editing and prime editing screens, coordinates should reference the targeted edit",
+            "constraints": {
+                "minimum": 0
+            }
+        },
+        {
+            "name": "intended_target_end",
+            "type": "integer",
+            "description": "base end position of target",
+            "constraints": {
+                "minimum": 0
+            }
+        },
+        {
+            "name": "putative_target_genes",
+            "type": "array",
+            "description": "list of relevant genes associated with target element"
+        },
+        {
+            "name": "reporter",
+            "type": "string",
+            "description": "sequence of reporter element"
+        },
+        {
+            "name": "imperfect",
+            "type": "string",
+            "description": "sequence of corresponding perfect guide RNA (pgRNA)"
+        }
+    ],
+    "missingValues": [
+        "NaN",
+        ""
+    ]
+}
