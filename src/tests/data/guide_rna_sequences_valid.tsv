@@ -1,4 +1,4 @@
-protospacer	targeting	type	guide_chr	guide_start	guide_end	strand	pam	(genomic_element)	(intended_target_name)	(intended_target_chr)	(intended_target_start)	(intended_target_end)	(putative_target_genes[])	(reporter)	(imperfect)
+protospacer	targeting	type	guide_chr	guide_start	guide_end	strand	pam	genomic_element	intended_target_name	intended_target_chr	intended_target_start	intended_target_end	putative_target_genes	reporter	imperfect
 AACAGGTATTTGTGAACTTT	TRUE	PosControl	chr9	107546722	107546742	-	ATT	Gene	ABCA1	chr9	107547922	107546738	["gene a", "gene b"]	TCTTTTAACAGGTATTTGTGAACTTTGCCAAG	
 TTTCAGGTTTGGAGATGGTT	TRUE	PosControl	chr9	107547907	107547927	-	CCC	Gene	ABCA1	chr9	107547922	107547922		TCCTGCTTTCAGGTTTGGAGATGGTTATACAA	
 TTTCAAGTTTGGAGATGGTT	TRUE	PosControl	chr9	107547907	107547927	-	CCG	Gene	ABCA1	chr9	107547922	107547922		TCCTGCTTTCAGGTTTGGAGATGGTTATACAA	TTTCAGGTTTGGAGATGGTT

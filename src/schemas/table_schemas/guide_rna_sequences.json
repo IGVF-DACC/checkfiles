@@ -26,9 +26,9 @@
                     "safe-targeting",
                     "non-targeting",
                     "targeting",
-                    "PosControl",
-                    "NegControl",
-                    "Variant"
+                    "positive control",
+                    "negative control",
+                    "variant"
                 ]
             }
         },
@@ -70,22 +70,22 @@
             "description": "protospacer adjacent motif"
         },
         {
-            "name": "(genomic_element)",
+            "name": "genomic_element",
             "type": "string",
             "description": "type of the genomic element being targeted, ex. gene, enhancer, promoter, insulator"
         },
         {
-            "name": "(intended_target_name)",
+            "name": "intended_target_name",
             "type": "string",
             "description": "name of target element, should use existing conventions whenever possible: SPDI_id, ensembl_id, HGNC_id. If intended_target_name == NaN, then the target element will be referenced using its coordinates"
         },
         {
-            "name": "(intended_target_chr)",
+            "name": "intended_target_chr",
             "type": "string",
             "description": "chromosome of target"
         },
         {
-            "name": "(intended_target_start)",
+            "name": "intended_target_start",
             "type": "integer",
             "description": "base start position of target. For CRISPRa, CRISPRi and CRISPR KO screens, coordinates should reference the targeted element. For base editing and prime editing screens, coordinates should reference the targeted edit",
             "constraints": {
@@ -93,7 +93,7 @@
             }
         },
         {
-            "name": "(intended_target_end)",
+            "name": "intended_target_end",
             "type": "integer",
             "description": "base end position of target",
             "constraints": {
@@ -101,17 +101,17 @@
             }
         },
         {
-            "name": "(putative_target_genes[])",
+            "name": "putative_target_genes",
             "type": "array",
             "description": "list of relevant genes associated with target element"
         },
         {
-            "name": "(reporter)",
+            "name": "reporter",
             "type": "string",
             "description": "sequence of reporter element"
         },
         {
-            "name": "(imperfect)",
+            "name": "imperfect",
             "type": "string",
             "description": "sequence of corresponding perfect guide RNA (pgRNA)"
         }
