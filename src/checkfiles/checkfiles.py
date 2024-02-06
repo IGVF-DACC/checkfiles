@@ -68,7 +68,8 @@ TABULAR_FORMAT = [
 ]
 
 TABULAR_FILE_SCHEMAS = {
-    'element quantifications': 'src/schemas/table_schemas/element_quant.json'
+    'element quantifications': 'src/schemas/table_schemas/element_quant.json',
+    'guide RNA sequences': 'src/schemas/table_schemas/guide_rna_sequences.json'
 }
 
 VALIDATE_FILES_ARGS = {
@@ -113,7 +114,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file.FileValidationRecord, submitted_md5sum, output_type, file_format_type, assembly):
+def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly):
     uuid = validation_record.uuid
     logger.info(f'Checking file uuid {uuid}')
     local_file_path = validation_record.file.path
@@ -176,7 +177,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         validation_record.update_errors(fasta_check_error)
     elif file_format in TABULAR_FORMAT:
         tabular_file_check_error = tabular_file_check(
-            output_type, local_file_path)
+            content_type, local_file_path)
         validation_record.update_errors(tabular_file_check_error)
     logger.info(
         f'Completed file validation for file uuid {uuid}.')
@@ -285,10 +286,10 @@ def fasta_check(file_path, is_gzipped, info=FASTA_VALIDATION_INFO):
     return error
 
 
-def tabular_file_check(output_type, file_path, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE):
+def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE):
     system.trusted = True
     error = {}
-    schema_path = schemas.get(output_type)
+    schema_path = schemas.get(content_type)
     report = validate(file_path, schema=schema_path)
     if not report.valid:
         report = report.flatten(['rowNumber', 'fieldNumber', 'type', 'note'])
@@ -384,9 +385,9 @@ def upload_credentials_are_expired(portal_uri: str, file_uuid: str, portal_auth:
 
 def fetch_pending_files_metadata(portal_uri: str, portal_auth: PortalAuth, number_of_files: Optional[int] = None) -> list:
     if number_of_files is not None:
-        search = f'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=output_type&limit={number_of_files}'
+        search = f'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&limit={number_of_files}'
     else:
-        search = 'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=output_type&limit=all'
+        search = 'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&limit=all'
     search_uri = f'{portal_uri}/{search}'
     response = requests.get(search_uri, auth=portal_auth)
     metadata = response.json()['@graph']
@@ -468,7 +469,7 @@ def main(args):
             else:
                 logger.warning('Skipping upload credentials expired check')
             assembly = file_metadata.get('assembly')
-            output_type = file_metadata.get('output_type')
+            content_type = file_metadata.get('content_type')
             file_format_type = file_metadata.get('file_format_type')
             submitted_md5sum = file_metadata['md5sum']
             file_validation_record = get_file_validation_record_from_metadata(
@@ -477,7 +478,7 @@ def main(args):
                 args.server, args.uuid, portal_auth)
             file_validation_record.original_etag = etag_original
             file_validation_complete_record = file_validation(args.server, portal_auth, file_validation_record,
-                                                              submitted_md5sum, output_type, file_format_type, assembly=assembly)
+                                                              submitted_md5sum, content_type, file_format_type, assembly=assembly)
             if args.patch:
                 # check etag first
                 etag_after = fetch_etag_for_uuid(
@@ -507,7 +508,7 @@ def main(args):
             for file_metadata in pending_files:
                 uuid = file_metadata['uuid']
                 assembly = file_metadata.get('assembly')
-                output_type = file_metadata.get('output_type')
+                content_type = file_metadata.get('content_type')
                 file_format_type = file_metadata.get('file_format_type')
                 submitted_md5sum = file_metadata['md5sum']
                 file_validation_record = get_file_validation_record_from_metadata(
@@ -516,7 +517,7 @@ def main(args):
                     args.server, uuid, portal_auth)
                 file_validation_record.original_etag = etag_original
                 jobs.append((args.ignore_active_credentials, args.server, portal_auth, file_validation_record,
-                            submitted_md5sum, output_type, file_format_type, assembly))
+                            submitted_md5sum, content_type, file_format_type, assembly))
             number_of_cpus = multiprocessing.cpu_count()
 
             if args.patch:
