@@ -159,7 +159,7 @@ def test_tabular_file_check_guide_rna_sequences_invalid():
     assert error == {
         'tabular_file_error': [
             [2, 1, 'constraint-error', 'constraint "required" is "True"'],
-            [2, 3, 'constraint-error', 'constraint "enum" is "[\'safe-targeting\', '"'non-targeting', 'targeting', 'PosControl', "'\'NegControl\', \'Variant\']"'],
+            [2, 3, 'constraint-error', 'constraint "enum" is "[\'safe-targeting\', '"'non-targeting', 'targeting', 'positive control', "'\'negative control\', \'variant\']"'],
             [2, 5, 'type-error', 'type is "integer/default"'],
             [2, 7, 'constraint-error', 'constraint "enum" is "[\'+\', \'-\']"'],
             [2, 14, 'type-error', 'type is "array/default"']
