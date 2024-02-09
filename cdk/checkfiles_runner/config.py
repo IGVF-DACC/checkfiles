@@ -14,6 +14,6 @@ config = {
     'instance_security_group_production': 'sg-0136bee948bf49fe7',
     'backend_uri_sandbox': 'https://api.sandbox.igvf.org',
     'backend_uri_production': 'https://api.data.igvf.org',
-    'checkfiles_branch_sandbox': 'dev',
-    'checkfiles_branch_production': 'dev',
+    'checkfiles_tag_sandbox': 'dev',
+    'checkfiles_tag_production': 'dev',
 }
