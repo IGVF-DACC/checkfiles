@@ -98,12 +98,12 @@
             "Properties": {
                 "Code": {
                     "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
-                    "S3Key": "d1bfd2bdcef8438eb258277c7e06f8c604ab94f9c59ee9d2c37d77fd636d0a54.zip"
+                    "S3Key": "43dfa7afa3a68c71016dc155d797d8f4ed7c2675e0b38b45499ca541cd1ee1da.zip"
                 },
                 "Environment": {
                     "Variables": {
                         "AMI_ID": "ami-testing",
-                        "CHECKFILES_BRANCH": "main",
+                        "CHECKFILES_TAG": "main",
                         "INSTANCE_NAME": "testing",
                         "INSTANCE_PROFILE_ARN": "arn:aws:iam::123456:instance-profile/checkfiles-instance",
                         "SECURITY_GROUP": "sg-123456"
