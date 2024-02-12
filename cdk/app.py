@@ -25,7 +25,7 @@ sandbox_props = RunCheckfilesStepFunctionProps(
     instance_name=config['instance_name_sandbox'],
     instance_profile_arn=config['instance_profile_arn_sandbox'],
     instance_security_group_id=config['instance_security_group_sandbox'],
-    checkfiles_tag=config['checkfiles_branch_sandbox'],
+    checkfiles_tag=config['checkfiles_tag_sandbox'],
     portal_secrets_arn=config['portal_secrets_arn_sandbox'],
     backend_uri=config['backend_uri_sandbox'],
 )
