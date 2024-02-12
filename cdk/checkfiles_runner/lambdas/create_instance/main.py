@@ -26,8 +26,8 @@ def get_security_group():
     return os.environ['SECURITY_GROUP']
 
 
-def get_checkfiles_branch():
-    return os.environ['CHECKFILES_BRANCH']
+def get_checkfiles_tag():
+    return os.environ['CHECKFILES_TAG']
 
 
 def get_instance_type_from_number_of_files_pending(number_of_files_pending: int):
@@ -51,11 +51,11 @@ def create_checkfiles_instance(event, context):
         number_of_files_pending)
     instance_profile_arn = get_instance_profile_arn()
     security_group = get_security_group()
-    branch = get_checkfiles_branch()
+    tag = get_checkfiles_tag()
     # clone checkfiles code and build the virtual environment
     user_data = f'''#!/bin/bash
     cd /home/ubuntu
-    git clone https://github.com/IGVF-DACC/checkfiles.git --branch {branch} --single-branch
+    git clone https://github.com/IGVF-DACC/checkfiles.git --branch {tag} --single-branch
     cd checkfiles
     python3 -m venv venv
     source venv/bin/activate
@@ -77,7 +77,7 @@ def create_checkfiles_instance(event, context):
     }
 
     logging.info(
-        f'instance_type: {instance_type} ami_id: {ami_id} checkfiles_branch: {branch}')
+        f'instance_type: {instance_type} ami_id: {ami_id} checkfiles_tag: {tag}')
     logging.info(f'user_data: \n {user_data}')
 
     instances = ec2.create_instances(

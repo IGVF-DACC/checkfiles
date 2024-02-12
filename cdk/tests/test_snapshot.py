@@ -27,7 +27,7 @@ def test_match_with_snapshot(snapshot):
         instance_name='testing',
         instance_profile_arn=INSTANCE_PROFILE_ARN,
         instance_security_group_id='sg-123456',
-        checkfiles_branch='main',
+        checkfiles_tag='main',
         portal_secrets_arn=PORTAL_SECRETS_ARN,
         backend_uri='testing-uri',
     )

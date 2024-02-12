@@ -44,7 +44,7 @@ class RunCheckfilesStepFunctionProps:
     instance_name: str
     instance_profile_arn: str
     instance_security_group_id: str
-    checkfiles_branch: str
+    checkfiles_tag: str
     portal_secrets_arn: str
     backend_uri: str
 
@@ -156,7 +156,7 @@ class RunCheckfilesStepFunction(Stack):
                 'INSTANCE_NAME': self.props.instance_name,
                 'INSTANCE_PROFILE_ARN': self.props.instance_profile_arn,
                 'SECURITY_GROUP': self.props.instance_security_group_id,
-                'CHECKFILES_BRANCH': self.props.checkfiles_branch,
+                'CHECKFILES_TAG': self.props.checkfiles_tag,
             }
         )
 
