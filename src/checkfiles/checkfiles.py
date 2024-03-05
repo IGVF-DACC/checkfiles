@@ -92,7 +92,7 @@ VALIDATE_FILES_ARGS = {
 }
 
 ASSEMBLY_TO_CHROMINFO_PATH_MAP = {
-    'GRCh38': 'src/schemas/genome_builds/chrom_sizes/GRCh38_EBV.chrom.sizes.tsv',
+    'GRCh38': 'src/schemas/genome_builds/chrom_sizes/GRCh38.chrom.sizes',
     'GRCm39': 'src/schemas/genome_builds/chrom_sizes/mm39.chrom.sizes',
 }
 
