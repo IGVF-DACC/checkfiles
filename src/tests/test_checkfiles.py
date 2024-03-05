@@ -243,7 +243,7 @@ def test_main_bam(mocker):
     }
 
 
-def test_main_tabular(mocker):
+def test_main_tabular_tsv(mocker):
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/ENCFF500IBL.tsv'
     key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF500IBL.tsv'
@@ -276,6 +276,73 @@ def test_main_tabular(mocker):
     assert result.errors == {
         'gzip': 'tsv file should be gzipped',
         'tabular_file_error': [[None, 1, 'incorrect-label', ''], [None, 2, 'incorrect-label', ''], [None, 3, 'incorrect-label', ''], [60, 24, 'type-error', "type is \"boolean/default\""], [61, 24, 'type-error', "type is \"boolean/default\""]]
+    }
+
+
+def test_main_tabular_csv(mocker):
+    portal_url = 'url_to_portal'
+    file_path = 'src/tests/data/ENCFF194CFN.csv'
+    uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
+    md5sum = '57946a79da3f1651b21b1c84681abc51'
+    file_format = 'csv'
+    output_type = 'element quantifications'
+    file_format_type = None
+    assembly = None
+    portal_auth = None
+
+    file = get_file(file_path, file_format)
+    validation_record = FileValidationRecord(file, uuid)
+    validation_record.original_etag = 'foobar'
+
+    mock_response_get_local_file_path = mocker.Mock()
+    mock_response_get_local_file_path.json.return_value = {
+        '@graph': []
+    }
+    mocker.patch('checkfiles.checkfiles.requests.Session.get',
+                 return_value=mock_response_get_local_file_path)
+
+    result = file_validation(portal_url, portal_auth, validation_record,
+                             md5sum, output_type, file_format_type, assembly)
+    assert result.validation_success == False
+    assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
+    assert result.info == {
+        'file_size': 13535
+    }
+    assert result.errors == {
+        'gzip': 'csv file should be gzipped',
+        'tabular_file_error': [[None, 4, 'missing-label', ''], [None, 5, 'missing-label', ''], [None, 6, 'missing-label', ''], [None, 7, 'missing-label', ''], [None, 8, 'missing-label', ''], [None, 9, 'missing-label', ''], [None, 10, 'missing-label', ''], [None, 11, 'missing-label', ''], [None, 12, 'missing-label', ''], [None, 13, 'missing-label', ''], ],
+    }
+
+
+def test_main_tabular_txt(mocker):
+    portal_url = 'url_to_portal'
+    file_path = 'src/tests/data/ENCFF583VAI.txt.gz'
+    uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
+    md5sum = '6c86ca5de2569bf49287cb21196d760d'
+    file_format = 'txt'
+    output_type = 'element quantifications'
+    file_format_type = None
+    assembly = None
+    portal_auth = None
+
+    file = get_file(file_path, file_format)
+    validation_record = FileValidationRecord(file, uuid)
+    validation_record.original_etag = 'foobar'
+
+    mock_response_get_local_file_path = mocker.Mock()
+    mock_response_get_local_file_path.json.return_value = {
+        '@graph': []
+    }
+    mocker.patch('checkfiles.checkfiles.requests.Session.get',
+                 return_value=mock_response_get_local_file_path)
+
+    result = file_validation(portal_url, portal_auth, validation_record,
+                             md5sum, output_type, file_format_type, assembly)
+    assert result.validation_success == True
+    assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
+    assert result.info == {
+        'file_size': 64,
+        'content_md5sum': 'eda02672669cbbbdbb895cbb4ea2507f'
     }
 
 
