@@ -12,7 +12,7 @@ logging.basicConfig(
 )
 
 
-PENDING_FILES_SEARCH = '/search?type=File&upload_status=pending'
+PENDING_FILES_SEARCH = '/search?type=File&upload_status=pending&controlled_access=false'
 
 
 def get_secret_arn():
