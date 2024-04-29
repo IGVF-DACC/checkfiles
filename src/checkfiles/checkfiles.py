@@ -89,6 +89,7 @@ VALIDATE_FILES_ARGS = {
     ('bigBed', 'bed3+'): ['-tab', '-type=bigBed3+'],
     ('bigWig', None): ['-type=bigWig'],
     ('bigInteract', None): ['-type=bigBed5+13', '-as=src/schemas/file_formats/as/interact.as'],
+    ('bed', 'mpra_starr'): ['-type=bed6+5', '-as=src/schemas/file_formats/as/mpra_starr.as'],
 
 }
 
