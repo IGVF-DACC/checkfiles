@@ -8,6 +8,6 @@ sudo apt-get -y install \
 
 git clone https://github.com/IGVF-DACC/fastq_stats.git
 cd fastq_stats
-cargo build
-sudo cp target/debug/fastq_stats /usr/bin
+cargo build --release
+sudo cp target/release/fastq_stats /usr/bin
 sudo chmod 755 /usr/bin/fastq_stats

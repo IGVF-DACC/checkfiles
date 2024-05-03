@@ -2,8 +2,8 @@ config = {
     'region': 'us-west-2',
     'account_staging': '920073238245',  # igvf-staging
     'account_production': '035226225042',  # igvf-prod
-    'ami_id_sandbox': 'ami-006a2ac0ea6cb5f72',
-    'ami_id_production': 'ami-07350e6017608eea5',
+    'ami_id_sandbox': 'ami-0278a13fd68ecd27b',
+    'ami_id_production': 'ami-023acf02ae838444e',
     'portal_secrets_arn_sandbox': 'arn:aws:secretsmanager:us-west-2:920073238245:secret:checkfiles-portal-secret-u9aeGR',
     'portal_secrets_arn_production': 'arn:aws:secretsmanager:us-west-2:035226225042:secret:checkfiles-portal-secret-GWpoIK',
     'instance_name_sandbox': 'checkfiles-sandbox',
