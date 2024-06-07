@@ -387,9 +387,9 @@ def upload_credentials_are_expired(portal_uri: str, file_uuid: str, portal_auth:
 
 def fetch_pending_files_metadata(portal_uri: str, portal_auth: PortalAuth, number_of_files: Optional[int] = None) -> list:
     if number_of_files is not None:
-        search = f'search?type=File&upload_status=pending&controlled_access=false&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&limit={number_of_files}'
+        search = f'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&limit={number_of_files}'
     else:
-        search = 'search?type=File&upload_status=pending&controlled_access=false&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&limit=all'
+        search = 'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&limit=all'
     search_uri = f'{portal_uri}/{search}'
     response = requests.get(search_uri, auth=portal_auth)
     metadata = response.json()['@graph']
