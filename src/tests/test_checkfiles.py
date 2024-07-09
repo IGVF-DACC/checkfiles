@@ -196,6 +196,7 @@ def test_main_empty_file(mocker):
                              md5sum, output_type, file_format_type, assembly)
     assert result.errors == {'file_size': 'file has zero size'}
 
+
 def test_main_fastq(mocker):
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'

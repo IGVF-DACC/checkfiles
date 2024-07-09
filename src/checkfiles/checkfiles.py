@@ -124,7 +124,8 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         true_file_size_bytes = validation_record.file.size
         validation_record.update_info({'file_size': true_file_size_bytes})
         if true_file_size_bytes == 0:
-            validation_record.update_errors({'file_size': 'file has zero size'})
+            validation_record.update_errors(
+                {'file_size': 'file has zero size'})
             return validation_record
     except FileNotFoundError:
         logger.warning(f'File not found for {uuid}')
