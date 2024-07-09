@@ -167,6 +167,36 @@ def test_tabular_file_check_guide_rna_sequences_invalid():
     }
 
 
+def test_main_empty_file(mocker):
+    portal_url = 'url_to_portal'
+    file_path = 'src/tests/data/empty_file.txt'
+    key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/empty_file.txt'
+    uuid = 'a3b754b6-0213-4ed4-a5f3-124f90273561'
+    md5sum = '3e814f4af7a4c13460584b26fbe32dc4'
+    file_format = 'txt'
+    output_type = 'reads'
+    file_format_type = None
+    assembly = None
+    portal_auth = None
+
+    file = get_file(file_path, file_format)
+    validation_record = FileValidationRecord(file, uuid)
+    validation_record.original_etag = 'foobar'
+    mock_response_session = mocker.Mock()
+    mock_response_session.json.return_value = {
+        '@graph': [
+            {
+                'accession': 'ENCFF123ABC'
+            }
+        ]
+    }
+    mocker.patch('checkfiles.checkfiles.requests.Session.get',
+                 return_value=mock_response_session)
+    result = file_validation(portal_url, portal_auth, validation_record,
+                             md5sum, output_type, file_format_type, assembly)
+    assert result.errors == {'file_size': 'file has zero size'}
+
+
 def test_main_fastq(mocker):
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
