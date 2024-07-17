@@ -70,7 +70,8 @@ TABULAR_FORMAT = [
 
 TABULAR_FILE_SCHEMAS = {
     'element quantifications': 'src/schemas/table_schemas/element_quant.json',
-    'guide RNA sequences': 'src/schemas/table_schemas/guide_rna_sequences.json'
+    'guide RNA sequences': 'src/schemas/table_schemas/guide_rna_sequences.json',
+    'designed sequences': 'src/schemas/table_schemas/designed_sequences.json'
 }
 
 VALIDATE_FILES_ARGS = {
