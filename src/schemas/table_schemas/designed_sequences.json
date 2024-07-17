@@ -1,0 +1,147 @@
+{
+    "fields": [
+        {
+            "name": "name",
+            "type": "string",
+            "description": "a unique-within-file identifier, one unique string per designed sequence",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "sequence",
+            "type": "string",
+            "description": "DNA string of designed sequence, consisting of A,C,G,T and no N",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "category",
+            "type": "string",
+            "description": "category of designed sequence",
+            "constraints": {
+                "required": true,
+                "enum": [
+                    "variant",
+                    "element",
+                    "synthetic",
+                    "scrambled"
+                ]
+            }
+        },
+        {
+            "name": "class",
+            "type": "string",
+            "description": "class of designed sequence",
+            "constraints": {
+                "required": true,
+                "enum": [
+                    "test",
+                    "variant positive control",
+                    "variant negative control",
+                    "element active control",
+                    "element inactive control"
+                ]
+            }
+        },
+        {
+            "name": "source",
+            "type": "string",
+            "description": "free-form description of the origin of the sequence"
+        },
+        {
+            "name": "ref",
+            "type": "string",
+            "description": "reference sequence, e.g. GRCh38"
+        },
+        {
+            "name": "chr",
+            "type": "string",
+            "description": "reference chromosome"
+        },
+        {
+            "name": "start",
+            "type": "integer",
+            "description": "0-based position of the left-most position of sequence with respect to the reference chromosome",
+            "constraints": {
+                "minimum": 0
+            }
+        },
+        {
+            "name": "end",
+            "type": "integer",
+            "description": "1-based position of the right-most position of sequence with respect to the reference chromosome",
+            "constraints": {
+                "minimum": 1
+            }
+        },
+        {
+            "name": "strand",
+            "type": "string",
+            "description": "strand of sequence in reference",
+            "constraints": {
+                "enum": [
+                    "+",
+                    "-"
+                ]
+            }
+        },
+        {
+            "name": "variant_class",
+	    "type": "array",
+            "description": "the class of the variant(s), allowing for multiple variants to be tested in one sequence (haplotypes)",
+	    "arrayItem": {
+		"type": "string",
+		"constraints": {
+                    "enum": [
+			"SNV",
+			"indel"
+                    ]
+		}
+	    }
+        },
+        {
+            "name": "variant_pos",
+            "type": "array",
+            "description": "0-based position of the start of the normalized representation of the variant(s). integer within [0, len(sequence) - 1]",
+	    "arrayItem": {
+		"type": "integer",
+		"constraints": {
+                    "minimum": 0
+		}
+	    }
+        },
+        {
+            "name": "SPDI",
+            "type": "array",
+            "description": "0-based, validated SPDI representation of the variant(s), e.g. NC_000001.11:25253603:G:A",
+	    "arrayItem": {
+		"type": "string"
+	    }
+        },
+        {
+            "name": "allele",
+            "type": "array",
+            "description": "the allele of the variant(s) with respect to the referenece chromosome sequence",
+	    "arrayItem": {
+		"type": "string",
+		"constraints": {
+                    "enum": [
+			"ref",
+			"alt"
+                    ]
+		}
+	    }
+        },
+        {
+            "name": "info",
+            "type": "string",
+            "description": "any additional comment or information"
+        }
+    ],
+    "missingValues": [
+        "NA",
+	""
+    ]
+}
