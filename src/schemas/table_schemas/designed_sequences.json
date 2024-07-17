@@ -89,50 +89,50 @@
         },
         {
             "name": "variant_class",
-	    "type": "array",
+            "type": "array",
             "description": "the class of the variant(s), allowing for multiple variants to be tested in one sequence (haplotypes)",
-	    "arrayItem": {
-		"type": "string",
-		"constraints": {
+            "arrayItem": {
+                "type": "string",
+                "constraints": {
                     "enum": [
-			"SNV",
-			"indel"
+                        "SNV",
+                        "indel"
                     ]
-		}
-	    }
+                }
+            }
         },
         {
             "name": "variant_pos",
             "type": "array",
             "description": "0-based position of the start of the normalized representation of the variant(s). integer within [0, len(sequence) - 1]",
-	    "arrayItem": {
-		"type": "integer",
-		"constraints": {
+            "arrayItem": {
+                "type": "integer",
+                "constraints": {
                     "minimum": 0
-		}
-	    }
+                }
+            }
         },
         {
             "name": "SPDI",
             "type": "array",
             "description": "0-based, validated SPDI representation of the variant(s), e.g. NC_000001.11:25253603:G:A",
-	    "arrayItem": {
-		"type": "string"
-	    }
+            "arrayItem": {
+                "type": "string"
+            }
         },
         {
             "name": "allele",
             "type": "array",
             "description": "the allele of the variant(s) with respect to the referenece chromosome sequence",
-	    "arrayItem": {
-		"type": "string",
-		"constraints": {
+            "arrayItem": {
+                "type": "string",
+                "constraints": {
                     "enum": [
-			"ref",
-			"alt"
+                        "ref",
+                        "alt"
                     ]
-		}
-	    }
+                }
+            }
         },
         {
             "name": "info",
@@ -142,6 +142,6 @@
     ],
     "missingValues": [
         "NA",
-	""
+        ""
     ]
 }
