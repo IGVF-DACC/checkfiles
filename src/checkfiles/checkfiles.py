@@ -73,6 +73,7 @@ TABULAR_FILE_SCHEMAS = {
     'guide RNA sequences': 'src/schemas/table_schemas/guide_rna_sequences.json',
     'MPRA sequence designs': 'src/schemas/table_schemas/mpra_sequence_designs.json',
     'prime editing guide RNA sequences': 'src/schemas/table_schemas/prime_editing_guide_rna_sequences.json',
+    'variants': 'src/schemas/table_schemas/variants.json',
 }
 
 VALIDATE_FILES_ARGS = {
