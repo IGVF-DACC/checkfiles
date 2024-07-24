@@ -169,13 +169,13 @@ def test_tabular_file_check_guide_rna_sequences_invalid():
 
 def test_tabular_file_check_designed_sequences_valid():
     file_path = 'src/tests/data/designed_sequences_valid.tsv'
-    error = tabular_file_check('designed sequences', file_path)
+    error = tabular_file_check('MPRA sequence designs', file_path)
     assert error == {}
 
 
 def test_tabular_file_check_designed_sequences_invalid():
     file_path = 'src/tests/data/designed_sequences_invalid.tsv'
-    error = tabular_file_check('designed sequences', file_path)
+    error = tabular_file_check('MPRA sequence designs', file_path)
     assert error == {
         'tabular_file_error': [
             [6, 1, 'constraint-error', 'constraint "required" is "True"'],
