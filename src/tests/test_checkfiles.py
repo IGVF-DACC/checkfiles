@@ -195,6 +195,23 @@ def test_tabular_file_check_designed_sequences_invalid():
     }
 
 
+def test_tabular_file_check_prime_editing_guide_rna_sequences_valid():
+    file_path = 'src/tests/data/prime_editing_guide_rna_sequences_valid.tsv'
+    error = tabular_file_check('prime editing guide RNA sequences', file_path)
+    assert error == {}
+
+
+def test_tabular_file_check_prime_editing_guide_rna_sequences_invalid():
+    file_path = 'src/tests/data/prime_editing_guide_rna_sequences_invalid.tsv'
+    error = tabular_file_check('prime editing guide RNA sequences', file_path)
+    assert error == {
+        'tabular_file_error': [
+            [2, 12, 'constraint-error', 'constraint "required" is "True"'],
+            [3, 9, 'constraint-error', 'constraint "required" is "True"']
+        ]
+    }
+
+
 def test_main_empty_file(mocker):
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/empty_file.txt'
