@@ -14,6 +14,7 @@ logger.setLevel(logging.INFO)
 
 
 def file_validation(file_path, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly):
+    logger.info(f'Checking file: {file_path}')
     try:
         true_file_size_bytes = validation_record.file.size
         validation_record.update_info({'file_size': true_file_size_bytes})
@@ -80,8 +81,11 @@ def main(args):
         file.get_file(args.path, args.file_format))
     file_validation_complete_record = file_validation(args.path, file_validation_record,
                                                       args.md5sum, args.content_type, args.file_format_type, args.assembly)
-    print('info:', file_validation_complete_record.info)
-    print('errors:', file_validation_complete_record.errors)
+    if file_validation_complete_record.errors:
+        logger.info(
+            f'file validation is completed and errors are found: {file_validation_complete_record.errors}')
+    else:
+        logger.info('file validation is completed and no error found.')
 
 
 # Start script
