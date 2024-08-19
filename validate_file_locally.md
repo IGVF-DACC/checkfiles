@@ -41,7 +41,7 @@ Validating bam file:
 python src/checkfiles/checkfiles_local.py --path src/tests/data/ENCFF206HGF.bam --file_format bam --md5sum 2d3b7df013d257c7052c084d93ff9026
 ```
 
-Validating bed file:
+Validating bed, bigWig, bigInteract, bigBed and bedpe file:
 
 ```bash
 python src/checkfiles/checkfiles_local.py --path src/tests/data/ENCFF597JNC.bed.gz --file_format bed --file_format_type bed3 --assembly GRCh38 --md5sum d1bae8af8fec54424cff157134652d26
@@ -59,7 +59,7 @@ Validating fastq file:
 python src/checkfiles/checkfiles_local.py --path src/tests/data/ENCFF594AYI.fastq.gz --file_format fastq --md5sum 3e814f4af7a4c13460584b26fbe32dc4
 ```
 
-Validating tabular file:
+Validating tabular file (csv, tsv and txt):
 
 ```bash
 python src/checkfiles/checkfiles_local.py --path src/tests/data/guide_rna_sequences_invalid.tsv.gz --file_format tsv --content_type "guide RNA sequences" --md5sum b8bfdca28ddbcc74128e3e3bb5febe24
