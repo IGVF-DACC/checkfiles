@@ -57,7 +57,7 @@ def file_validation(file_path, validation_record: file.FileValidationRecord, sub
     elif file_format in TABULAR_FORMAT:
         if not content_type and not tabular_file_schema:
             logger.info(
-                'file content type is not provided for the tabular file, will only perform tabular file based checks')
+                'file content type and tabular file schema are not provided for the tabular file, will only perform tabular file based checks')
         tabular_file_check_error = tabular_file_check(
             content_type, file_path, schema_path=tabular_file_schema)
         validation_record.update_errors(tabular_file_check_error)
@@ -106,7 +106,7 @@ if __name__ == '__main__':
                         help='file format type of the file to be checked.')
     parser.add_argument('--md5sum', help='md5sum of the file to be checked.')
     parser.add_argument('--tabular_file_schema',
-                        help='the schema file relative path for tabular file.')
+                        help='the relative path to the schema file of the tabular file.')
 
     args = parser.parse_args()
     main(args)
