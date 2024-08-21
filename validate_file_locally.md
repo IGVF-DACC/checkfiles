@@ -64,3 +64,9 @@ Validating tabular file (csv, tsv and txt):
 ```bash
 python src/checkfiles/checkfiles_local.py --path src/tests/data/guide_rna_sequences_invalid.tsv.gz --file_format tsv --content_type "guide RNA sequences" --md5sum b8bfdca28ddbcc74128e3e3bb5febe24
 ```
+
+Validating tabular file with your own schema file:
+
+```bash
+python src/checkfiles/checkfiles_local.py --path src/tests/data/guide_rna_sequences_invalid.tsv.gz --file_format tsv --content_type "guide RNA sequences" --md5sum b8bfdca28ddbcc74128e3e3bb5febe24 --tabular_file_schema src/schemas/table_schemas/element_quant.json
+```

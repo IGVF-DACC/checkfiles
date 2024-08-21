@@ -13,7 +13,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def file_validation(file_path, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly):
+def file_validation(file_path, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly, tabular_file_schema):
     logger.info(f'Checking file: {file_path}')
     try:
         true_file_size_bytes = validation_record.file.size
@@ -55,11 +55,11 @@ def file_validation(file_path, validation_record: file.FileValidationRecord, sub
         fasta_check_error = fasta_check(file_path, is_gzipped)
         validation_record.update_errors(fasta_check_error)
     elif file_format in TABULAR_FORMAT:
-        if not content_type:
+        if not content_type and not tabular_file_schema:
             logger.info(
                 'file content type is not provided for the tabular file, will only perform tabular file based checks')
         tabular_file_check_error = tabular_file_check(
-            content_type, file_path)
+            content_type, file_path, schema_path=tabular_file_schema)
         validation_record.update_errors(tabular_file_check_error)
 
     if validation_record.errors:
@@ -80,12 +80,13 @@ def main(args):
     file_validation_record = file.FileValidationRecord(
         file.get_file(args.path, args.file_format))
     file_validation_complete_record = file_validation(args.path, file_validation_record,
-                                                      args.md5sum, args.content_type, args.file_format_type, args.assembly)
-    if file_validation_complete_record.errors:
-        logger.info(
-            f'file validation is completed and errors are found: {file_validation_complete_record.errors}')
-    else:
-        logger.info('file validation is completed and no error found.')
+                                                      args.md5sum, args.content_type, args.file_format_type, args.assembly, args.tabular_file_schema)
+    if not file_validation_complete_record.file_not_found:
+        if file_validation_complete_record.errors:
+            logger.info(
+                f'file validation is completed and errors are found: {file_validation_complete_record.errors}')
+        else:
+            logger.info('file validation is completed and no error found.')
 
 
 # Start script
@@ -104,6 +105,8 @@ if __name__ == '__main__':
     parser.add_argument('--file_format_type',
                         help='file format type of the file to be checked.')
     parser.add_argument('--md5sum', help='md5sum of the file to be checked.')
+    parser.add_argument('--tabular_file_schema',
+                        help='the schema file relative path for tabular file.')
 
     args = parser.parse_args()
     main(args)
