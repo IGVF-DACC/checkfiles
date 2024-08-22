@@ -294,11 +294,11 @@ def fasta_check(file_path, is_gzipped, info=FASTA_VALIDATION_INFO):
     return error
 
 
-def tabular_file_check(content_type, file_path, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE, schema_path=None):
+def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE, schema_path=None):
     system.trusted = True
     error = {}
     if not schema_path:
-        schema_path = TABULAR_FILE_SCHEMAS.get(content_type)
+        schema_path = schemas.get(content_type)
     report = validate(file_path, schema=schema_path)
     if not report.valid:
         report = report.flatten(['rowNumber', 'fieldNumber', 'type', 'note'])

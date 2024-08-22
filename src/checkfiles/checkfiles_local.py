@@ -2,6 +2,7 @@ import argparse
 import logging
 import file
 import logformatter
+from pprint import pprint
 
 from checkfiles import TABULAR_FORMAT
 from checkfiles import check_valid_gzipped_file_format, check_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, fasta_check, tabular_file_check, get_validate_files_args, validate_files_check, validate_files_fastq_check
@@ -13,8 +14,8 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def file_validation(file_path, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly, tabular_file_schema):
-    logger.info(f'Checking file: {file_path}')
+def file_validation(input_file_path, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly, tabular_file_schema_path):
+    logger.info(f'Checking file: {input_file_path}')
     try:
         true_file_size_bytes = validation_record.file.size
         validation_record.update_info({'file_size': true_file_size_bytes})
@@ -23,7 +24,7 @@ def file_validation(file_path, validation_record: file.FileValidationRecord, sub
                 {'file_size': 'file has zero size'})
             return validation_record
     except FileNotFoundError:
-        logger.warning(f'File not found at path {file_path}')
+        logger.warning(f'File not found at path {input_file_path}')
         validation_record.file_not_found = True
         return validation_record
     file_format = validation_record.file.file_format
@@ -35,31 +36,31 @@ def file_validation(file_path, validation_record: file.FileValidationRecord, sub
         submitted_md5sum, validation_record.file.md5sum)
     validation_record.update_errors(md5_sum_error)
     if file_format == 'bam':
-        bam_check_result = bam_pysam_check(file_path)
+        bam_check_result = bam_pysam_check(input_file_path)
         if 'bam_error' in bam_check_result:
             validation_record.update_errors(bam_check_result)
         else:
             validation_record.update_info(bam_check_result)
     elif file_format == 'fastq':
         validate_files_fastq_check_error = validate_files_fastq_check(
-            file_path)
+            input_file_path)
         validation_record.update_errors(validate_files_fastq_check_error)
         fastq_read_info = fastq_get_average_read_length_and_number_of_reads(
-            file_path)
+            input_file_path)
         validation_record.update_info(fastq_read_info)
     elif file_format in ['bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe']:
         validate_files_check_error = validate_files_check(
-            file_path, file_format, file_format_type, assembly)
+            input_file_path, file_format, file_format_type, assembly)
         validation_record.update_errors(validate_files_check_error)
     elif file_format == 'fasta':
-        fasta_check_error = fasta_check(file_path, is_gzipped)
+        fasta_check_error = fasta_check(input_file_path, is_gzipped)
         validation_record.update_errors(fasta_check_error)
     elif file_format in TABULAR_FORMAT:
-        if not content_type and not tabular_file_schema:
+        if not content_type and not tabular_file_schema_path:
             logger.info(
                 'file content type and tabular file schema are not provided for the tabular file, will only perform tabular file based checks')
         tabular_file_check_error = tabular_file_check(
-            content_type, file_path, schema_path=tabular_file_schema)
+            content_type, input_file_path, schema_path=tabular_file_schema_path)
         validation_record.update_errors(tabular_file_check_error)
 
     if validation_record.errors:
@@ -78,21 +79,26 @@ def main(args):
         raise ValueError(
             'file_format_type is required for bed and bigBed file')
     file_validation_record = file.FileValidationRecord(
-        file.get_file(args.path, args.file_format))
-    file_validation_complete_record = file_validation(args.path, file_validation_record,
-                                                      args.md5sum, args.content_type, args.file_format_type, args.assembly, args.tabular_file_schema)
+        file.get_file(args.input_file_path, args.file_format))
+    file_validation_complete_record = file_validation(args.input_file_path, file_validation_record,
+                                                      args.md5sum, args.content_type, args.file_format_type, args.assembly, args.tabular_file_schema_path)
     if not file_validation_complete_record.file_not_found:
         if file_validation_complete_record.errors:
             logger.info(
-                f'file validation is completed and errors are found: {file_validation_complete_record.errors}')
+                f'file validation is completed and errors are found.')
         else:
             logger.info('file validation is completed and no error found.')
+        print('\nFile info:')
+        pprint(file_validation_complete_record.info)
+        if file_validation_complete_record.errors:
+            print('\nFile errors:')
+            pprint(file_validation_complete_record.errors)
 
 
 # Start script
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Checkfiles argumentparser')
-    parser.add_argument('--path', required=True,
+    parser.add_argument('--input_file_path', required=True,
                         help='path of the local file to be checked.')
     # assembly is required for some file formats: 'bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe'
     parser.add_argument(
@@ -105,7 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('--file_format_type',
                         help='file format type of the file to be checked.')
     parser.add_argument('--md5sum', help='md5sum of the file to be checked.')
-    parser.add_argument('--tabular_file_schema',
+    parser.add_argument('--tabular_file_schema_path',
                         help='the relative path to the schema file of the tabular file.')
 
     args = parser.parse_args()

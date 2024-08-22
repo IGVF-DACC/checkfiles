@@ -38,35 +38,35 @@ Here are some examples to show you how to validate files locally.
 Validating bam file:
 
 ```bash
-python src/checkfiles/checkfiles_local.py --path src/tests/data/ENCFF206HGF.bam --file_format bam --md5sum 2d3b7df013d257c7052c084d93ff9026
+python src/checkfiles/checkfiles_local.py --input_file_path src/tests/data/ENCFF206HGF.bam --file_format bam --md5sum 2d3b7df013d257c7052c084d93ff9026
 ```
 
 Validating bed, bigWig, bigInteract, bigBed and bedpe file:
 
 ```bash
-python src/checkfiles/checkfiles_local.py --path src/tests/data/ENCFF597JNC.bed.gz --file_format bed --file_format_type bed3 --assembly GRCh38 --md5sum d1bae8af8fec54424cff157134652d26
+python src/checkfiles/checkfiles_local.py --input_file_path src/tests/data/ENCFF597JNC.bed.gz --file_format bed --file_format_type bed3 --assembly GRCh38 --md5sum d1bae8af8fec54424cff157134652d26
 ```
 
 Validating fasta file:
 
 ```bash
-python src/checkfiles/checkfiles_local.py --path src/tests/data/ENCFF329FTG.fasta.gz --file_format fasta --md5sum c8c18396efe2a44e93f613d00c00823d
+python src/checkfiles/checkfiles_local.py --input_file_path src/tests/data/ENCFF329FTG.fasta.gz --file_format fasta --md5sum c8c18396efe2a44e93f613d00c00823d
 ```
 
 Validating fastq file:
 
 ```bash
-python src/checkfiles/checkfiles_local.py --path src/tests/data/ENCFF594AYI.fastq.gz --file_format fastq --md5sum 3e814f4af7a4c13460584b26fbe32dc4
+python src/checkfiles/checkfiles_local.py --input_file_path src/tests/data/ENCFF594AYI.fastq.gz --file_format fastq --md5sum 3e814f4af7a4c13460584b26fbe32dc4
 ```
 
 Validating tabular file (csv, tsv and txt):
 
 ```bash
-python src/checkfiles/checkfiles_local.py --path src/tests/data/guide_rna_sequences_invalid.tsv.gz --file_format tsv --content_type "guide RNA sequences" --md5sum b8bfdca28ddbcc74128e3e3bb5febe24
+python src/checkfiles/checkfiles_local.py --input_file_path src/tests/data/guide_rna_sequences_invalid.tsv.gz --file_format tsv --content_type "guide RNA sequences" --md5sum b8bfdca28ddbcc74128e3e3bb5febe24
 ```
 
 Validating tabular file with your own schema file:
 
 ```bash
-python src/checkfiles/checkfiles_local.py --path src/tests/data/guide_rna_sequences_invalid.tsv.gz --file_format tsv --content_type "guide RNA sequences" --md5sum b8bfdca28ddbcc74128e3e3bb5febe24 --tabular_file_schema src/schemas/table_schemas/element_quant.json
+python src/checkfiles/checkfiles_local.py --input_file_path src/tests/data/guide_rna_sequences_invalid.tsv.gz --file_format tsv --content_type "guide RNA sequences" --md5sum b8bfdca28ddbcc74128e3e3bb5febe24 --tabular_file_schema_path src/schemas/table_schemas/element_quant.json
 ```
