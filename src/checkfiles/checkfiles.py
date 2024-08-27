@@ -86,12 +86,12 @@ VALIDATE_FILES_ARGS = {
     ('bed', 'bed12'): ['-type=bed12'],
     ('bed', 'CRISPR element quantifications'): ['-type=bed3+22', '-as=src/schemas/file_formats/as/element_quant_format.as'],
     ('bed', 'bedGraph'): ['-type=bedGraph'],
+    ('bed', 'mpra_starr'): ['-type=bed6+5', '-as=src/schemas/file_formats/as/mpra_starr.as'],
     ('bedpe', None): ['-type=bed3+'],
     ('bigBed', 'bed3'): ['-type=bigBed3'],
     ('bigBed', 'bed3+'): ['-tab', '-type=bigBed3+'],
     ('bigWig', None): ['-type=bigWig'],
     ('bigInteract', None): ['-type=bigBed5+13', '-as=src/schemas/file_formats/as/interact.as'],
-    ('bed', 'mpra_starr'): ['-type=bed6+5', '-as=src/schemas/file_formats/as/mpra_starr.as'],
 
 }
 
@@ -294,10 +294,11 @@ def fasta_check(file_path, is_gzipped, info=FASTA_VALIDATION_INFO):
     return error
 
 
-def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE):
+def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE, schema_path=None):
     system.trusted = True
     error = {}
-    schema_path = schemas.get(content_type)
+    if not schema_path:
+        schema_path = schemas.get(content_type)
     report = validate(file_path, schema=schema_path)
     if not report.valid:
         report = report.flatten(['rowNumber', 'fieldNumber', 'type', 'note'])
