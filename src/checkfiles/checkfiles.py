@@ -302,6 +302,10 @@ def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, ma
     report = validate(file_path, schema=schema_path)
     if not report.valid:
         report = report.flatten(['rowNumber', 'fieldNumber', 'type', 'note'])
+        # find the unique type of errors, if there are only type errors and no schema, then we can ignore the error
+        error_types = list(set([row[2] for row in report]))
+        if not schema_path and error_types == ['type-error']:
+            return {}
         if len(report) > max_error:
             report = report[0:max_error]
         error = {
