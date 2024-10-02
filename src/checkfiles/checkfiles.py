@@ -306,10 +306,18 @@ def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, ma
         error_types = list(set([row[2] for row in report]))
         if not schema_path and error_types == ['type-error']:
             return {}
-        if len(report) > max_error:
+        number_of_errors = len(report)
+        number_of_errors_string = str(number_of_errors)
+        if max_error:
+            number_of_errors_string = f'{number_of_errors_string} (max {max_error} shown)'
+        if max_error and len(report) > max_error:
             report = report[0:max_error]
         error = {
-            'tabular_file_error': report
+            'tabular_file_error': {
+                'schema': schema_path,
+                'number_of_errors': number_of_errors_string,
+                'errors': report
+            }
         }
     return error
 

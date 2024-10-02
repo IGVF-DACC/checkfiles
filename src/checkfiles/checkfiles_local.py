@@ -4,7 +4,7 @@ import file
 import logformatter
 from pprint import pprint
 
-from checkfiles import TABULAR_FORMAT
+from checkfiles import TABULAR_FORMAT, MAX_NUM_ERROR_FOR_TABULAR_FILE
 from checkfiles import check_valid_gzipped_file_format, check_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, fasta_check, tabular_file_check, get_validate_files_args, validate_files_check, validate_files_fastq_check
 
 logger = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def file_validation(input_file_path, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly, tabular_file_schema_path):
+def file_validation(input_file_path, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly, tabular_file_schema_path, max_tabular_file_errors):
     logger.info(f'Checking file: {input_file_path}')
     try:
         true_file_size_bytes = validation_record.file.size
@@ -59,8 +59,11 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
         if not content_type and not tabular_file_schema_path:
             logger.info(
                 'file content type and tabular file schema are not provided for the tabular file, will only perform tabular file based checks')
+        max_error = MAX_NUM_ERROR_FOR_TABULAR_FILE
+        if max_tabular_file_errors:
+            max_error = max_tabular_file_errors
         tabular_file_check_error = tabular_file_check(
-            content_type, input_file_path, schema_path=tabular_file_schema_path)
+            content_type, input_file_path, schema_path=tabular_file_schema_path, max_error=max_error)
         validation_record.update_errors(tabular_file_check_error)
 
     if validation_record.errors:
@@ -71,6 +74,17 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
         return validation_record
 
 
+def ranged_type(arg):
+    try:
+        val = int(arg)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f'the value must be an integer')
+    if val < 1 or val > 1000:
+        raise argparse.ArgumentTypeError(
+            f'the value must be an integer between 1 and 1000')
+    return val
+
+
 def main(args):
     if args.assembly is None and args.file_format in ['bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe']:
         raise ValueError(
@@ -78,10 +92,14 @@ def main(args):
     if args.file_format in ['bed', 'bigBed'] and args.file_format_type is None:
         raise ValueError(
             'file_format_type is required for bed and bigBed file')
+    if args.max_tabular_file_errors:
+        if args.max_tabular_file_errors < 1 or args.max_tabular_file_errors > 1000:
+            raise ValueError(
+                'max_tabular_file_errors should be between 1 and 1000')
     file_validation_record = file.FileValidationRecord(
         file.get_file(args.input_file_path, args.file_format))
     file_validation_complete_record = file_validation(args.input_file_path, file_validation_record,
-                                                      args.md5sum, args.content_type, args.file_format_type, args.assembly, args.tabular_file_schema_path)
+                                                      args.md5sum, args.content_type, args.file_format_type, args.assembly, args.tabular_file_schema_path, args.max_tabular_file_errors)
     if not file_validation_complete_record.file_not_found:
         if file_validation_complete_record.errors:
             logger.info(
@@ -113,6 +131,8 @@ if __name__ == '__main__':
     parser.add_argument('--md5sum', help='md5sum of the file to be checked.')
     parser.add_argument('--tabular_file_schema_path',
                         help='the relative path to the schema file of the tabular file.')
+    parser.add_argument('--max_tabular_file_errors', type=ranged_type,
+                        help='maximum number of errors to be reported for the tabular file. Default is 10. Choose between 1 and 1000.')
 
     args = parser.parse_args()
     main(args)
