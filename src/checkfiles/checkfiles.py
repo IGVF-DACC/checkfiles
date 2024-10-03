@@ -24,7 +24,7 @@ from typing import Optional
 
 from FastaValidator import fasta_validator
 
-from frictionless import system
+from frictionless import system, Checklist
 from frictionless import validate
 
 import file
@@ -299,14 +299,18 @@ def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, ma
     error = {}
     if not schema_path:
         schema_path = schemas.get(content_type)
-    report = validate(file_path, schema=schema_path, limit_errors=max_error)
+    if not schema_path:
+        # if no schema, we can ignore type-error
+        report = validate(file_path, limit_errors=max_error,
+                          skip_errors=['type-error'])
+    else:
+        report = validate(file_path, schema=schema_path,
+                          limit_errors=max_error)
     if not report.valid:
-        report = report.flatten(['rowNumber', 'fieldNumber', 'type', 'note'])
-        # find the unique type of errors, if there are only type errors and no schema, then we can ignore the error
-        error_types = list(set([row[2] for row in report]))
-        if not schema_path and error_types == ['type-error']:
-            return {}
+        report = report.flatten(
+            ['rowNumber', 'fieldNumber', 'type', 'note', 'description'])
         number_of_errors = len(report)
+        error_types = set([row[2] for row in report])
         tabular_file_error = {
             'schema': schema_path,
             'error_number_limit': max_error,
@@ -321,6 +325,7 @@ def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, ma
             else:
                 tabular_file_error[error_type] = {}
                 tabular_file_error[error_type]['count'] = 1
+                tabular_file_error[error_type]['description'] = row[4]
                 tabular_file_error[error_type]['details'] = [row]
 
         tabular_file_error['error_types'] = error_types
