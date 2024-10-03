@@ -74,17 +74,6 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
         return validation_record
 
 
-def ranged_type(arg):
-    try:
-        val = int(arg)
-    except ValueError:
-        raise argparse.ArgumentTypeError(f'the value must be an integer')
-    if val < 1 or val > 1000:
-        raise argparse.ArgumentTypeError(
-            f'the value must be an integer between 1 and 1000')
-    return val
-
-
 def main(args):
     if args.assembly is None and args.file_format in ['bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe']:
         raise ValueError(
@@ -92,10 +81,6 @@ def main(args):
     if args.file_format in ['bed', 'bigBed'] and args.file_format_type is None:
         raise ValueError(
             'file_format_type is required for bed and bigBed file')
-    if args.max_tabular_file_errors:
-        if args.max_tabular_file_errors < 1 or args.max_tabular_file_errors > 1000:
-            raise ValueError(
-                'max_tabular_file_errors should be between 1 and 1000')
     file_validation_record = file.FileValidationRecord(
         file.get_file(args.input_file_path, args.file_format))
     file_validation_complete_record = file_validation(args.input_file_path, file_validation_record,
@@ -131,8 +116,8 @@ if __name__ == '__main__':
     parser.add_argument('--md5sum', help='md5sum of the file to be checked.')
     parser.add_argument('--tabular_file_schema_path',
                         help='the relative path to the schema file of the tabular file.')
-    parser.add_argument('--max_tabular_file_errors', type=ranged_type,
-                        help='maximum number of errors to be reported for the tabular file. Default is 10. Choose between 1 and 1000.')
+    parser.add_argument('--max_tabular_file_errors', type=int,
+                        help='maximum number of errors to be scaned for the tabular file.')
 
     args = parser.parse_args()
     main(args)

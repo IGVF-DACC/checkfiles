@@ -34,7 +34,7 @@ import logformatter
 
 SCHEMA_DIR = 'src/schemas/'
 CHROM_INFO_DIR = SCHEMA_DIR + 'genome_builds'
-MAX_NUM_ERROR_FOR_TABULAR_FILE = 10
+MAX_NUM_ERROR_FOR_TABULAR_FILE = 1000
 
 ZIP_FILE_FORMAT = [
     'bam',
@@ -299,7 +299,7 @@ def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, ma
     error = {}
     if not schema_path:
         schema_path = schemas.get(content_type)
-    report = validate(file_path, schema=schema_path)
+    report = validate(file_path, schema=schema_path, limit_errors=max_error)
     if not report.valid:
         report = report.flatten(['rowNumber', 'fieldNumber', 'type', 'note'])
         # find the unique type of errors, if there are only type errors and no schema, then we can ignore the error
@@ -307,18 +307,27 @@ def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, ma
         if not schema_path and error_types == ['type-error']:
             return {}
         number_of_errors = len(report)
-        number_of_errors_string = str(number_of_errors)
-        if max_error:
-            number_of_errors_string = f'{number_of_errors_string} (max {max_error} shown)'
-        if max_error and len(report) > max_error:
-            report = report[0:max_error]
-        error = {
-            'tabular_file_error': {
-                'schema': schema_path,
-                'number_of_errors': number_of_errors_string,
-                'errors': report
-            }
+        tabular_file_error = {
+            'schema': schema_path,
+            'error_number_limit': max_error,
+            'number_of_errors': number_of_errors,
         }
+        for row in report:
+            error_type = row[2]
+            if error_type in tabular_file_error:
+                tabular_file_error[error_type]['count'] += 1
+                if len(tabular_file_error[error_type]['details']) < 2:
+                    tabular_file_error[error_type]['details'].append(row)
+            else:
+                tabular_file_error[error_type] = {}
+                tabular_file_error[error_type]['count'] = 1
+                tabular_file_error[error_type]['details'] = [row]
+
+        tabular_file_error['error_types'] = error_types
+        error = {
+            'tabular_file_error': tabular_file_error,
+        }
+
     return error
 
 
