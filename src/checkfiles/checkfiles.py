@@ -32,6 +32,7 @@ import logformatter
 SCHEMA_DIR = 'src/schemas/'
 CHROM_INFO_DIR = SCHEMA_DIR + 'genome_builds'
 MAX_NUM_ERROR_FOR_TABULAR_FILE = 1000
+MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE = 2
 
 ZIP_FILE_FORMAT = [
     'bam',
@@ -317,7 +318,7 @@ def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, ma
             error_type = row[2]
             if error_type in tabular_file_error:
                 tabular_file_error[error_type]['count'] += 1
-                if len(tabular_file_error[error_type]['details']) < 2:
+                if len(tabular_file_error[error_type]['details']) < MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE:
                     tabular_file_error[error_type]['details'].append(
                         {
                             'row_number': row[0],
