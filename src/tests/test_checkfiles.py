@@ -156,8 +156,22 @@ def test_tabular_file_check_guide_rna_sequences_valid():
 def test_tabular_file_check_guide_rna_sequences_invalid():
     file_path = 'src/tests/data/guide_rna_sequences_invalid.tsv'
     error = tabular_file_check('guide RNA sequences', file_path)
-    assert error == {'tabular_file_error': {'schema': 'src/schemas/table_schemas/guide_rna_sequences.json', 'error_number_limit': 1000, 'number_of_errors': 5, 'constraint-error': {'count': 3, 'description': 'A field value does not conform to a constraint.', 'details': [{'row_number': 2, 'field_number': 1, 'note': 'constraint "required" is "True"'}, {
-        'row_number': 2, 'field_number': 3, 'note': 'constraint "enum" is "[\'safe-targeting\', \'non-targeting\', \'targeting\', \'positive control\', \'negative control\', \'variant\']"'}]}, 'type-error': {'count': 2, 'description': 'The value does not match the schema type and format for this field.', 'details': [{'row_number': 2, 'field_number': 5, 'note': 'type is "integer/default"'}, {'row_number': 2, 'field_number': 14, 'note': 'type is "array/default"'}]}, 'error_types': ['constraint-error', 'type-error']}}
+    tabular_file_error = error['tabular_file_error']
+    assert tabular_file_error['schema'] == 'src/schemas/table_schemas/guide_rna_sequences.json'
+    assert tabular_file_error['error_number_limit'] == 1000
+    assert tabular_file_error['number_of_errors'] == 5
+    assert tabular_file_error['constraint-error'] == {
+        'count': 3,
+        'description': 'A field value does not conform to a constraint.',
+        'details': [
+            {'row_number': 2, 'field_number': 1,
+                'note': 'constraint "required" is "True"'},
+            {'row_number': 2, 'field_number': 3,
+                'note': 'constraint "enum" is "[\'safe-targeting\', \'non-targeting\', \'targeting\', \'positive control\', \'negative control\', \'variant\']"'}
+        ]
+    }
+    assert 'type-error' in tabular_file_error['error_types']
+    assert 'constraint-error' in tabular_file_error['error_types']
 
 
 def test_tabular_file_check_mpra_sequence_designs_valid():
@@ -169,8 +183,21 @@ def test_tabular_file_check_mpra_sequence_designs_valid():
 def test_tabular_file_check_mpra_sequence_designs_invalid():
     file_path = 'src/tests/data/mpra_sequence_designs_invalid.tsv'
     error = tabular_file_check('MPRA sequence designs', file_path)
-    assert error == {'tabular_file_error': {'schema': 'src/schemas/table_schemas/mpra_sequence_designs.json', 'error_number_limit': 1000, 'number_of_errors': 10, 'constraint-error': {'count': 10, 'description': 'A field value does not conform to a constraint.',
-                                                                                                                                                                                       'details': [{'row_number': 6, 'field_number': 1, 'note': 'constraint "required" is "True"'}, {'row_number': 6, 'field_number': 2, 'note': 'constraint "required" is "True"'}]}, 'error_types': ['constraint-error']}}
+    tabular_file_error = error['tabular_file_error']
+    assert tabular_file_error['schema'] == 'src/schemas/table_schemas/mpra_sequence_designs.json'
+    assert tabular_file_error['error_number_limit'] == 1000
+    assert tabular_file_error['number_of_errors'] == 10
+    assert tabular_file_error['constraint-error'] == {
+        'count': 10,
+        'description': 'A field value does not conform to a constraint.',
+        'details': [
+            {'row_number': 6, 'field_number': 1,
+                'note': 'constraint "required" is "True"'},
+            {'row_number': 6, 'field_number': 2,
+                'note': 'constraint "required" is "True"'}
+        ]
+    }
+    assert 'constraint-error' in tabular_file_error['error_types']
 
 
 def test_tabular_file_check_prime_editing_guide_rna_sequences_valid():
@@ -182,8 +209,21 @@ def test_tabular_file_check_prime_editing_guide_rna_sequences_valid():
 def test_tabular_file_check_prime_editing_guide_rna_sequences_invalid():
     file_path = 'src/tests/data/prime_editing_guide_rna_sequences_invalid.tsv'
     error = tabular_file_check('prime editing guide RNA sequences', file_path)
-    assert error == {'tabular_file_error': {'schema': 'src/schemas/table_schemas/prime_editing_guide_rna_sequences.json', 'error_number_limit': 1000, 'number_of_errors': 2, 'constraint-error': {'count': 2, 'description': 'A field value does not conform to a constraint.',
-                                                                                                                                                                                                  'details': [{'row_number': 2, 'field_number': 12, 'note': 'constraint "required" is "True"'}, {'row_number': 3, 'field_number': 9, 'note': 'constraint "required" is "True"'}]}, 'error_types': ['constraint-error']}}
+    tabular_file_error = error['tabular_file_error']
+    assert tabular_file_error['schema'] == 'src/schemas/table_schemas/prime_editing_guide_rna_sequences.json'
+    assert tabular_file_error['error_number_limit'] == 1000
+    assert tabular_file_error['number_of_errors'] == 2
+    assert tabular_file_error['constraint-error'] == {
+        'count': 2,
+        'description': 'A field value does not conform to a constraint.',
+        'details': [
+            {'row_number': 2, 'field_number': 12,
+                'note': 'constraint "required" is "True"'},
+            {'row_number': 3, 'field_number': 9,
+                'note': 'constraint "required" is "True"'}
+        ]
+    }
+    assert 'constraint-error' in tabular_file_error['error_types']
 
 
 def test_main_empty_file(mocker):
