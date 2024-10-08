@@ -1,7 +1,6 @@
 import argparse
 import datetime
 import gzip
-import hashlib
 import json
 import logging
 import math
@@ -13,10 +12,8 @@ import shlex
 import shutil
 import subprocess
 import sys
-import time
 import tempfile
 
-import pyfastx
 import pysam
 
 from collections import namedtuple
@@ -24,7 +21,7 @@ from typing import Optional
 
 from FastaValidator import fasta_validator
 
-from frictionless import system, Checklist
+from frictionless import system
 from frictionless import validate
 
 import file
@@ -310,7 +307,7 @@ def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, ma
         report = report.flatten(
             ['rowNumber', 'fieldNumber', 'type', 'note', 'description'])
         number_of_errors = len(report)
-        error_types = set([row[2] for row in report])
+        error_types = list(set([row[2] for row in report]))
         tabular_file_error = {
             'schema': schema_path,
             'error_number_limit': max_error,
@@ -321,12 +318,24 @@ def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, ma
             if error_type in tabular_file_error:
                 tabular_file_error[error_type]['count'] += 1
                 if len(tabular_file_error[error_type]['details']) < 2:
-                    tabular_file_error[error_type]['details'].append(row)
+                    tabular_file_error[error_type]['details'].append(
+                        {
+                            'row_number': row[0],
+                            'field_number': row[1],
+                            'note': row[3],
+                        }
+                    )
             else:
                 tabular_file_error[error_type] = {}
                 tabular_file_error[error_type]['count'] = 1
                 tabular_file_error[error_type]['description'] = row[4]
-                tabular_file_error[error_type]['details'] = [row]
+                tabular_file_error[error_type]['details'] = [
+                    {
+                        'row_number': row[0],
+                        'field_number': row[1],
+                        'note': row[3],
+                    }
+                ]
 
         tabular_file_error['error_types'] = error_types
         error = {

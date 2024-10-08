@@ -156,8 +156,8 @@ def test_tabular_file_check_guide_rna_sequences_valid():
 def test_tabular_file_check_guide_rna_sequences_invalid():
     file_path = 'src/tests/data/guide_rna_sequences_invalid.tsv'
     error = tabular_file_check('guide RNA sequences', file_path)
-    assert error == {'tabular_file_error': {'schema': 'src/schemas/table_schemas/guide_rna_sequences.json', 'error_number_limit': 1000, 'number_of_errors': 5, 'constraint-error': {'count': 3, 'description': 'A field value does not conform to a constraint.', 'details': [[2, 1, 'constraint-error', 'constraint "required" is "True"', 'A field value does not conform to a constraint.'], [2, 3, 'constraint-error', 'constraint "enum" is "[\'safe-targeting\', \'non-targeting\', \'targeting\', \'positive control\', \'negative control\', \'variant\']"', 'A field value does not conform to a constraint.']]}, 'type-error': {
-        'count': 2, 'description': 'The value does not match the schema type and format for this field.', 'details': [[2, 5, 'type-error', 'type is "integer/default"', 'The value does not match the schema type and format for this field.'], [2, 14, 'type-error', 'type is "array/default"', 'The value does not match the schema type and format for this field.']]}, 'error_types': {'type-error', 'constraint-error'}}}
+    assert error == {'tabular_file_error': {'schema': 'src/schemas/table_schemas/guide_rna_sequences.json', 'error_number_limit': 1000, 'number_of_errors': 5, 'constraint-error': {'count': 3, 'description': 'A field value does not conform to a constraint.', 'details': [{'row_number': 2, 'field_number': 1, 'note': 'constraint "required" is "True"'}, {
+        'row_number': 2, 'field_number': 3, 'note': 'constraint "enum" is "[\'safe-targeting\', \'non-targeting\', \'targeting\', \'positive control\', \'negative control\', \'variant\']"'}]}, 'type-error': {'count': 2, 'description': 'The value does not match the schema type and format for this field.', 'details': [{'row_number': 2, 'field_number': 5, 'note': 'type is "integer/default"'}, {'row_number': 2, 'field_number': 14, 'note': 'type is "array/default"'}]}, 'error_types': ['constraint-error', 'type-error']}}
 
 
 def test_tabular_file_check_mpra_sequence_designs_valid():
@@ -169,8 +169,8 @@ def test_tabular_file_check_mpra_sequence_designs_valid():
 def test_tabular_file_check_mpra_sequence_designs_invalid():
     file_path = 'src/tests/data/mpra_sequence_designs_invalid.tsv'
     error = tabular_file_check('MPRA sequence designs', file_path)
-    assert error == {'tabular_file_error': {'schema': 'src/schemas/table_schemas/mpra_sequence_designs.json', 'error_number_limit': 1000, 'number_of_errors': 10, 'constraint-error': {'count': 10, 'description': 'A field value does not conform to a constraint.', 'details': [
-        [6, 1, 'constraint-error', 'constraint "required" is "True"', 'A field value does not conform to a constraint.'], [6, 2, 'constraint-error', 'constraint "required" is "True"', 'A field value does not conform to a constraint.']]}, 'error_types': {'constraint-error'}}}
+    assert error == {'tabular_file_error': {'schema': 'src/schemas/table_schemas/mpra_sequence_designs.json', 'error_number_limit': 1000, 'number_of_errors': 10, 'constraint-error': {'count': 10, 'description': 'A field value does not conform to a constraint.',
+                                                                                                                                                                                       'details': [{'row_number': 6, 'field_number': 1, 'note': 'constraint "required" is "True"'}, {'row_number': 6, 'field_number': 2, 'note': 'constraint "required" is "True"'}]}, 'error_types': ['constraint-error']}}
 
 
 def test_tabular_file_check_prime_editing_guide_rna_sequences_valid():
@@ -183,7 +183,7 @@ def test_tabular_file_check_prime_editing_guide_rna_sequences_invalid():
     file_path = 'src/tests/data/prime_editing_guide_rna_sequences_invalid.tsv'
     error = tabular_file_check('prime editing guide RNA sequences', file_path)
     assert error == {'tabular_file_error': {'schema': 'src/schemas/table_schemas/prime_editing_guide_rna_sequences.json', 'error_number_limit': 1000, 'number_of_errors': 2, 'constraint-error': {'count': 2, 'description': 'A field value does not conform to a constraint.',
-                                                                                                                                                                                                  'details': [[2, 12, 'constraint-error', 'constraint "required" is "True"', 'A field value does not conform to a constraint.'], [3, 9, 'constraint-error', 'constraint "required" is "True"', 'A field value does not conform to a constraint.']]}, 'error_types': {'constraint-error'}}}
+                                                                                                                                                                                                  'details': [{'row_number': 2, 'field_number': 12, 'note': 'constraint "required" is "True"'}, {'row_number': 3, 'field_number': 9, 'note': 'constraint "required" is "True"'}]}, 'error_types': ['constraint-error']}}
 
 
 def test_main_empty_file(mocker):
@@ -322,8 +322,20 @@ def test_main_tabular_tsv(mocker):
     assert result.info == {
         'file_size': 22585
     }
-    assert result.errors == {'gzip': 'tsv file should be gzipped', 'tabular_file_error': {'schema': 'src/schemas/table_schemas/element_quant.json', 'error_number_limit': 1000, 'number_of_errors': 5, 'incorrect-label': {'count': 3, 'description': 'One of the data source header does not match the field name defined in the schema.', 'details': [[None, 1, 'incorrect-label', '', 'One of the data source header does not match the field name defined in the schema.'], [
-        None, 2, 'incorrect-label', '', 'One of the data source header does not match the field name defined in the schema.']]}, 'type-error': {'count': 2, 'description': 'The value does not match the schema type and format for this field.', 'details': [[60, 24, 'type-error', 'type is "boolean/default"', 'The value does not match the schema type and format for this field.'], [61, 24, 'type-error', 'type is "boolean/default"', 'The value does not match the schema type and format for this field.']]}, 'error_types': {'type-error', 'incorrect-label'}}}
+    errors = result.errors['tabular_file_error']
+    assert errors['schema'] == 'src/schemas/table_schemas/element_quant.json'
+    assert errors['error_number_limit'] == 1000
+    assert errors['number_of_errors'] == 5
+    assert errors['incorrect-label'] == {
+        'count': 3,
+        'description': 'One of the data source header does not match the field name defined in the schema.',
+        'details': [
+            {'row_number': None, 'field_number': 1, 'note': ''},
+            {'row_number': None, 'field_number': 2, 'note': ''}
+        ]
+    }
+    assert 'type-error' in errors['error_types']
+    assert 'incorrect-label' in errors['error_types']
 
 
 def test_main_tabular_csv(mocker):
@@ -355,8 +367,22 @@ def test_main_tabular_csv(mocker):
     assert result.info == {
         'file_size': 13535
     }
-    assert result.errors == {'gzip': 'csv file should be gzipped', 'tabular_file_error': {'schema': 'src/schemas/table_schemas/element_quant.json', 'error_number_limit': 1000, 'number_of_errors': 1000, 'missing-label': {'count': 22, 'description': "Based on the schema there should be a label that is missing in the data's header.", 'details': [[None, 4, 'missing-label', '', "Based on the schema there should be a label that is missing in the data's header."], [None, 5, 'missing-label', '', "Based on the schema there should be a label that is missing in the data's header."]]}, 'incorrect-label': {'count': 3, 'description': 'One of the data source header does not match the field name defined in the schema.', 'details': [[None, 1, 'incorrect-label', '', 'One of the data source header does not match the field name defined in the schema.'], [None, 2, 'incorrect-label', '', 'One of the data source header does not match the field name defined in the schema.']]}, 'type-error': {'count': 82, 'description': 'The value does not match the schema type and format for this field.', 'details': [
-        [2, 2, 'type-error', 'type is "integer/default"', 'The value does not match the schema type and format for this field.'], [2, 3, 'type-error', 'type is "integer/default"', 'The value does not match the schema type and format for this field.']]}, 'missing-cell': {'count': 893, 'description': 'This row has less values compared to the header row (the first row in the data source). A key concept is that all the rows in tabular data must have the same number of columns.', 'details': [[2, 4, 'missing-cell', '', 'This row has less values compared to the header row (the first row in the data source). A key concept is that all the rows in tabular data must have the same number of columns.'], [2, 5, 'missing-cell', '', 'This row has less values compared to the header row (the first row in the data source). A key concept is that all the rows in tabular data must have the same number of columns.']]}, 'error_types': {'incorrect-label', 'missing-label', 'type-error', 'missing-cell'}}}
+    errors = result.errors['tabular_file_error']
+    assert errors['schema'] == 'src/schemas/table_schemas/element_quant.json'
+    assert errors['error_number_limit'] == 1000
+    assert errors['number_of_errors'] == 1000
+    assert errors['missing-label'] == {
+        'count': 22,
+        'description': "Based on the schema there should be a label that is missing in the data's header.",
+        'details': [
+            {'row_number': None, 'field_number': 4, 'note': ''},
+            {'row_number': None, 'field_number': 5, 'note': ''}
+        ]
+    }
+    assert 'missing-label' in errors['error_types']
+    assert 'type-error' in errors['error_types']
+    assert 'incorrect-label' in errors['error_types']
+    assert 'missing-cell' in errors['error_types']
 
 
 def test_main_tabular_txt(mocker):
@@ -415,7 +441,6 @@ def test_main_tabular_skip_type_error(mocker):
 
     result = file_validation(portal_url, portal_auth, validation_record,
                              md5sum, output_type, file_format_type, assembly)
-    print(result.errors)
     assert result.validation_success == False
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.errors == {'gzip': 'csv file should be gzipped'}
