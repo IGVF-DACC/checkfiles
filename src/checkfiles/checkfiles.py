@@ -63,7 +63,6 @@ ZIP_FILE_FORMAT = [
 ]
 
 TABULAR_FORMAT = [
-    'txt',
     'tsv',
     'csv',
 ]
