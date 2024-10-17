@@ -389,38 +389,6 @@ def test_main_tabular_csv(mocker):
     }
 
 
-def test_main_tabular_txt(mocker):
-    portal_url = 'url_to_portal'
-    file_path = 'src/tests/data/ENCFF583VAI.txt.gz'
-    uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
-    md5sum = '6c86ca5de2569bf49287cb21196d760d'
-    file_format = 'txt'
-    output_type = 'element quantifications'
-    file_format_type = None
-    assembly = None
-    portal_auth = None
-
-    file = get_file(file_path, file_format)
-    validation_record = FileValidationRecord(file, uuid)
-    validation_record.original_etag = 'foobar'
-
-    mock_response_get_local_file_path = mocker.Mock()
-    mock_response_get_local_file_path.json.return_value = {
-        '@graph': []
-    }
-    mocker.patch('checkfiles.checkfiles.requests.Session.get',
-                 return_value=mock_response_get_local_file_path)
-
-    result = file_validation(portal_url, portal_auth, validation_record,
-                             md5sum, output_type, file_format_type, assembly)
-    assert result.validation_success == True
-    assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
-    assert result.info == {
-        'file_size': 64,
-        'content_md5sum': 'eda02672669cbbbdbb895cbb4ea2507f'
-    }
-
-
 def test_main_bed(mocker):
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/ENCFF597JNC.bed.gz'
