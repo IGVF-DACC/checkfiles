@@ -309,6 +309,13 @@ class RunCheckfilesStepFunction(Stack):
             result_path=JsonPath.DISCARD,
         )
 
+        run_checkfiles_command.add_catch(
+            handler=terminate_instance
+        )
+        wait_for_checkfiles.add_catch(
+            handler=terminate_instance
+        )
+
         send_pending_files_slack_notification = self.make_slack_notification_task(
             'SendPendingFilesCheckedSlackNotification')
         send_checkfiles_finished_slack_notification = self.make_slack_notification_task(
