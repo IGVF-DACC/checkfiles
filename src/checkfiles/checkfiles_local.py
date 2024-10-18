@@ -59,11 +59,8 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
         if not content_type and not tabular_file_schema_path:
             logger.info(
                 'file content type and tabular file schema are not provided for the tabular file, will only perform tabular file based checks')
-        max_error = MAX_NUM_ERROR_FOR_TABULAR_FILE
-        if max_tabular_file_errors:
-            max_error = max_tabular_file_errors
         tabular_file_check_error = tabular_file_check(
-            content_type, input_file_path, schema_path=tabular_file_schema_path, max_error=max_error)
+            content_type, input_file_path, schema_path=tabular_file_schema_path, max_error=max_tabular_file_errors)
         validation_record.update_errors(tabular_file_check_error)
 
     if validation_record.errors:
@@ -116,7 +113,7 @@ if __name__ == '__main__':
     parser.add_argument('--md5sum', help='md5sum of the file to be checked.')
     parser.add_argument('--tabular_file_schema_path',
                         help='the relative path to the schema file of the tabular file.')
-    parser.add_argument('--max_tabular_file_errors', type=int,
+    parser.add_argument('--max_tabular_file_errors', type=int, default=MAX_NUM_ERROR_FOR_TABULAR_FILE,
                         help='maximum number of errors to be scaned for the tabular file.')
 
     args = parser.parse_args()
