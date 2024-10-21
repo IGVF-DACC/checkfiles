@@ -338,14 +338,14 @@
                                     "Arn"
                                 ]
                             },
-                            "\"},\"WaitForSSMReg\":{\"Type\":\"Wait\",\"Seconds\":120,\"Next\":\"RunCheckFilesCommand\"},\"RunCheckFilesCommand\":{\"Next\":\"WaitForCheckfiles\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"instance_id.$\":\"$.instance_id\",\"command_id.$\":\"$.command_id\"},\"Resource\":\"",
+                            "\"},\"WaitForSSMReg\":{\"Type\":\"Wait\",\"Seconds\":120,\"Next\":\"RunCheckFilesCommand\"},\"RunCheckFilesCommand\":{\"Next\":\"WaitForCheckfiles\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Catch\":[{\"ErrorEquals\":[\"States.ALL\"],\"Next\":\"TerminateInstance\"}],\"Type\":\"Task\",\"ResultSelector\":{\"instance_id.$\":\"$.instance_id\",\"command_id.$\":\"$.command_id\"},\"Resource\":\"",
                             {
                                 "Fn::GetAtt": [
                                     "RunCheckfilesCommandLambda7EB09D55",
                                     "Arn"
                                 ]
                             },
-                            "\"},\"WaitForCheckfiles\":{\"Next\":\"MakeCheckfilesFinishedMessage\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2},{\"ErrorEquals\":[\"CommandInProgress\"],\"IntervalSeconds\":3600,\"MaxAttempts\":22,\"BackoffRate\":1}],\"Type\":\"Task\",\"ResultSelector\":{\"checkfiles_command_status.$\":\"$.checkfiles_command_status\",\"instance_id.$\":\"$.instance_id\",\"command_id.$\":\"$.command_id\",\"instance_id_list.$\":\"$.instance_id_list\"},\"Resource\":\"",
+                            "\"},\"WaitForCheckfiles\":{\"Next\":\"MakeCheckfilesFinishedMessage\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2},{\"ErrorEquals\":[\"CommandInProgress\"],\"IntervalSeconds\":3600,\"MaxAttempts\":22,\"BackoffRate\":1}],\"Catch\":[{\"ErrorEquals\":[\"States.ALL\"],\"Next\":\"TerminateInstance\"}],\"Type\":\"Task\",\"ResultSelector\":{\"checkfiles_command_status.$\":\"$.checkfiles_command_status\",\"instance_id.$\":\"$.instance_id\",\"command_id.$\":\"$.command_id\",\"instance_id_list.$\":\"$.instance_id_list\"},\"Resource\":\"",
                             {
                                 "Fn::GetAtt": [
                                     "WaitForCheckfilesLambdaBCE62619",
