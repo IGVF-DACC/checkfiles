@@ -156,15 +156,22 @@ def test_tabular_file_check_guide_rna_sequences_valid():
 def test_tabular_file_check_guide_rna_sequences_invalid():
     file_path = 'src/tests/data/guide_rna_sequences_invalid.tsv'
     error = tabular_file_check('guide RNA sequences', file_path)
-    assert error == {
-        'tabular_file_error': [
-            [2, 1, 'constraint-error', 'constraint "required" is "True"'],
-            [2, 3, 'constraint-error', 'constraint "enum" is "[\'safe-targeting\', '"'non-targeting', 'targeting', 'positive control', "'\'negative control\', \'variant\']"'],
-            [2, 5, 'type-error', 'type is "integer/default"'],
-            [2, 7, 'constraint-error', 'constraint "enum" is "[\'+\', \'-\']"'],
-            [2, 14, 'type-error', 'type is "array/default"']
+    tabular_file_error = error['tabular_file_error']
+    assert tabular_file_error['schema'] == 'src/schemas/table_schemas/guide_rna_sequences.json'
+    assert tabular_file_error['error_number_limit'] == 1000
+    assert tabular_file_error['number_of_errors'] == 5
+    assert tabular_file_error['constraint-error'] == {
+        'count': 3,
+        'description': 'A field value does not conform to a constraint.',
+        'details': [
+            {'row_number': 2, 'field_number': 1,
+                'note': 'constraint "required" is "True"'},
+            {'row_number': 2, 'field_number': 3,
+                'note': 'constraint "enum" is "[\'safe-targeting\', \'non-targeting\', \'targeting\', \'positive control\', \'negative control\', \'variant\']"'}
         ]
     }
+    assert 'type-error' in tabular_file_error['error_types']
+    assert 'constraint-error' in tabular_file_error['error_types']
 
 
 def test_tabular_file_check_mpra_sequence_designs_valid():
@@ -176,23 +183,21 @@ def test_tabular_file_check_mpra_sequence_designs_valid():
 def test_tabular_file_check_mpra_sequence_designs_invalid():
     file_path = 'src/tests/data/mpra_sequence_designs_invalid.tsv'
     error = tabular_file_check('MPRA sequence designs', file_path)
-    assert error == {
-        'tabular_file_error': [
-            [6, 1, 'constraint-error', 'constraint "required" is "True"'],
-            [6, 2, 'constraint-error', 'constraint "required" is "True"'],
-            [6, 3, 'constraint-error', 'constraint "required" is "True"'],
-            [6, 4, 'constraint-error', 'constraint "required" is "True"'],
-            [7, 3, 'constraint-error',
-                'constraint "enum" is "[\'variant\', \'element\', \'synthetic\', \'scrambled\']"'],
-            [7, 4, 'constraint-error', 'constraint "enum" is "[\'test\', \'variant positive control\', \'variant negative control\', \'element active control\', \'element inactive control\']"'],
-            [7, 10, 'constraint-error', 'constraint "enum" is "[\'+\', \'-\']"'],
-            [7, 11, 'constraint-error',
-                'array item constraint "enum" is "[\'SNV\', \'indel\']"'],
-            [7, 14, 'constraint-error',
-                'array item constraint "enum" is "[\'ref\', \'alt\']"'],
-            [8, 8, 'constraint-error', 'constraint "minimum" is "0"']
+    tabular_file_error = error['tabular_file_error']
+    assert tabular_file_error['schema'] == 'src/schemas/table_schemas/mpra_sequence_designs.json'
+    assert tabular_file_error['error_number_limit'] == 1000
+    assert tabular_file_error['number_of_errors'] == 10
+    assert tabular_file_error['constraint-error'] == {
+        'count': 10,
+        'description': 'A field value does not conform to a constraint.',
+        'details': [
+            {'row_number': 6, 'field_number': 1,
+                'note': 'constraint "required" is "True"'},
+            {'row_number': 6, 'field_number': 2,
+                'note': 'constraint "required" is "True"'}
         ]
     }
+    assert 'constraint-error' in tabular_file_error['error_types']
 
 
 def test_tabular_file_check_prime_editing_guide_rna_sequences_valid():
@@ -204,12 +209,21 @@ def test_tabular_file_check_prime_editing_guide_rna_sequences_valid():
 def test_tabular_file_check_prime_editing_guide_rna_sequences_invalid():
     file_path = 'src/tests/data/prime_editing_guide_rna_sequences_invalid.tsv'
     error = tabular_file_check('prime editing guide RNA sequences', file_path)
-    assert error == {
-        'tabular_file_error': [
-            [2, 12, 'constraint-error', 'constraint "required" is "True"'],
-            [3, 9, 'constraint-error', 'constraint "required" is "True"']
+    tabular_file_error = error['tabular_file_error']
+    assert tabular_file_error['schema'] == 'src/schemas/table_schemas/prime_editing_guide_rna_sequences.json'
+    assert tabular_file_error['error_number_limit'] == 1000
+    assert tabular_file_error['number_of_errors'] == 2
+    assert tabular_file_error['constraint-error'] == {
+        'count': 2,
+        'description': 'A field value does not conform to a constraint.',
+        'details': [
+            {'row_number': 2, 'field_number': 12,
+                'note': 'constraint "required" is "True"'},
+            {'row_number': 3, 'field_number': 9,
+                'note': 'constraint "required" is "True"'}
         ]
     }
+    assert 'constraint-error' in tabular_file_error['error_types']
 
 
 def test_main_empty_file(mocker):
@@ -348,10 +362,20 @@ def test_main_tabular_tsv(mocker):
     assert result.info == {
         'file_size': 22585
     }
-    assert result.errors == {
-        'gzip': 'tsv file should be gzipped',
-        'tabular_file_error': [[None, 1, 'incorrect-label', ''], [None, 2, 'incorrect-label', ''], [None, 3, 'incorrect-label', ''], [60, 24, 'type-error', "type is \"boolean/default\""], [61, 24, 'type-error', "type is \"boolean/default\""]]
+    errors = result.errors['tabular_file_error']
+    assert errors['schema'] == 'src/schemas/table_schemas/element_quant.json'
+    assert errors['error_number_limit'] == 1000
+    assert errors['number_of_errors'] == 5
+    assert errors['incorrect-label'] == {
+        'count': 3,
+        'description': 'One of the data source header does not match the field name defined in the schema.',
+        'details': [
+            {'row_number': None, 'field_number': 1, 'note': ''},
+            {'row_number': None, 'field_number': 2, 'note': ''}
+        ]
     }
+    assert 'type-error' in errors['error_types']
+    assert 'incorrect-label' in errors['error_types']
 
 
 def test_main_tabular_csv(mocker):
@@ -383,10 +407,51 @@ def test_main_tabular_csv(mocker):
     assert result.info == {
         'file_size': 13535
     }
-    assert result.errors == {
-        'gzip': 'csv file should be gzipped',
-        'tabular_file_error': [[None, 4, 'missing-label', ''], [None, 5, 'missing-label', ''], [None, 6, 'missing-label', ''], [None, 7, 'missing-label', ''], [None, 8, 'missing-label', ''], [None, 9, 'missing-label', ''], [None, 10, 'missing-label', ''], [None, 11, 'missing-label', ''], [None, 12, 'missing-label', ''], [None, 13, 'missing-label', ''], ],
+    errors = result.errors['tabular_file_error']
+    assert errors['schema'] == 'src/schemas/table_schemas/element_quant.json'
+    assert errors['error_number_limit'] == 1000
+    assert errors['number_of_errors'] == 1000
+    assert errors['missing-label'] == {
+        'count': 22,
+        'description': "Based on the schema there should be a label that is missing in the data's header.",
+        'details': [
+            {'row_number': None, 'field_number': 4, 'note': ''},
+            {'row_number': None, 'field_number': 5, 'note': ''}
+        ]
     }
+    assert 'missing-label' in errors['error_types']
+    assert 'type-error' in errors['error_types']
+    assert 'incorrect-label' in errors['error_types']
+    assert 'missing-cell' in errors['error_types']
+
+
+def test_main_tabular_skip_type_error(mocker):
+    portal_url = 'url_to_portal'
+    file_path = 'src/tests/data/skip_error_test_file.csv'
+    uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
+    md5sum = '5ff9fc3dbbd206cf4abb8164015c67e5'
+    file_format = 'csv'
+    output_type = 'test'
+    file_format_type = None
+    assembly = None
+    portal_auth = None
+
+    file = get_file(file_path, file_format)
+    validation_record = FileValidationRecord(file, uuid)
+    validation_record.original_etag = 'foobar'
+
+    mock_response_get_local_file_path = mocker.Mock()
+    mock_response_get_local_file_path.json.return_value = {
+        '@graph': []
+    }
+    mocker.patch('checkfiles.checkfiles.requests.Session.get',
+                 return_value=mock_response_get_local_file_path)
+
+    result = file_validation(portal_url, portal_auth, validation_record,
+                             md5sum, output_type, file_format_type, assembly)
+    assert result.validation_success == False
+    assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
+    assert result.errors == {'gzip': 'csv file should be gzipped'}
 
 
 def test_main_bed(mocker):
