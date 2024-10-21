@@ -269,7 +269,7 @@ def fastq_get_average_read_length_and_number_of_reads(file_path):
     for item in output.decode().strip().split('\n'):
         split_item = item.split(': ')
         # mean might not be an integer to begin with, but schema wants integer so floor it
-        info.update({split_item[0]: math.floor(float(split_item[1]))})
+        info.update({split_item[0]: round(float(split_item[1]), 2)})
     return info
 
 
