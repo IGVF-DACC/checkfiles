@@ -70,3 +70,9 @@ Validating tabular file with your own schema file:
 ```bash
 python src/checkfiles/checkfiles_local.py --input_file_path src/tests/data/guide_rna_sequences_invalid.tsv.gz --file_format tsv --content_type "guide RNA sequences" --md5sum b8bfdca28ddbcc74128e3e3bb5febe24 --tabular_file_schema_path src/schemas/table_schemas/element_quant.json
 ```
+
+The script will scan max of 1000 tabular file errors as default. You can set the max number of errors if needed:
+
+```bash
+python src/checkfiles/checkfiles_local.py --input_file_path src/tests/data/guide_rna_sequences_invalid.tsv.gz --file_format tsv --content_type "guide RNA sequences" --md5sum b8bfdca28ddbcc74128e3e3bb5febe24 --max_tabular_file_errors 100
+```
