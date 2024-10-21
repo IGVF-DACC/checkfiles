@@ -34,7 +34,7 @@ def test_bam_pysam_check_invalid_bam_file():
 def test_bam_pysam_check_number_of_read():
     file_path = 'src/tests/data/ENCFF206HGF.bam'
     result = bam_pysam_check(file_path)
-    assert result == {'bam_number_of_reads': 1709}
+    assert result == {'read_count': 1709}
 
 
 def test_fastq_get_average_read_length_and_number_of_reads():
@@ -328,7 +328,7 @@ def test_main_bam(mocker):
     assert result.info == {
         'content_md5sum': '9095bad36672afefd7bf9165d89b4eb5',
         'file_size': 118126,
-        'bam_number_of_reads': 1709
+        'read_count': 1709
     }
 
 
