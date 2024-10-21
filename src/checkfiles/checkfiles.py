@@ -246,7 +246,7 @@ def bam_pysam_check(file_path):
             samfile = pysam.AlignmentFile(file_path, 'rb')
             count = samfile.count(until_eof=True)
             logger.info(f'the number of reads: {count}')
-            info = {'bam_number_of_reads': count}
+            info = {'read_count': count}
             samfile.close()
             return info
     except pysam.utils.SamtoolsError as e:
