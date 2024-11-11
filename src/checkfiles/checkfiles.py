@@ -3,7 +3,6 @@ import datetime
 import gzip
 import json
 import logging
-import math
 import multiprocessing
 import os
 import re
@@ -97,6 +96,12 @@ ASSEMBLY_TO_CHROMINFO_PATH_MAP = {
     'GRCm39': 'src/schemas/genome_builds/chrom_sizes/mm39.chrom.sizes',
 }
 
+ASSEMBLY_TO_SEQUENCE_URL_MAP = {
+    'GRCh38': 'https://api.data.igvf.org/reference-files/IGVFFI0653VCGH/@@download/IGVFFI0653VCGH.fasta.gz',
+    # 'GRCh38': 'https://hgdownload2.soe.ucsc.edu/goldenPath/hg38/chromosomes/chrY.fa.gz',
+    'GRCm39': 'https://api.data.igvf.org/reference-files/IGVFFI9282QLXO/@@download/IGVFFI9282QLXO.fasta.gz',
+}
+
 FASTA_VALIDATION_INFO = {
     0: 'this is a valid fasta file',
     1: 'the first line does not start with a > (rule 1 violated).',
@@ -184,6 +189,10 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         tabular_file_check_error = tabular_file_check(
             content_type, local_file_path)
         validation_record.update_errors(tabular_file_check_error)
+    elif file_format == 'vcf':
+        vcf_check_error = vcf_sequence_check(local_file_path, assembly)
+        validation_record.update_errors(vcf_check_error)
+
     logger.info(
         f'Completed file validation for file uuid {uuid}.')
 
@@ -342,6 +351,41 @@ def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, ma
             'tabular_file_error': tabular_file_error,
         }
 
+    return error
+
+
+def vcf_sequence_check(file_path, assembly):
+    error = {}
+    reference_file_url = ASSEMBLY_TO_SEQUENCE_URL_MAP[assembly]
+    if not reference_file_url:
+        error['vcf_error'] = f'assembly {assembly} is not supported.'
+        return error
+    # download reference file
+    reference_gz_file = tempfile.NamedTemporaryFile()
+    with requests.get(reference_file_url, stream=True) as r:
+        with open(reference_gz_file.name, 'wb') as f:
+            shutil.copyfileobj(r.raw, f)
+            # unzip gziped reference file
+            reference_file = tempfile.NamedTemporaryFile()
+            with gzip.open(reference_gz_file.name, 'rb') as f_in:
+                with open(reference_file.name, 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+                    # make fai file
+                    # check if you can open reference_file
+
+                    pysam.faidx(reference_file.name)
+
+                    # check vcf file
+                    command = ['./vcf_assembly_checker_macos_arm64',
+                               '-i', file_path, '-f', reference_file.name]
+                    print('command:', ' '.join(command))
+                    try:
+                        stdout = subprocess.check_output(
+                            command, stderr=subprocess.STDOUT)
+                        print(stdout)
+                    except subprocess.CalledProcessError as e:
+                        error['vcf_error'] = e.output.decode(
+                            errors='replace').rstrip('\n')
     return error
 
 
