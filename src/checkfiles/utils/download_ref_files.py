@@ -1,0 +1,60 @@
+
+from pathlib import Path
+import subprocess
+import requests
+import pysam
+
+FILE_URLS = {
+    'GRCh38': 'https://hgdownload2.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz',
+    'GRCm39': 'https://hgdownload2.soe.ucsc.edu/goldenPath/mm39/bigZips/mm39.fa.gz',
+}
+
+LOCAL_DIR = Path('./src/checkfiles/supporting_files/')
+
+
+def download_file(key, url, dir_path):
+    '''
+    Download the gz file from a URL, ungzip the file and save it to a path.
+    The file name should be the key + '.fa'.
+    url: URL to download the file from
+    '''
+    gz_path = dir_path / (key.lower() + '.fa.gz')
+    # Download the file
+    print(f'Downloading {key} fasta file to {gz_path}...')
+    r = requests.get(url)
+    r.raise_for_status()
+    # Save the gz file
+    with open(gz_path, 'wb') as f:
+        f.write(r.content)
+    # Ungzip the file
+    subprocess.run(['gzip', '-d', gz_path])
+
+
+def create_fai_file(fasta_path):
+    '''
+    Create a fasta index file for a fasta file.
+    fasta_path: Path object to the fasta file
+    '''
+    print(f'Indexing {fasta_path}...')
+    fai_path = fasta_path.with_suffix('.fai')
+    if not fai_path.exists():
+        pysam.faidx(fasta_path)
+
+
+def download_ref_file_by_assembly(assembly):
+    url = FILE_URLS[assembly]
+    fasta_path = LOCAL_DIR / (assembly.lower() + '.fa')
+    download_file(assembly, url, LOCAL_DIR)
+    create_fai_file(fasta_path)
+
+
+def main():
+    for key, url in FILE_URLS.items():
+        fasta_path = LOCAL_DIR / (key.lower() + '.fa')
+        if not fasta_path.exists():
+            download_file(key, url, LOCAL_DIR)
+            create_fai_file(fasta_path)
+
+
+if __name__ == '__main__':
+    main()
