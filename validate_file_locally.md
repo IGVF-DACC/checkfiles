@@ -43,7 +43,7 @@
 You can run this command to download reference files:
 
 ```bash
-python src/utils/download_ref_files.py
+python src/checkfiles/utils/download_ref_files.py
 ```
 
 ## Validate Files locally
