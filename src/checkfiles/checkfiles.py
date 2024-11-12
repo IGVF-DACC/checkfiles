@@ -26,12 +26,14 @@ from frictionless import validate
 import file
 
 import logformatter
+from utils.download_ref_files import download_ref_file_by_assembly
 
 
 SCHEMA_DIR = 'src/schemas/'
 CHROM_INFO_DIR = SCHEMA_DIR + 'genome_builds'
 MAX_NUM_ERROR_FOR_TABULAR_FILE = 1000
 MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE = 2
+ASSEMBLY_REPORT_FILE_PATH = 'src/checkfiles/supporting_files/assembly_report.txt'
 
 ZIP_FILE_FORMAT = [
     'bam',
@@ -98,8 +100,12 @@ ASSEMBLY_TO_CHROMINFO_PATH_MAP = {
 
 ASSEMBLY_TO_SEQUENCE_URL_MAP = {
     'GRCh38': 'https://api.data.igvf.org/reference-files/IGVFFI0653VCGH/@@download/IGVFFI0653VCGH.fasta.gz',
-    # 'GRCh38': 'https://hgdownload2.soe.ucsc.edu/goldenPath/hg38/chromosomes/chrY.fa.gz',
     'GRCm39': 'https://api.data.igvf.org/reference-files/IGVFFI9282QLXO/@@download/IGVFFI9282QLXO.fasta.gz',
+}
+
+ASSEMBLY_TO_SEQUENCE_FILE_MAP = {
+    'GRCh38': 'src/checkfiles/supporting_files/grch38.fa',
+    'GRCm39': 'src/checkfiles/supporting_files/grcm39.fa',
 }
 
 FASTA_VALIDATION_INFO = {
@@ -360,32 +366,22 @@ def vcf_sequence_check(file_path, assembly):
     if not reference_file_url:
         error['vcf_error'] = f'assembly {assembly} is not supported.'
         return error
-    # download reference file
-    reference_gz_file = tempfile.NamedTemporaryFile()
-    with requests.get(reference_file_url, stream=True) as r:
-        with open(reference_gz_file.name, 'wb') as f:
-            shutil.copyfileobj(r.raw, f)
-            # unzip gziped reference file
-            reference_file = tempfile.NamedTemporaryFile()
-            with gzip.open(reference_gz_file.name, 'rb') as f_in:
-                with open(reference_file.name, 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-                    # make fai file
-                    # check if you can open reference_file
-
-                    pysam.faidx(reference_file.name)
-
-                    # check vcf file
-                    command = ['./vcf_assembly_checker_macos_arm64',
-                               '-i', file_path, '-f', reference_file.name]
-                    print('command:', ' '.join(command))
-                    try:
-                        stdout = subprocess.check_output(
-                            command, stderr=subprocess.STDOUT)
-                        print(stdout)
-                    except subprocess.CalledProcessError as e:
-                        error['vcf_error'] = e.output.decode(
-                            errors='replace').rstrip('\n')
+    ref_file = ASSEMBLY_TO_SEQUENCE_FILE_MAP[assembly]
+    # check if reference file exists
+    if not os.path.exists(ref_file):
+        # download reference file
+        download_ref_file_by_assembly(assembly)
+    # check vcf file
+    command = ['./vcf_assembly_checker',
+               '-i', file_path, '-f', ref_file, '-a', ASSEMBLY_REPORT_FILE_PATH]
+    print('command:', ' '.join(command))
+    try:
+        stdout = subprocess.check_output(
+            command, stderr=subprocess.STDOUT)
+        print(stdout)
+    except subprocess.CalledProcessError as e:
+        error['vcf_error'] = e.output.decode(
+            errors='replace').rstrip('\n')
     return error
 
 
