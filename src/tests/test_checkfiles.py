@@ -159,18 +159,28 @@ def test_tabular_file_check_guide_rna_sequences_invalid():
     tabular_file_error = error['tabular_file_error']
     assert tabular_file_error['schema'] == 'src/schemas/table_schemas/guide_rna_sequences.json'
     assert tabular_file_error['error_number_limit'] == 1000
-    assert tabular_file_error['number_of_errors'] == 5
-    assert tabular_file_error['constraint-error'] == {
-        'count': 3,
-        'description': 'A field value does not conform to a constraint.',
-        'details': [
-            {'row_number': 2, 'field_number': 1,
-                'note': 'constraint "required" is "True"'},
-            {'row_number': 2, 'field_number': 3,
-                'note': 'constraint "enum" is "[\'safe-targeting\', \'non-targeting\', \'targeting\', \'positive control\', \'negative control\', \'variant\']"'}
-        ]
-    }
-    assert 'type-error' in tabular_file_error['error_types']
+    assert tabular_file_error['number_of_errors'] == 2
+    assert tabular_file_error['constraint-error'] == {'count': 2,
+                                                      'description': 'A field value '
+                                                      'does not conform '
+                                                      'to a constraint.',
+                                                      'details': [{'field_number': 1,
+                                                                   'note': 'constraint '
+                                                                   '"required" '
+                                                                   'is "True"',
+                                                                   'row_number': 2},
+                                                                  {'field_number': 4,
+                                                                   'note': 'constraint '
+                                                                   '"enum" is '
+                                                                   '"[\'safe-targeting\', '
+                                                                   "'non-targeting', "
+                                                                   "'targeting', "
+                                                                   "'positive "
+                                                                   "control', "
+                                                                   "'negative "
+                                                                   "control', "
+                                                                   '\'variant\']"',
+                                                                   'row_number': 2}]}
     assert 'constraint-error' in tabular_file_error['error_types']
 
 
