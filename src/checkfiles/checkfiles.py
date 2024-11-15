@@ -24,6 +24,7 @@ from FastaValidator import fasta_validator
 from frictionless import system
 from frictionless import validate
 
+from guide_rna_sequences_check import guide_rna_sequences_check
 import file
 
 import logformatter
@@ -301,8 +302,11 @@ def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, ma
         report = validate(file_path, limit_errors=max_error,
                           skip_errors=['type-error'])
     else:
+        checks = []
+        if content_type == 'guide RNA sequences':
+            checks = [guide_rna_sequences_check()]
         report = validate(file_path, schema=schema_path,
-                          limit_errors=max_error)
+                          limit_errors=max_error, checks=checks)
     if not report.valid:
         report = report.flatten(
             ['rowNumber', 'fieldNumber', 'type', 'note', 'description'])
