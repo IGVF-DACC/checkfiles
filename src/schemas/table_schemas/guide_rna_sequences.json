@@ -75,10 +75,7 @@
         {
             "name": "pam",
             "type": "string",
-            "description": "protospacer adjacent motif",
-            "constraints": {
-                "required": true
-            }
+            "description": "protospacer adjacent motif"
         },
         {
             "name": "genomic_element",
