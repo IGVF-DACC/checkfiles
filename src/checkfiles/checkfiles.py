@@ -378,11 +378,9 @@ def vcf_sequence_check(file_path, assembly):
     # check vcf file
     command = ['vcf_assembly_checker',
                '-i', file_path, '-f', ref_file, '-a', ASSEMBLY_REPORT_FILE_PATH[assembly]]
-    print('command:', ' '.join(command))
     try:
-        stdout = subprocess.check_output(
+        subprocess.check_output(
             command, stderr=subprocess.STDOUT)
-        print(stdout)
     except subprocess.CalledProcessError as e:
         error['vcf_error'] = e.output.decode(
             errors='replace').rstrip('\n')
