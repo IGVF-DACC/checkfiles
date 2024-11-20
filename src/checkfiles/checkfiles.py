@@ -33,8 +33,12 @@ SCHEMA_DIR = 'src/schemas/'
 CHROM_INFO_DIR = SCHEMA_DIR + 'genome_builds'
 MAX_NUM_ERROR_FOR_TABULAR_FILE = 1000
 MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE = 2
-ASSEMBLY_REPORT_FILE_PATH = 'src/checkfiles/supporting_files/assembly_report.txt'
-
+ASSEMBLY_REPORT_FILE_PATH = {
+    # this file is downloaded here:https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_assembly_report.txt
+    'GRCh38': 'src/checkfiles/supporting_files/GCF_000001405.40_GRCh38.p14_assembly_report.txt',
+    # this file is downloaded here: https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/635/GCF_000001635.27_GRCm39/GCF_000001635.27_GRCm39_assembly_report.txt
+    'GRCm39': 'src/checkfiles/supporting_files/GCF_000001635.27_GRCm39.p6_assembly_report.txt',
+}
 ZIP_FILE_FORMAT = [
     'bam',
     'bed',
@@ -372,8 +376,8 @@ def vcf_sequence_check(file_path, assembly):
         # download reference file
         download_ref_file_by_assembly(assembly)
     # check vcf file
-    command = ['./vcf_assembly_checker',
-               '-i', file_path, '-f', ref_file, '-a', ASSEMBLY_REPORT_FILE_PATH]
+    command = ['vcf_assembly_checker',
+               '-i', file_path, '-f', ref_file, '-a', ASSEMBLY_REPORT_FILE_PATH[assembly]]
     print('command:', ' '.join(command))
     try:
         stdout = subprocess.check_output(

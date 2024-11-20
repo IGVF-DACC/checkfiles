@@ -5,8 +5,8 @@ import requests
 import pysam
 
 FILE_URLS = {
-    'GRCh38': 'https://hgdownload2.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz',
-    'GRCm39': 'https://hgdownload2.soe.ucsc.edu/goldenPath/mm39/bigZips/mm39.fa.gz',
+    'GRCh38': 'https://api.data.igvf.org/reference-files/IGVFFI6815WBWB/@@download/IGVFFI6815WBWB.fasta.gz',
+    'GRCm39': 'https://api.data.igvf.org/reference-files/IGVFFI9282QLXO/@@download/IGVFFI9282QLXO.fasta.gz',
 }
 
 LOCAL_DIR = Path('./src/checkfiles/supporting_files/')
