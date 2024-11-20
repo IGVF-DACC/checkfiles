@@ -35,6 +35,7 @@
 
     ```bash
     chmod +x vcf_assembly_checker
+    mv vcf_assembly_checker /usr/local/bin/
     brew install cmake boost
     ```
 
