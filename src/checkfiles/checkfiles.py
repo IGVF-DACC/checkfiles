@@ -5,6 +5,7 @@ import json
 import logging
 import multiprocessing
 import os
+from pathlib import Path
 import re
 import requests
 import shlex
@@ -26,7 +27,7 @@ from frictionless import validate
 import file
 
 import logformatter
-from utils.download_ref_files import download_ref_file_by_assembly
+from utils.download_ref_files import download_ref_file_by_assembly, create_fai_file
 
 
 SCHEMA_DIR = 'src/schemas/'
@@ -37,7 +38,7 @@ ASSEMBLY_REPORT_FILE_PATH = {
     # this file is downloaded here:https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_assembly_report.txt
     'GRCh38': 'src/checkfiles/supporting_files/GCF_000001405.40_GRCh38.p14_assembly_report.txt',
     # this file is downloaded here: https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/635/GCF_000001635.27_GRCm39/GCF_000001635.27_GRCm39_assembly_report.txt
-    'GRCm39': 'src/checkfiles/supporting_files/GCF_000001635.27_GRCm39.p6_assembly_report.txt',
+    'GRCm39': 'src/checkfiles/supporting_files/GCF_000001635.27_GRCm39_assembly_report.txt',
 }
 ZIP_FILE_FORMAT = [
     'bam',
@@ -102,14 +103,11 @@ ASSEMBLY_TO_CHROMINFO_PATH_MAP = {
     'GRCm39': 'src/schemas/genome_builds/chrom_sizes/mm39.chrom.sizes',
 }
 
-ASSEMBLY_TO_SEQUENCE_URL_MAP = {
-    'GRCh38': 'https://api.data.igvf.org/reference-files/IGVFFI0653VCGH/@@download/IGVFFI0653VCGH.fasta.gz',
-    'GRCm39': 'https://api.data.igvf.org/reference-files/IGVFFI9282QLXO/@@download/IGVFFI9282QLXO.fasta.gz',
-}
+ASSEMBLY = ['GRCh38', 'GRCm39']
 
 ASSEMBLY_TO_SEQUENCE_FILE_MAP = {
-    'GRCh38': 'src/checkfiles/supporting_files/grch38.fa',
-    'GRCm39': 'src/checkfiles/supporting_files/grcm39.fa',
+    'GRCh38': Path('src/checkfiles/supporting_files/grch38.fa'),
+    'GRCm39': Path('src/checkfiles/supporting_files/grcm39.fa'),
 }
 
 FASTA_VALIDATION_INFO = {
@@ -366,18 +364,21 @@ def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, ma
 
 def vcf_sequence_check(file_path, assembly):
     error = {}
-    reference_file_url = ASSEMBLY_TO_SEQUENCE_URL_MAP[assembly]
-    if not reference_file_url:
+    if assembly not in ASSEMBLY:
         error['vcf_error'] = f'assembly {assembly} is not supported.'
         return error
-    ref_file = ASSEMBLY_TO_SEQUENCE_FILE_MAP[assembly]
+    ref_file_path = ASSEMBLY_TO_SEQUENCE_FILE_MAP[assembly]
+    fai_file_path = ref_file_path.with_suffix('.fa.fai')
     # check if reference file exists
-    if not os.path.exists(ref_file):
+    if not ref_file_path.exists():
         # download reference file
         download_ref_file_by_assembly(assembly)
+    elif not fai_file_path.exists():
+        # create fai file
+        create_fai_file(ref_file_path)
     # check vcf file
     command = ['vcf_assembly_checker',
-               '-i', file_path, '-f', ref_file, '-a', ASSEMBLY_REPORT_FILE_PATH[assembly]]
+               '-i', file_path, '-f', ref_file_path, '-a', ASSEMBLY_REPORT_FILE_PATH[assembly]]
     try:
         subprocess.check_output(
             command, stderr=subprocess.STDOUT)

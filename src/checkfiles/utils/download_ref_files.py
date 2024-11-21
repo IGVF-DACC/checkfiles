@@ -36,9 +36,10 @@ def create_fai_file(fasta_path):
     fasta_path: Path object to the fasta file
     '''
     print(f'Indexing {fasta_path}...')
-    fai_path = fasta_path.with_suffix('.fai')
+    # add .fai to fasta_path
+    fai_path = fasta_path.with_suffix('.fa.fai')
     if not fai_path.exists():
-        pysam.faidx(fasta_path)
+        pysam.faidx(str(fasta_path))
 
 
 def download_ref_file_by_assembly(assembly):
@@ -49,10 +50,10 @@ def download_ref_file_by_assembly(assembly):
 
 
 def main():
-    for key, url in FILE_URLS.items():
-        fasta_path = LOCAL_DIR / (key.lower() + '.fa')
+    for assembly, url in FILE_URLS.items():
+        fasta_path = LOCAL_DIR / (assembly.lower() + '.fa')
         if not fasta_path.exists():
-            download_file(key, url, LOCAL_DIR)
+            download_file(assembly, url, LOCAL_DIR)
             create_fai_file(fasta_path)
 
 

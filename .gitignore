@@ -153,6 +153,3 @@ src/checkfiles/supporting_files/grch38.fa
 src/checkfiles/supporting_files/grch38.fa.fai
 src/checkfiles/supporting_files/grcm39.fa
 src/checkfiles/supporting_files/grcm39.fa.fai
-
-# local tools:
-vcf_assembly_checker
