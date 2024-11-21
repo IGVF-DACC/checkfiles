@@ -5,7 +5,6 @@ import json
 import logging
 import multiprocessing
 import os
-from pathlib import Path
 import re
 import requests
 import shlex
@@ -27,7 +26,6 @@ from frictionless import validate
 import file
 
 import logformatter
-from utils.download_ref_files import download_ref_file_by_assembly, create_fai_file
 
 
 SCHEMA_DIR = 'src/schemas/'
@@ -106,8 +104,8 @@ ASSEMBLY_TO_CHROMINFO_PATH_MAP = {
 ASSEMBLY = ['GRCh38', 'GRCm39']
 
 ASSEMBLY_TO_SEQUENCE_FILE_MAP = {
-    'GRCh38': Path('src/checkfiles/supporting_files/grch38.fa'),
-    'GRCm39': Path('src/checkfiles/supporting_files/grcm39.fa'),
+    'GRCh38': 'src/checkfiles/supporting_files/grch38.fa',
+    'GRCm39': 'src/checkfiles/supporting_files/grcm39.fa',
 }
 
 FASTA_VALIDATION_INFO = {
@@ -368,14 +366,6 @@ def vcf_sequence_check(file_path, assembly):
         error['vcf_error'] = f'assembly {assembly} is not supported.'
         return error
     ref_file_path = ASSEMBLY_TO_SEQUENCE_FILE_MAP[assembly]
-    fai_file_path = ref_file_path.with_suffix('.fa.fai')
-    # check if reference file exists
-    if not ref_file_path.exists():
-        # download reference file
-        download_ref_file_by_assembly(assembly)
-    elif not fai_file_path.exists():
-        # create fai file
-        create_fai_file(ref_file_path)
     # check vcf file
     command = ['vcf_assembly_checker',
                '-i', file_path, '-f', ref_file_path, '-a', ASSEMBLY_REPORT_FILE_PATH[assembly]]

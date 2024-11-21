@@ -5,7 +5,7 @@ import requests
 import pysam
 
 FILE_URLS = {
-    'GRCh38': 'https://api.data.igvf.org/reference-files/IGVFFI6815WBWB/@@download/IGVFFI6815WBWB.fasta.gz',
+    # 'GRCh38': 'https://api.data.igvf.org/reference-files/IGVFFI6815WBWB/@@download/IGVFFI6815WBWB.fasta.gz',
     'GRCm39': 'https://api.data.igvf.org/reference-files/IGVFFI9282QLXO/@@download/IGVFFI9282QLXO.fasta.gz',
 }
 
@@ -40,13 +40,6 @@ def create_fai_file(fasta_path):
     fai_path = fasta_path.with_suffix('.fa.fai')
     if not fai_path.exists():
         pysam.faidx(str(fasta_path))
-
-
-def download_ref_file_by_assembly(assembly):
-    url = FILE_URLS[assembly]
-    fasta_path = LOCAL_DIR / (assembly.lower() + '.fa')
-    download_file(assembly, url, LOCAL_DIR)
-    create_fai_file(fasta_path)
 
 
 def main():
