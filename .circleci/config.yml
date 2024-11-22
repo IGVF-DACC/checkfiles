@@ -41,8 +41,6 @@ jobs:
             sudo wget https://github.com/EBIvariation/vcf-validator/releases/download/v0.10.0/vcf_assembly_checker_linux
             sudo chmod 755 vcf_assembly_checker_linux
             sudo cp vcf_assembly_checker_linux /usr/local/bin/vcf_assembly_checker
-            python3 src/checkfiles/utils/download_ref_files.py
-
       - run:
           name: Tests
           command: pytest --ignore=cdk --cov .

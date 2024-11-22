@@ -454,21 +454,22 @@ def test_main_tabular_skip_type_error(mocker):
     assert result.errors == {'gzip': 'csv file should be gzipped'}
 
 
-def test_main_vcf_sequence_check_valid():
+def test_main_vcf_sequence_check_valid(mocker):
+    mocker.patch('checkfiles.checkfiles.ASSEMBLY_TO_SEQUENCE_FILE_MAP', {
+        'GRCh38': 'src/tests/data/chrY_sample.fa',
+        'GRCm39': 'src/checkfiles/supporting_files/grcm39.fa',
+    })
     file_path = 'src/tests/data/chry_variants_sample_valid.vcf.gz'
     assembly = 'GRCh38'
     error = vcf_sequence_check(file_path, assembly)
     assert error == {}
 
 
-def test_main_vcf_sequence_check_valid():
-    file_path = 'src/tests/data/chry_variants_sample_valid.vcf.gz'
-    assembly = 'GRCh38'
-    error = vcf_sequence_check(file_path, assembly)
-    assert error == {}
-
-
-def test_main_vcf_sequence_check_invalid():
+def test_main_vcf_sequence_check_invalid(mocker):
+    mocker.patch('checkfiles.checkfiles.ASSEMBLY_TO_SEQUENCE_FILE_MAP', {
+        'GRCh38': 'src/tests/data/chrY_sample.fa',
+        'GRCm39': 'src/checkfiles/supporting_files/grcm39.fa',
+    })
     file_path = 'src/tests/data/chry_variants_sample_invalid.vcf'
     assembly = 'GRCh38'
     error = vcf_sequence_check(file_path, assembly)
