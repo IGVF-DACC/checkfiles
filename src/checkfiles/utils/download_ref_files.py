@@ -5,7 +5,7 @@ import requests
 import pysam
 
 FILE_URLS = {
-    # 'GRCh38': 'https://api.data.igvf.org/reference-files/IGVFFI6815WBWB/@@download/IGVFFI6815WBWB.fasta.gz',
+    'GRCh38': 'https://api.data.igvf.org/reference-files/IGVFFI6815WBWB/@@download/IGVFFI6815WBWB.fasta.gz',
     'GRCm39': 'https://api.data.igvf.org/reference-files/IGVFFI9282QLXO/@@download/IGVFFI9282QLXO.fasta.gz',
 }
 
