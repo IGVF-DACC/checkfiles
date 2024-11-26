@@ -3,7 +3,6 @@ import datetime
 import gzip
 import json
 import logging
-import math
 import multiprocessing
 import os
 import re
@@ -33,7 +32,12 @@ SCHEMA_DIR = 'src/schemas/'
 CHROM_INFO_DIR = SCHEMA_DIR + 'genome_builds'
 MAX_NUM_ERROR_FOR_TABULAR_FILE = 1000
 MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE = 2
-
+ASSEMBLY_REPORT_FILE_PATH = {
+    # this file is downloaded here:https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_assembly_report.txt
+    'GRCh38': 'src/checkfiles/supporting_files/GCF_000001405.40_GRCh38.p14_assembly_report.txt',
+    # this file is downloaded here: https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/635/GCF_000001635.27_GRCm39/GCF_000001635.27_GRCm39_assembly_report.txt
+    'GRCm39': 'src/checkfiles/supporting_files/GCF_000001635.27_GRCm39_assembly_report.txt',
+}
 ZIP_FILE_FORMAT = [
     'bam',
     'bed',
@@ -95,6 +99,13 @@ VALIDATE_FILES_ARGS = {
 ASSEMBLY_TO_CHROMINFO_PATH_MAP = {
     'GRCh38': 'src/schemas/genome_builds/chrom_sizes/GRCh38.chrom.sizes',
     'GRCm39': 'src/schemas/genome_builds/chrom_sizes/mm39.chrom.sizes',
+}
+
+ASSEMBLY = ['GRCh38', 'GRCm39']
+
+ASSEMBLY_TO_SEQUENCE_FILE_MAP = {
+    'GRCh38': 'src/checkfiles/supporting_files/grch38.fa',
+    'GRCm39': 'src/checkfiles/supporting_files/grcm39.fa',
 }
 
 FASTA_VALIDATION_INFO = {
@@ -184,6 +195,10 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         tabular_file_check_error = tabular_file_check(
             content_type, local_file_path)
         validation_record.update_errors(tabular_file_check_error)
+    elif file_format == 'vcf':
+        vcf_check_error = vcf_sequence_check(local_file_path, assembly)
+        validation_record.update_errors(vcf_check_error)
+
     logger.info(
         f'Completed file validation for file uuid {uuid}.')
 
@@ -342,6 +357,24 @@ def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, ma
             'tabular_file_error': tabular_file_error,
         }
 
+    return error
+
+
+def vcf_sequence_check(file_path, assembly):
+    error = {}
+    if assembly not in ASSEMBLY:
+        error['vcf_error'] = f'assembly {assembly} is not supported.'
+        return error
+    ref_file_path = ASSEMBLY_TO_SEQUENCE_FILE_MAP[assembly]
+    # check vcf file
+    command = ['vcf_assembly_checker',
+               '-i', file_path, '-f', ref_file_path, '-a', ASSEMBLY_REPORT_FILE_PATH[assembly]]
+    try:
+        subprocess.check_output(
+            command, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        error['vcf_error'] = e.output.decode(
+            errors='replace').rstrip('\n')
     return error
 
 

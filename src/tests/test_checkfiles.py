@@ -1,6 +1,6 @@
 import datetime
 
-from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check
+from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check, vcf_sequence_check
 from checkfiles.checkfiles import make_content_md5sum_search_url, check_md5sum, check_content_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, file_validation
 from checkfiles.checkfiles import get_validate_files_args, validate_files_check, validate_files_fastq_check, tabular_file_check
 from checkfiles.checkfiles import PortalAuth
@@ -452,6 +452,34 @@ def test_main_tabular_skip_type_error(mocker):
     assert result.validation_success == False
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.errors == {'gzip': 'csv file should be gzipped'}
+
+
+def test_main_vcf_sequence_check_valid(mocker):
+    mocker.patch('checkfiles.checkfiles.ASSEMBLY_TO_SEQUENCE_FILE_MAP', {
+        'GRCh38': 'src/tests/data/chrY_sample.fa',
+        'GRCm39': 'src/checkfiles/supporting_files/grcm39.fa',
+    })
+    file_path = 'src/tests/data/chry_variants_sample_valid.vcf.gz'
+    assembly = 'GRCh38'
+    error = vcf_sequence_check(file_path, assembly)
+    assert error == {}
+
+
+def test_main_vcf_sequence_check_invalid(mocker):
+    mocker.patch('checkfiles.checkfiles.ASSEMBLY_TO_SEQUENCE_FILE_MAP', {
+        'GRCh38': 'src/tests/data/chrY_sample.fa',
+        'GRCm39': 'src/checkfiles/supporting_files/grcm39.fa',
+    })
+    file_path = 'src/tests/data/chry_variants_sample_invalid.vcf'
+    assembly = 'GRCh38'
+    error = vcf_sequence_check(file_path, assembly)
+    assert error == {
+        'vcf_error': '[info] Reading from input VCF file...\n'
+        '[info] Reading from input FASTA file...\n'
+        '[info] Reading from input FASTA index file...\n'
+        '[info] Number of matches: 9/10\n'
+        '[info] Percentage of matches: 90%'
+    }
 
 
 def test_main_bed(mocker):

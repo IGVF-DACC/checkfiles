@@ -38,7 +38,9 @@ jobs:
             pip install coveralls
             sudo curl -sS -L -o /usr/local/bin/validateFiles http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/validateFiles
             sudo chmod +x /usr/local/bin/validateFiles
-
+            sudo wget https://github.com/EBIvariation/vcf-validator/releases/download/v0.10.0/vcf_assembly_checker_linux
+            sudo chmod 755 vcf_assembly_checker_linux
+            sudo cp vcf_assembly_checker_linux /usr/local/bin/vcf_assembly_checker
       - run:
           name: Tests
           command: pytest --ignore=cdk --cov .
