@@ -31,6 +31,22 @@
     sudo chmod 755 /usr/local/bin/fastq_stats
     ```
 
+5. Insall vcf assembly checker for checking vcf file. You can download the tool here accordingly: <https://github.com/EBIvariation/vcf-validator/releases>. Rename it to "vcf_assembly_checker". For macOS arm64, choose this file: <https://github.com/EBIvariation/vcf-validator/releases/download/v0.10.0/vcf_assembly_checker_macos_arm64>.  You may need to run those command inorder to use vcf assembly checker:
+
+    ```bash
+    chmod +x vcf_assembly_checker
+    mv vcf_assembly_checker /usr/local/bin/
+    brew install cmake boost
+    ```
+
+## Download the reference files for vcf file validation
+
+You can run this command to download reference files:
+
+```bash
+python src/checkfiles/utils/download_ref_files.py
+```
+
 ## Validate Files locally
 
 Here are some examples to show you how to validate files locally.
@@ -75,4 +91,10 @@ The script will scan max of 1000 tabular file errors as default. You can set the
 
 ```bash
 python src/checkfiles/checkfiles_local.py --input_file_path src/tests/data/guide_rna_sequences_invalid.tsv.gz --file_format tsv --content_type "guide RNA sequences" --md5sum b8bfdca28ddbcc74128e3e3bb5febe24 --max_tabular_file_errors 100
+```
+
+Validate vcf file:
+
+```bash
+python src/checkfiles/checkfiles_local.py --input_file_path src/tests/data/chry_variants_sample_valid.vcf.gz --file_format vcf --assembly GRCh38 --md5sum 99b7b2c055d087565970221a4845fa7f
 ```

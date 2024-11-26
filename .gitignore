@@ -147,3 +147,9 @@ sandbox/
 # packer manifest
 
 packer/templates/manifest.json
+
+# reference files:
+src/checkfiles/supporting_files/grch38.fa
+src/checkfiles/supporting_files/grch38.fa.fai
+src/checkfiles/supporting_files/grcm39.fa
+src/checkfiles/supporting_files/grcm39.fa.fai

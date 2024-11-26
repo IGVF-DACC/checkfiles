@@ -60,6 +60,7 @@ def create_checkfiles_instance(event, context):
     python3 -m venv venv
     source venv/bin/activate
     pip install -r src/checkfiles/requirements.txt
+    python src/checkfiles/utils/download_ref_files.py
     cd ..
     chown -R ubuntu:ubuntu checkfiles/
     '''
