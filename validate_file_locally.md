@@ -47,6 +47,13 @@ You can run this command to download reference files:
 python src/checkfiles/utils/download_ref_files.py
 ```
 
+## Set environment variable IGVF_API_KEY and IGVF_SECRET_KEY if you want to validate seqspec file
+
+```bash
+export IGVF_API_KEY=XXXXXXXX
+export IGVF_SECRET_KEY=XXXXXXXXXXXXXXXX
+```
+
 ## Validate Files locally
 
 Here are some examples to show you how to validate files locally.
@@ -97,4 +104,10 @@ Validate vcf file:
 
 ```bash
 python src/checkfiles/checkfiles_local.py --input_file_path src/tests/data/chry_variants_sample_valid.vcf.gz --file_format vcf --assembly GRCh38 --md5sum 99b7b2c055d087565970221a4845fa7f
+```
+
+Validate seqspec yaml file:
+
+```bash
+python src/checkfiles/checkfiles_local.py --input_file_path src/tests/data/seqspec_valid.yaml.gz --file_format yaml --content_type seqspec --md5sum f1859dd9d60554a8f8ab63b65b458267
 ```

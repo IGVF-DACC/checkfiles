@@ -198,6 +198,9 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     elif file_format == 'vcf':
         vcf_check_error = vcf_sequence_check(local_file_path, assembly)
         validation_record.update_errors(vcf_check_error)
+    elif content_type == 'seqspec':
+        seqspec_check_error = seqspec_file_check(local_file_path, is_gzipped)
+        validation_record.update_errors(seqspec_check_error)
 
     logger.info(
         f'Completed file validation for file uuid {uuid}.')
@@ -294,7 +297,6 @@ def fasta_check(file_path, is_gzipped, info=FASTA_VALIDATION_INFO):
         with gzip.open(file_path, 'rb') as f_in:
             temp_file = tempfile.NamedTemporaryFile()
             with open(temp_file.name, 'wb') as f_out:
-                temp_file = tempfile.NamedTemporaryFile()
                 shutil.copyfileobj(f_in, f_out)
         file_path = temp_file.name
     try:
@@ -375,6 +377,41 @@ def vcf_sequence_check(file_path, assembly):
     except subprocess.CalledProcessError as e:
         error['vcf_error'] = e.output.decode(
             errors='replace').rstrip('\n')
+    return error
+
+
+def seqspec_file_check(file_path, is_gzipped):
+    error = {}
+    if is_gzipped:
+        with gzip.open(file_path, 'rb') as f_in:
+            temp_file = tempfile.NamedTemporaryFile()
+            with open(temp_file.name, 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+        file_path = temp_file.name
+    try:
+        # upgrade seqspec file first
+        upgrade_file = tempfile.NamedTemporaryFile()
+        command = ['seqspec', 'upgrade', file_path, '-o', upgrade_file.name]
+        stdout = subprocess.run(command, check=True,
+                                capture_output=True, text=True).stdout
+        if stdout:
+            error['seqspec_error'] = stdout
+            return error
+        # check if IGVF_API_KEY and IGVF_SECRET_KEY are set
+        if 'IGVF_API_KEY' not in os.environ or 'IGVF_SECRET_KEY' not in os.environ:
+            logger.warning(
+                f'IGVF_API_KEY and IGVF_SECRET_KEY are not set. seqspec check will not be able to access files that are not released.')
+        # validate upgraded file
+        command = ['seqspec', 'check', upgrade_file.name]
+        stdout = subprocess.run(command, check=True,
+                                capture_output=True, text=True).stdout
+        # remove warning "Warning: IGVF_API_KEY and IGVF_SECRET_KEY not set" from stdout
+        stdout = re.sub(
+            r'Warning: IGVF_API_KEY and IGVF_SECRET_KEY not set\n', '', stdout)
+        if stdout:
+            error['seqspec_error'] = stdout
+    except Exception as e:
+        error['seqspec_error'] = str(e)
     return error
 
 
@@ -530,6 +567,8 @@ def patch_file(portal_uri: str, portal_auth: PortalAuth, validation_record: file
 
 def main(args):
     portal_auth = PortalAuth(args.portal_key_id, args.portal_secret_key)
+    os.environ['IGVF_API_KEY'] = args.portal_key_id
+    os.environ['IGVF_SECRET_KEY'] = args.portal_secret_key
     if args.uuid:
         try:
             file_metadata = fetch_file_metadata_by_uuid(
