@@ -235,7 +235,7 @@ def test_sequence_file_check_valid():
 
 def test_sequence_file_check_invalid():
     file_path = 'src/tests/data/seqspec_invalid.yaml.gz'
-    is_gzipped = False
+    is_gzipped = True
     error = seqspec_file_check(file_path, is_gzipped)
     assert error == {
         'seqspec_error': "[error 1] 'atac-illumina_p5' sequence "
