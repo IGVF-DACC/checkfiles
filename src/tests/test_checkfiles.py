@@ -293,7 +293,7 @@ def test_main_fastq(mocker):
         'read_count': 25,
         'mean_read_length': 58,
         'minimum_read_length': 58,
-        'maximum_read_length': 58,
+        'maximum_read_length': 58
     }
     assert result.errors == {
         'content_md5sum_error': 'content md5sum 1fa9f74aa895c4c938e1712bedf044ec conflicts with content md5sum of existing file(s): ENCFF594AYI'
