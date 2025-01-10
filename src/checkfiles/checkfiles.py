@@ -28,6 +28,7 @@ import file
 import logformatter
 
 
+VERSION = 'v14'
 SCHEMA_DIR = 'src/schemas/'
 CHROM_INFO_DIR = SCHEMA_DIR + 'genome_builds'
 MAX_NUM_ERROR_FOR_TABULAR_FILE = 1000
@@ -130,6 +131,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     uuid = validation_record.uuid
     logger.info(f'Checking file uuid {uuid}')
     local_file_path = validation_record.file.path
+    validation_record.update_info({'checkfiles_version': VERSION})
     try:
         true_file_size_bytes = validation_record.file.size
         validation_record.update_info({'file_size': true_file_size_bytes})
