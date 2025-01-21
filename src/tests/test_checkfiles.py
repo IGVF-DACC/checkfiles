@@ -257,6 +257,20 @@ def test_tabular_file_check_prime_editing_guide_rna_sequences_invalid():
     assert 'constraint-error' in tabular_file_error['error_types']
 
 
+def test_tabular_file_check_extra_fields_valid():
+    file_path = 'src/tests/data/guide_rna_sequences_extra_valid.tsv'
+    error = tabular_file_check('guide RNA sequences', file_path)
+    assert error == {}
+
+
+def test_tabular_file_check_extra_fields_invalid():
+    file_path = 'src/tests/data/guide_rna_sequences_extra_invalid.tsv'
+    error = tabular_file_check('guide RNA sequences', file_path)
+    tabular_file_error = error['tabular_file_error']
+    assert tabular_file_error['number_of_errors'] == 1
+    assert 'constraint-error' in tabular_file_error['error_types']
+
+
 def test_main_empty_file(mocker):
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/empty_file.txt'
