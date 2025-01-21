@@ -24,6 +24,7 @@ from frictionless import system, validate, describe, Schema
 
 from guide_rna_sequences_check import GuideRnaSequencesCheck
 import file
+from version import get_checkfiles_version
 
 import logformatter
 
@@ -130,6 +131,8 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     uuid = validation_record.uuid
     logger.info(f'Checking file uuid {uuid}')
     local_file_path = validation_record.file.path
+    validation_record.update_info(
+        {'checkfiles_version': get_checkfiles_version()})
     try:
         true_file_size_bytes = validation_record.file.size
         validation_record.update_info({'file_size': true_file_size_bytes})

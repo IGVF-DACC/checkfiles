@@ -1,13 +1,14 @@
 import datetime
 
 from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check, vcf_sequence_check
-from checkfiles.checkfiles import make_content_md5sum_search_url, check_md5sum, check_content_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, file_validation
+from checkfiles.checkfiles import make_content_md5sum_search_url, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, file_validation
 from checkfiles.checkfiles import get_validate_files_args, validate_files_check, validate_files_fastq_check, tabular_file_check
 from checkfiles.checkfiles import PortalAuth
 from checkfiles.checkfiles import upload_credentials_are_expired
 from checkfiles.file import File
 from checkfiles.file import FileValidationRecord
 from checkfiles.file import get_file
+from checkfiles.version import get_checkfiles_version
 
 
 def test_check_valid_gzipped_file_format_no_error():
@@ -332,6 +333,7 @@ def test_main_fastq(mocker):
     assert result.validation_success == False
     assert result.original_etag == 'foobar'
     assert result.info == {
+        'checkfiles_version': get_checkfiles_version(),
         'content_md5sum': '1fa9f74aa895c4c938e1712bedf044ec',
         'file_size': 1371,
         'read_count': 25,
@@ -371,6 +373,7 @@ def test_main_bam(mocker):
                              md5sum, output_type, file_format_type, assembly)
     assert result.validation_success == True
     assert result.info == {
+        'checkfiles_version': get_checkfiles_version(),
         'content_md5sum': '9095bad36672afefd7bf9165d89b4eb5',
         'file_size': 118126,
         'read_count': 1709
@@ -405,6 +408,7 @@ def test_main_tabular_tsv(mocker):
     assert result.validation_success == False
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.info == {
+        'checkfiles_version': get_checkfiles_version(),
         'file_size': 22585
     }
     errors = result.errors['tabular_file_error']
@@ -450,6 +454,7 @@ def test_main_tabular_csv(mocker):
     assert result.validation_success == False
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.info == {
+        'checkfiles_version': get_checkfiles_version(),
         'file_size': 13535
     }
     errors = result.errors['tabular_file_error']
@@ -558,6 +563,7 @@ def test_main_bed(mocker):
     assert result.validation_success == False
     assert result.uuid == 'a3c64b51-5838-4ad2-a6c3-dc289786f626'
     assert result.info == {
+        'checkfiles_version': get_checkfiles_version(),
         'content_md5sum': '16a792c57f2de7877b1a09e5bef7cb5c',
         'file_size': 5751
     }
