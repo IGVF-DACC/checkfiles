@@ -1,7 +1,7 @@
 from frictionless import Check, errors
 
 
-class guide_rna_sequences_check(Check):
+class GuideRnaSequencesCheck(Check):
     Errors = [errors.ConstraintError]
 
     def validate_row(self, row):
