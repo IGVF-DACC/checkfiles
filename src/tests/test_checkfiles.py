@@ -248,9 +248,9 @@ def test_tabular_file_check_prime_editing_guide_rna_sequences_invalid():
         'count': 2,
         'description': 'A field value does not conform to a constraint.',
         'details': [
-            {'row_number': 2, 'field_number': 12,
+            {'row_number': 2, 'field_number': 13,
                 'note': 'constraint "required" is "True"'},
-            {'row_number': 3, 'field_number': 9,
+            {'row_number': 3, 'field_number': 10,
                 'note': 'constraint "required" is "True"'}
         ]
     }

@@ -1,6 +1,14 @@
 {
     "fields": [
         {
+            "name": "guide_id",
+            "type": "string",
+            "description": "name of the guide",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
             "name": "protospacer",
             "type": "string",
             "description": "sequence of protospacer",

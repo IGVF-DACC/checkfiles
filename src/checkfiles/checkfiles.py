@@ -303,7 +303,7 @@ def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, ma
                           skip_errors=['type-error'])
     else:
         checks = []
-        if content_type == 'guide RNA sequences':
+        if content_type in ['guide RNA sequences', 'prime editing guide RNA sequences']:
             checks = [guide_rna_sequences_check()]
         report = validate(file_path, schema=schema_path,
                           limit_errors=max_error, checks=checks)
