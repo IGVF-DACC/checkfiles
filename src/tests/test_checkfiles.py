@@ -5,7 +5,6 @@ from checkfiles.checkfiles import make_content_md5sum_search_url, bam_pysam_chec
 from checkfiles.checkfiles import get_validate_files_args, validate_files_check, validate_files_fastq_check, tabular_file_check
 from checkfiles.checkfiles import PortalAuth
 from checkfiles.checkfiles import upload_credentials_are_expired
-from checkfiles.file import File
 from checkfiles.file import FileValidationRecord
 from checkfiles.file import get_file
 from checkfiles.version import get_checkfiles_version
@@ -274,6 +273,8 @@ def test_sequence_file_check_invalid():
         "'AATGATACGGCGACCACCGAGATCTACAC' has length 29, expected "
         'range (30, 30)\n'
     }
+
+
 def test_tabular_file_check_extra_fields_valid():
     file_path = 'src/tests/data/guide_rna_sequences_extra_valid.tsv'
     error = tabular_file_check('guide RNA sequences', file_path)
