@@ -69,7 +69,7 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
         vcf_check_error = vcf_sequence_check(input_file_path, assembly)
         validation_record.update_errors(vcf_check_error)
     elif content_type == 'seqspec':
-        seqspec_check_error = seqspec_file_check(input_file_path, is_gzipped)
+        seqspec_check_error = seqspec_file_check(input_file_path)
         validation_record.update_errors(seqspec_check_error)
 
     if validation_record.errors:

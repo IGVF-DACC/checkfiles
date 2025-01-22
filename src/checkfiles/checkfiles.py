@@ -20,6 +20,10 @@ from typing import Optional
 
 from FastaValidator import fasta_validator
 from frictionless import system, validate, describe, Schema
+from seqspec.seqspec_upgrade import run_upgrade as seqspec_run_upgrade
+from seqspec.utils import load_spec as seqspec_load_spec
+from seqspec.seqspec_check import check as seqspec_check
+
 
 from guide_rna_sequences_check import GuideRnaSequencesCheck
 import file
@@ -201,7 +205,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         vcf_check_error = vcf_sequence_check(local_file_path, assembly)
         validation_record.update_errors(vcf_check_error)
     elif content_type == 'seqspec':
-        seqspec_check_error = seqspec_file_check(local_file_path, is_gzipped)
+        seqspec_check_error = seqspec_file_check(local_file_path)
         validation_record.update_errors(seqspec_check_error)
 
     logger.info(
@@ -396,36 +400,25 @@ def vcf_sequence_check(file_path, assembly):
     return error
 
 
-def seqspec_file_check(file_path, is_gzipped):
+def seqspec_file_check(file_path):
     error = {}
-    if is_gzipped:
-        with gzip.open(file_path, 'rb') as f_in:
-            temp_file = tempfile.NamedTemporaryFile()
-            with open(temp_file.name, 'wb') as f_out:
-                shutil.copyfileobj(f_in, f_out)
-        file_path = temp_file.name
     try:
         # upgrade seqspec file first
         upgrade_file = tempfile.NamedTemporaryFile()
-        command = ['seqspec', 'upgrade', file_path, '-o', upgrade_file.name]
-        stdout = subprocess.run(command, check=True,
-                                capture_output=True, text=True).stdout
-        if stdout:
-            error['seqspec_error'] = stdout
-            return error
-        # check if IGVF_API_KEY and IGVF_SECRET_KEY are set
-        if 'IGVF_API_KEY' not in os.environ or 'IGVF_SECRET_KEY' not in os.environ:
-            logger.warning(
-                f'IGVF_API_KEY and IGVF_SECRET_KEY are not set. seqspec check will not be able to access files that are not released.')
+        seqspec_run_upgrade(file_path, upgrade_file.name)
+    except Exception as e:
+        error['seqspec_error'] = str(e)
+        return error
+    # check if IGVF_API_KEY and IGVF_SECRET_KEY are set
+    if 'IGVF_API_KEY' not in os.environ or 'IGVF_SECRET_KEY' not in os.environ:
+        logger.warning(
+            f'IGVF_API_KEY and IGVF_SECRET_KEY are not set. seqspec check will not be able to access files that are not released.')
+    try:
         # validate upgraded file
-        command = ['seqspec', 'check', upgrade_file.name]
-        stdout = subprocess.run(command, check=True,
-                                capture_output=True, text=True).stdout
-        # remove warning "Warning: IGVF_API_KEY and IGVF_SECRET_KEY not set" from stdout
-        stdout = re.sub(
-            r'Warning: IGVF_API_KEY and IGVF_SECRET_KEY not set\n', '', stdout)
-        if stdout:
-            error['seqspec_error'] = stdout
+        spec = seqspec_load_spec(upgrade_file.name)
+        errors = seqspec_check(spec, upgrade_file.name)
+        if errors:
+            error['seqspec_error'] = errors
     except Exception as e:
         error['seqspec_error'] = str(e)
     return error

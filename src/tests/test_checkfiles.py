@@ -259,19 +259,17 @@ def test_tabular_file_check_prime_editing_guide_rna_sequences_invalid():
 
 def test_sequence_file_check_valid():
     file_path = 'src/tests/data/seqspec_valid.yaml.gz'
-    is_gzipped = True
-    error = seqspec_file_check(file_path, is_gzipped)
+    error = seqspec_file_check(file_path)
     assert error == {}
 
 
 def test_sequence_file_check_invalid():
     file_path = 'src/tests/data/seqspec_invalid.yaml.gz'
-    is_gzipped = True
-    error = seqspec_file_check(file_path, is_gzipped)
+    error = seqspec_file_check(file_path)
     assert error == {
-        'seqspec_error': "[error 1] 'atac-illumina_p5' sequence "
-        "'AATGATACGGCGACCACCGAGATCTACAC' has length 29, expected "
-        'range (30, 30)\n'
+        'seqspec_error': [
+            "[error 1] 'atac-illumina_p5' sequence 'AATGATACGGCGACCACCGAGATCTACAC' has length 29, expected range (30, 30)"
+        ]
     }
 
 
