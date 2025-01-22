@@ -53,6 +53,7 @@ ZIP_FILE_FORMAT = [
     'gds',
     'gff',
     'gtf',
+    'mtx',
     'obo',
     'owl',
     'tagAlign',
