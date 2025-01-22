@@ -19,11 +19,12 @@ from collections import namedtuple
 from typing import Optional
 
 from FastaValidator import fasta_validator
+from frictionless import system, validate, describe, Schema
 
-from frictionless import system
-from frictionless import validate
 
+from guide_rna_sequences_check import GuideRnaSequencesCheck
 import file
+from version import get_checkfiles_version
 
 import logformatter
 
@@ -130,6 +131,8 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     uuid = validation_record.uuid
     logger.info(f'Checking file uuid {uuid}')
     local_file_path = validation_record.file.path
+    validation_record.update_info(
+        {'checkfiles_version': get_checkfiles_version()})
     try:
         true_file_size_bytes = validation_record.file.size
         validation_record.update_info({'file_size': true_file_size_bytes})
@@ -308,7 +311,7 @@ def fasta_check(file_path, is_gzipped, info=FASTA_VALIDATION_INFO):
     return error
 
 
-def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE, schema_path=None):
+def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE, allow_additional_fields=True, schema_path=None):
     system.trusted = True
     error = {}
     if not schema_path:
@@ -318,8 +321,22 @@ def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, ma
         report = validate(file_path, limit_errors=max_error,
                           skip_errors=['type-error'])
     else:
-        report = validate(file_path, schema=schema_path,
-                          limit_errors=max_error)
+        checks = []
+        if content_type in ['guide RNA sequences', 'prime editing guide RNA sequences']:
+            checks = [GuideRnaSequencesCheck()]
+        if not allow_additional_fields:
+            report = validate(file_path, schema=schema_path,
+                              limit_errors=max_error, checks=checks)
+        else:
+            infer_schema = describe(file_path, type='schema')
+            schema = Schema.from_descriptor(schema_path)
+            if len(infer_schema.fields) > len(schema.fields):
+                for i in range(len(schema.fields), len(infer_schema.fields)):
+                    schema.add_field(infer_schema.fields[i])
+
+            report = validate(file_path, schema=schema,
+                              limit_errors=max_error, checks=checks)
+
     if not report.valid:
         report = report.flatten(
             ['rowNumber', 'fieldNumber', 'type', 'note', 'description'])

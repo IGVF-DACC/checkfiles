@@ -1,13 +1,14 @@
 import datetime
 
 from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check, vcf_sequence_check, seqspec_file_check
-from checkfiles.checkfiles import make_content_md5sum_search_url, check_md5sum, check_content_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, file_validation
+from checkfiles.checkfiles import make_content_md5sum_search_url, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, file_validation
 from checkfiles.checkfiles import get_validate_files_args, validate_files_check, validate_files_fastq_check, tabular_file_check
 from checkfiles.checkfiles import PortalAuth
 from checkfiles.checkfiles import upload_credentials_are_expired
 from checkfiles.file import File
 from checkfiles.file import FileValidationRecord
 from checkfiles.file import get_file
+from checkfiles.version import get_checkfiles_version
 
 
 def test_check_valid_gzipped_file_format_no_error():
@@ -159,18 +160,49 @@ def test_tabular_file_check_guide_rna_sequences_invalid():
     tabular_file_error = error['tabular_file_error']
     assert tabular_file_error['schema'] == 'src/schemas/table_schemas/guide_rna_sequences.json'
     assert tabular_file_error['error_number_limit'] == 1000
-    assert tabular_file_error['number_of_errors'] == 5
-    assert tabular_file_error['constraint-error'] == {
-        'count': 3,
-        'description': 'A field value does not conform to a constraint.',
-        'details': [
-            {'row_number': 2, 'field_number': 1,
-                'note': 'constraint "required" is "True"'},
-            {'row_number': 2, 'field_number': 3,
-                'note': 'constraint "enum" is "[\'safe-targeting\', \'non-targeting\', \'targeting\', \'positive control\', \'negative control\', \'variant\']"'}
-        ]
-    }
-    assert 'type-error' in tabular_file_error['error_types']
+    assert tabular_file_error['number_of_errors'] == 2
+    assert tabular_file_error['constraint-error'] == {'count': 2,
+                                                      'description': 'A field value '
+                                                      'does not conform '
+                                                      'to a constraint.',
+                                                      'details': [{'field_number': 1,
+                                                                   'note': 'constraint '
+                                                                   '"required" '
+                                                                   'is "True"',
+                                                                   'row_number': 2},
+                                                                  {'field_number': 4,
+                                                                   'note': 'constraint '
+                                                                   '"enum" is '
+                                                                   '"[\'safe-targeting\', '
+                                                                   "'non-targeting', "
+                                                                   "'targeting', "
+                                                                   "'positive "
+                                                                   "control', "
+                                                                   "'negative "
+                                                                   "control', "
+                                                                   '\'variant\']"',
+                                                                   'row_number': 2}]}
+    assert 'constraint-error' in tabular_file_error['error_types']
+
+
+def test_tabular_file_check_guide_rna_sequences_custom_check():
+    file_path = 'src/tests/data/guide_rna_sequences_custom_check.tsv'
+    error = tabular_file_check('guide RNA sequences', file_path)
+    tabular_file_error = error['tabular_file_error']
+    assert tabular_file_error['schema'] == 'src/schemas/table_schemas/guide_rna_sequences.json'
+    assert tabular_file_error['error_number_limit'] == 1000
+    assert tabular_file_error['number_of_errors'] == 1
+    assert tabular_file_error['constraint-error'] == {'count': 1,
+                                                      'description': 'A field value '
+                                                      'does not conform '
+                                                      'to a constraint.',
+                                                      'details': [{'field_number': 5,
+                                                                   'note': 'guide_chr '
+                                                                   'is required '
+                                                                   'when '
+                                                                   'targeting '
+                                                                   'is True',
+                                                                   'row_number': 33}]}
     assert 'constraint-error' in tabular_file_error['error_types']
 
 
@@ -217,9 +249,9 @@ def test_tabular_file_check_prime_editing_guide_rna_sequences_invalid():
         'count': 2,
         'description': 'A field value does not conform to a constraint.',
         'details': [
-            {'row_number': 2, 'field_number': 12,
+            {'row_number': 2, 'field_number': 13,
                 'note': 'constraint "required" is "True"'},
-            {'row_number': 3, 'field_number': 9,
+            {'row_number': 3, 'field_number': 10,
                 'note': 'constraint "required" is "True"'}
         ]
     }
@@ -242,6 +274,18 @@ def test_sequence_file_check_invalid():
         "'AATGATACGGCGACCACCGAGATCTACAC' has length 29, expected "
         'range (30, 30)\n'
     }
+def test_tabular_file_check_extra_fields_valid():
+    file_path = 'src/tests/data/guide_rna_sequences_extra_valid.tsv'
+    error = tabular_file_check('guide RNA sequences', file_path)
+    assert error == {}
+
+
+def test_tabular_file_check_extra_fields_invalid():
+    file_path = 'src/tests/data/guide_rna_sequences_extra_invalid.tsv'
+    error = tabular_file_check('guide RNA sequences', file_path)
+    tabular_file_error = error['tabular_file_error']
+    assert tabular_file_error['number_of_errors'] == 1
+    assert 'constraint-error' in tabular_file_error['error_types']
 
 
 def test_main_empty_file(mocker):
@@ -305,6 +349,7 @@ def test_main_fastq(mocker):
     assert result.validation_success == False
     assert result.original_etag == 'foobar'
     assert result.info == {
+        'checkfiles_version': get_checkfiles_version(),
         'content_md5sum': '1fa9f74aa895c4c938e1712bedf044ec',
         'file_size': 1371,
         'read_count': 25,
@@ -344,6 +389,7 @@ def test_main_bam(mocker):
                              md5sum, output_type, file_format_type, assembly)
     assert result.validation_success == True
     assert result.info == {
+        'checkfiles_version': get_checkfiles_version(),
         'content_md5sum': '9095bad36672afefd7bf9165d89b4eb5',
         'file_size': 118126,
         'read_count': 1709
@@ -378,6 +424,7 @@ def test_main_tabular_tsv(mocker):
     assert result.validation_success == False
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.info == {
+        'checkfiles_version': get_checkfiles_version(),
         'file_size': 22585
     }
     errors = result.errors['tabular_file_error']
@@ -423,6 +470,7 @@ def test_main_tabular_csv(mocker):
     assert result.validation_success == False
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.info == {
+        'checkfiles_version': get_checkfiles_version(),
         'file_size': 13535
     }
     errors = result.errors['tabular_file_error']
@@ -531,6 +579,7 @@ def test_main_bed(mocker):
     assert result.validation_success == False
     assert result.uuid == 'a3c64b51-5838-4ad2-a6c3-dc289786f626'
     assert result.info == {
+        'checkfiles_version': get_checkfiles_version(),
         'content_md5sum': '16a792c57f2de7877b1a09e5bef7cb5c',
         'file_size': 5751
     }
