@@ -21,7 +21,6 @@ from typing import Optional
 from FastaValidator import fasta_validator
 from frictionless import system, validate, describe, Schema
 
-
 from guide_rna_sequences_check import GuideRnaSequencesCheck
 import file
 from version import get_checkfiles_version
