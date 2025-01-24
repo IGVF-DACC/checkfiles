@@ -455,7 +455,6 @@ def test_main_tabular_csv(mocker):
         'checkfiles_version': get_checkfiles_version(),
         'file_size': 4561
     }
-    print('error!!!!!', result.errors)
     errors = result.errors['tabular_file_error']
     assert errors['schema'] == 'src/schemas/table_schemas/guide_rna_sequences.json'
     assert errors['error_number_limit'] == 1000
