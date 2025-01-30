@@ -20,7 +20,6 @@ from typing import Optional
 
 from FastaValidator import fasta_validator
 from frictionless import system, validate, describe, Schema
-from seqspec.seqspec_upgrade import run_upgrade as seqspec_run_upgrade
 from seqspec.utils import load_spec as seqspec_load_spec
 from seqspec.seqspec_check import check as seqspec_check
 
