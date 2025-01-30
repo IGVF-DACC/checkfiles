@@ -413,6 +413,8 @@ def seqspec_file_check(file_path):
             error['seqspec_error'] = errors
     except Exception as e:
         error['seqspec_error'] = str(e)
+        logger.exception(
+            f'exception occurred when checking seqspec yaml file: {str(e)}')
     return error
 
 
