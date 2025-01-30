@@ -263,6 +263,12 @@ def test_sequence_file_check_valid():
     assert error == {}
 
 
+def test_sequence_file_check_valid_for_igvf():
+    file_path = 'src/tests/data/seqspec_valid_for_igvf.yaml.gz'
+    error = seqspec_file_check(file_path)
+    assert error == {}
+
+
 def test_sequence_file_check_invalid():
     file_path = 'src/tests/data/seqspec_invalid.yaml.gz'
     error = seqspec_file_check(file_path)

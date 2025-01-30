@@ -402,21 +402,14 @@ def vcf_sequence_check(file_path, assembly):
 
 def seqspec_file_check(file_path):
     error = {}
-    try:
-        # upgrade seqspec file first
-        upgrade_file = tempfile.NamedTemporaryFile()
-        seqspec_run_upgrade(file_path, upgrade_file.name)
-    except Exception as e:
-        error['seqspec_error'] = str(e)
-        return error
     # check if IGVF_API_KEY and IGVF_SECRET_KEY are set
     if 'IGVF_API_KEY' not in os.environ or 'IGVF_SECRET_KEY' not in os.environ:
         logger.warning(
             f'IGVF_API_KEY and IGVF_SECRET_KEY are not set. seqspec check will not be able to access files that are not released.')
     try:
-        # validate upgraded file
-        spec = seqspec_load_spec(upgrade_file.name)
-        errors = seqspec_check(spec, upgrade_file.name)
+        # validate seqspec yaml file without upgrading
+        spec = seqspec_load_spec(file_path)
+        errors = seqspec_check(spec, file_path, for_igvf=True)
         if errors:
             error['seqspec_error'] = errors
     except Exception as e:
