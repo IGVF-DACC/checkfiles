@@ -1,7 +1,0 @@
-BUCKET_NAME=checkfiles-test
-KEY=2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF500IBL.tsv
-MD5SUM=4b0b3c68fafc5a26d0fc6150baadaa5b
-FILE_FORMAT=tsv
-OUTPUT_TYPE=element quantifications
-UUID=0af18365-3200-4d64-9537-8f1b8dbb840d
-FILE_SIZE=22585
