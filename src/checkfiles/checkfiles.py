@@ -19,7 +19,7 @@ from collections import namedtuple
 from typing import Optional
 
 from FastaValidator import fasta_validator
-from frictionless import system, validate, describe, Schema
+from frictionless import system, validate, describe, Schema, Dialect
 
 
 from guide_rna_sequences_check import GuideRnaSequencesCheck
@@ -65,6 +65,9 @@ ZIP_FILE_FORMAT = [
     'yaml',
 ]
 
+NO_HEADER_CONTENT_TYPE = [
+    'fragments'
+]
 TABULAR_FORMAT = [
     'tsv',
     'csv',
@@ -311,19 +314,23 @@ def fasta_check(file_path, is_gzipped, info=FASTA_VALIDATION_INFO):
 def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE, allow_additional_fields=True, schema_path=None):
     system.trusted = True
     error = {}
+    # Specifies char used to comment the rows.
+    dialect = Dialect(comment_char='#')
+    if content_type in NO_HEADER_CONTENT_TYPE:
+        dialect = Dialect(header=False, comment_char='#')
     if not schema_path:
         schema_path = schemas.get(content_type)
     if not schema_path:
         # if no schema, we can ignore type-error
         report = validate(file_path, limit_errors=max_error,
-                          skip_errors=['type-error'])
+                          skip_errors=['type-error'], dialect=dialect)
     else:
         checks = []
         if content_type in ['guide RNA sequences', 'prime editing guide RNA sequences']:
             checks = [GuideRnaSequencesCheck()]
         if not allow_additional_fields:
             report = validate(file_path, schema=schema_path,
-                              limit_errors=max_error, checks=checks)
+                              limit_errors=max_error, checks=checks, dialect=dialect)
         else:
             infer_schema = describe(file_path, type='schema')
             schema = Schema.from_descriptor(schema_path)
@@ -332,7 +339,7 @@ def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, ma
                     schema.add_field(infer_schema.fields[i])
 
             report = validate(file_path, schema=schema,
-                              limit_errors=max_error, checks=checks)
+                              limit_errors=max_error, checks=checks, dialect=dialect)
 
     if not report.valid:
         report = report.flatten(
