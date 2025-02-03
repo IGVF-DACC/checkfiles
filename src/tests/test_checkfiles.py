@@ -293,6 +293,12 @@ def test_tabular_file_check_extra_fields_invalid():
     assert 'constraint-error' in tabular_file_error['error_types']
 
 
+def test_tabular_file_check_fragments_valid():
+    file_path = 'src/tests/data/fragments_valid.tsv'
+    error = tabular_file_check('fragments', file_path)
+    assert error == {}
+
+
 def test_main_empty_file(mocker):
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/empty_file.txt'
