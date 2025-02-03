@@ -75,7 +75,6 @@ TABULAR_FORMAT = [
 ]
 
 TABULAR_FILE_SCHEMAS = {
-    'element quantifications': 'src/schemas/table_schemas/element_quant.json',
     'guide RNA sequences': 'src/schemas/table_schemas/guide_rna_sequences.json',
     'MPRA sequence designs': 'src/schemas/table_schemas/mpra_sequence_designs.json',
     'prime editing guide RNA sequences': 'src/schemas/table_schemas/prime_editing_guide_rna_sequences.json',
@@ -90,14 +89,13 @@ VALIDATE_FILES_ARGS = {
     ('bed', 'bed9'): ['-type=bed9'],
     ('bed', 'bed9+'): ['-tab', '-type=bed9+'],
     ('bed', 'bed12'): ['-type=bed12'],
-    ('bed', 'CRISPR element quantifications'): ['-type=bed3+22', '-as=src/schemas/file_formats/as/element_quant_format.as'],
     ('bed', 'bedGraph'): ['-type=bedGraph'],
-    ('bed', 'mpra_starr'): ['-type=bed6+5', '-as=src/schemas/file_formats/as/mpra_starr.as'],
+    ('bed', 'mpra_starr'): ['-type=bed6+5', '-as=src/schemas/as/mpra_starr.as'],
     ('bedpe', None): ['-type=bed3+'],
     ('bigBed', 'bed3'): ['-type=bigBed3'],
     ('bigBed', 'bed3+'): ['-tab', '-type=bigBed3+'],
     ('bigWig', None): ['-type=bigWig'],
-    ('bigInteract', None): ['-type=bigBed5+13', '-as=src/schemas/file_formats/as/interact.as'],
+    ('bigInteract', None): ['-type=bigBed5+13', '-as=src/schemas/as/interact.as'],
 
 }
 

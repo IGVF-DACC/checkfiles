@@ -409,12 +409,11 @@ def test_main_bam(mocker):
 
 def test_main_tabular_tsv(mocker):
     portal_url = 'url_to_portal'
-    file_path = 'src/tests/data/ENCFF500IBL.tsv'
-    key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF500IBL.tsv'
+    file_path = 'src/tests/data/guide_rna_sequences_invalid.tsv'
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
     md5sum = '4b0b3c68fafc5a26d0fc6150baadaa5b'
     file_format = 'tsv'
-    output_type = 'element quantifications'
+    output_type = 'guide RNA sequences'
     file_format_type = None
     assembly = None
     portal_auth = None
@@ -436,31 +435,30 @@ def test_main_tabular_tsv(mocker):
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
-        'file_size': 22585
+        'file_size': 4522
     }
     errors = result.errors['tabular_file_error']
-    assert errors['schema'] == 'src/schemas/table_schemas/element_quant.json'
+    assert errors['schema'] == 'src/schemas/table_schemas/guide_rna_sequences.json'
     assert errors['error_number_limit'] == 1000
-    assert errors['number_of_errors'] == 5
-    assert errors['incorrect-label'] == {
-        'count': 3,
-        'description': 'One of the data source header does not match the field name defined in the schema.',
+    assert errors['number_of_errors'] == 2
+    assert errors['constraint-error'] == {
+        'count': 2,
+        'description': 'A field value does not conform to a constraint.',
         'details': [
-            {'row_number': None, 'field_number': 1, 'note': ''},
-            {'row_number': None, 'field_number': 2, 'note': ''}
-        ]
+            {'row_number': 2, 'field_number': 1,
+                'note': 'constraint "required" is "True"'},
+            {'row_number': 2, 'field_number': 4, 'note': 'constraint "enum" is "[\'safe-targeting\', \'non-targeting\', \'targeting\', \'positive control\', \'negative control\', \'variant\']"'}]
     }
-    assert 'type-error' in errors['error_types']
-    assert 'incorrect-label' in errors['error_types']
+    assert 'constraint-error' in errors['error_types']
 
 
 def test_main_tabular_csv(mocker):
     portal_url = 'url_to_portal'
-    file_path = 'src/tests/data/ENCFF194CFN.csv'
+    file_path = 'src/tests/data/guide_rna_sequences_invalid.csv'
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
     md5sum = '57946a79da3f1651b21b1c84681abc51'
     file_format = 'csv'
-    output_type = 'element quantifications'
+    output_type = 'guide RNA sequences'
     file_format_type = None
     assembly = None
     portal_auth = None
@@ -482,24 +480,21 @@ def test_main_tabular_csv(mocker):
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
-        'file_size': 13535
+        'file_size': 4561
     }
     errors = result.errors['tabular_file_error']
-    assert errors['schema'] == 'src/schemas/table_schemas/element_quant.json'
+    assert errors['schema'] == 'src/schemas/table_schemas/guide_rna_sequences.json'
     assert errors['error_number_limit'] == 1000
-    assert errors['number_of_errors'] == 1000
-    assert errors['missing-label'] == {
-        'count': 22,
-        'description': "Based on the schema there should be a label that is missing in the data's header.",
+    assert errors['number_of_errors'] == 2
+    assert errors['constraint-error'] == {
+        'count': 2,
+        'description': 'A field value does not conform to a constraint.',
         'details': [
-            {'row_number': None, 'field_number': 4, 'note': ''},
-            {'row_number': None, 'field_number': 5, 'note': ''}
-        ]
+            {'row_number': 2, 'field_number': 1,
+                'note': 'constraint "required" is "True"'},
+            {'row_number': 2, 'field_number': 4, 'note': 'constraint "enum" is "[\'safe-targeting\', \'non-targeting\', \'targeting\', \'positive control\', \'negative control\', \'variant\']"'}]
     }
-    assert 'missing-label' in errors['error_types']
-    assert 'type-error' in errors['error_types']
-    assert 'incorrect-label' in errors['error_types']
-    assert 'missing-cell' in errors['error_types']
+    assert 'constraint-error' in errors['error_types']
 
 
 def test_main_tabular_skip_type_error(mocker):
