@@ -6,3 +6,5 @@ pysam==0.21.0
 boto3==1.26.0
 frictionless==5.0.0b23
 py-fasta-validator==0.5
+# need to change to the version once the new version is released
+git+https://github.com/IGVF-DACC/seqspec.git@dev

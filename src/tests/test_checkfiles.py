@@ -1,11 +1,10 @@
 import datetime
 
-from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check, vcf_sequence_check
+from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check, vcf_sequence_check, seqspec_file_check
 from checkfiles.checkfiles import make_content_md5sum_search_url, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, file_validation
 from checkfiles.checkfiles import get_validate_files_args, validate_files_check, validate_files_fastq_check, tabular_file_check
 from checkfiles.checkfiles import PortalAuth
 from checkfiles.checkfiles import upload_credentials_are_expired
-from checkfiles.file import File
 from checkfiles.file import FileValidationRecord
 from checkfiles.file import get_file
 from checkfiles.version import get_checkfiles_version
@@ -256,6 +255,28 @@ def test_tabular_file_check_prime_editing_guide_rna_sequences_invalid():
         ]
     }
     assert 'constraint-error' in tabular_file_error['error_types']
+
+
+def test_sequence_file_check_valid():
+    file_path = 'src/tests/data/seqspec_valid.yaml.gz'
+    error = seqspec_file_check(file_path)
+    assert error == {}
+
+
+def test_sequence_file_check_valid_for_igvf():
+    file_path = 'src/tests/data/seqspec_valid_for_igvf.yaml.gz'
+    error = seqspec_file_check(file_path)
+    assert error == {}
+
+
+def test_sequence_file_check_invalid():
+    file_path = 'src/tests/data/seqspec_invalid.yaml.gz'
+    error = seqspec_file_check(file_path)
+    assert error == {
+        'seqspec_error': [
+            "[error 1] 'atac-illumina_p5' sequence 'AATGATACGGCGACCACCGAGATCTACAC' has length 29, expected range (30, 30)"
+        ]
+    }
 
 
 def test_tabular_file_check_extra_fields_valid():
