@@ -19,8 +19,9 @@ from collections import namedtuple
 from typing import Optional
 
 from FastaValidator import fasta_validator
-from frictionless import system, validate, describe, Schema
-
+from frictionless import system, validate, describe, Schema, Dialect
+from seqspec.utils import load_spec as seqspec_load_spec
+from seqspec.seqspec_check import check as seqspec_check
 
 from guide_rna_sequences_check import GuideRnaSequencesCheck
 import file
@@ -66,13 +67,15 @@ ZIP_FILE_FORMAT = [
     'yaml',
 ]
 
+NO_HEADER_CONTENT_TYPE = [
+    'fragments'
+]
 TABULAR_FORMAT = [
     'tsv',
     'csv',
 ]
 
 TABULAR_FILE_SCHEMAS = {
-    'element quantifications': 'src/schemas/table_schemas/element_quant.json',
     'guide RNA sequences': 'src/schemas/table_schemas/guide_rna_sequences.json',
     'MPRA sequence designs': 'src/schemas/table_schemas/mpra_sequence_designs.json',
     'prime editing guide RNA sequences': 'src/schemas/table_schemas/prime_editing_guide_rna_sequences.json',
@@ -87,14 +90,13 @@ VALIDATE_FILES_ARGS = {
     ('bed', 'bed9'): ['-type=bed9'],
     ('bed', 'bed9+'): ['-tab', '-type=bed9+'],
     ('bed', 'bed12'): ['-type=bed12'],
-    ('bed', 'CRISPR element quantifications'): ['-type=bed3+22', '-as=src/schemas/file_formats/as/element_quant_format.as'],
     ('bed', 'bedGraph'): ['-type=bedGraph'],
-    ('bed', 'mpra_starr'): ['-type=bed6+5', '-as=src/schemas/file_formats/as/mpra_starr.as'],
+    ('bed', 'mpra_starr'): ['-type=bed6+5', '-as=src/schemas/as/mpra_starr.as'],
     ('bedpe', None): ['-type=bed3+'],
     ('bigBed', 'bed3'): ['-type=bigBed3'],
     ('bigBed', 'bed3+'): ['-tab', '-type=bigBed3+'],
     ('bigWig', None): ['-type=bigWig'],
-    ('bigInteract', None): ['-type=bigBed5+13', '-as=src/schemas/file_formats/as/interact.as'],
+    ('bigInteract', None): ['-type=bigBed5+13', '-as=src/schemas/as/interact.as'],
 
 }
 
@@ -202,6 +204,9 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     elif file_format == 'vcf':
         vcf_check_error = vcf_sequence_check(local_file_path, assembly)
         validation_record.update_errors(vcf_check_error)
+    elif content_type == 'seqspec':
+        seqspec_check_error = seqspec_file_check(local_file_path)
+        validation_record.update_errors(seqspec_check_error)
 
     logger.info(
         f'Completed file validation for file uuid {uuid}.')
@@ -312,19 +317,23 @@ def fasta_check(file_path, is_gzipped, info=FASTA_VALIDATION_INFO):
 def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE, allow_additional_fields=True, schema_path=None):
     system.trusted = True
     error = {}
+    # Specifies char used to comment the rows.
+    dialect = Dialect(comment_char='#')
+    if content_type in NO_HEADER_CONTENT_TYPE:
+        dialect = Dialect(header=False, comment_char='#')
     if not schema_path:
         schema_path = schemas.get(content_type)
     if not schema_path:
         # if no schema, we can ignore type-error
         report = validate(file_path, limit_errors=max_error,
-                          skip_errors=['type-error'])
+                          skip_errors=['type-error'], dialect=dialect)
     else:
         checks = []
         if content_type in ['guide RNA sequences', 'prime editing guide RNA sequences']:
             checks = [GuideRnaSequencesCheck()]
         if not allow_additional_fields:
             report = validate(file_path, schema=schema_path,
-                              limit_errors=max_error, checks=checks)
+                              limit_errors=max_error, checks=checks, dialect=dialect)
         else:
             infer_schema = describe(file_path, type='schema')
             schema = Schema.from_descriptor(schema_path)
@@ -333,7 +342,7 @@ def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, ma
                     schema.add_field(infer_schema.fields[i])
 
             report = validate(file_path, schema=schema,
-                              limit_errors=max_error, checks=checks)
+                              limit_errors=max_error, checks=checks, dialect=dialect)
 
     if not report.valid:
         report = report.flatten(
@@ -392,6 +401,25 @@ def vcf_sequence_check(file_path, assembly):
     except subprocess.CalledProcessError as e:
         error['vcf_error'] = e.output.decode(
             errors='replace').rstrip('\n')
+    return error
+
+
+def seqspec_file_check(file_path):
+    error = {}
+    # check if IGVF_API_KEY and IGVF_SECRET_KEY are set
+    if 'IGVF_API_KEY' not in os.environ or 'IGVF_SECRET_KEY' not in os.environ:
+        logger.warning(
+            f'IGVF_API_KEY and IGVF_SECRET_KEY are not set. seqspec check will not be able to access files that are not released.')
+    try:
+        # validate seqspec yaml file without upgrading
+        spec = seqspec_load_spec(file_path)
+        errors = seqspec_check(spec, file_path, for_igvf=True)
+        if errors:
+            error['seqspec_error'] = errors
+    except Exception as e:
+        error['seqspec_error'] = str(e)
+        logger.exception(
+            f'exception occurred when checking seqspec yaml file: {str(e)}')
     return error
 
 
@@ -547,6 +575,8 @@ def patch_file(portal_uri: str, portal_auth: PortalAuth, validation_record: file
 
 def main(args):
     portal_auth = PortalAuth(args.portal_key_id, args.portal_secret_key)
+    os.environ['IGVF_API_KEY'] = args.portal_key_id
+    os.environ['IGVF_SECRET_KEY'] = args.portal_secret_key
     if args.uuid:
         try:
             file_metadata = fetch_file_metadata_by_uuid(
