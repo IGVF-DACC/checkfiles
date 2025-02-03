@@ -20,6 +20,8 @@ from typing import Optional
 
 from FastaValidator import fasta_validator
 from frictionless import system, validate, describe, Schema
+from seqspec.utils import load_spec as seqspec_load_spec
+from seqspec.seqspec_check import check as seqspec_check
 
 
 from guide_rna_sequences_check import GuideRnaSequencesCheck
@@ -201,6 +203,9 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     elif file_format == 'vcf':
         vcf_check_error = vcf_sequence_check(local_file_path, assembly)
         validation_record.update_errors(vcf_check_error)
+    elif content_type == 'seqspec':
+        seqspec_check_error = seqspec_file_check(local_file_path)
+        validation_record.update_errors(seqspec_check_error)
 
     logger.info(
         f'Completed file validation for file uuid {uuid}.')
@@ -394,6 +399,25 @@ def vcf_sequence_check(file_path, assembly):
     return error
 
 
+def seqspec_file_check(file_path):
+    error = {}
+    # check if IGVF_API_KEY and IGVF_SECRET_KEY are set
+    if 'IGVF_API_KEY' not in os.environ or 'IGVF_SECRET_KEY' not in os.environ:
+        logger.warning(
+            f'IGVF_API_KEY and IGVF_SECRET_KEY are not set. seqspec check will not be able to access files that are not released.')
+    try:
+        # validate seqspec yaml file without upgrading
+        spec = seqspec_load_spec(file_path)
+        errors = seqspec_check(spec, file_path, for_igvf=True)
+        if errors:
+            error['seqspec_error'] = errors
+    except Exception as e:
+        error['seqspec_error'] = str(e)
+        logger.exception(
+            f'exception occurred when checking seqspec yaml file: {str(e)}')
+    return error
+
+
 def get_validate_files_args(file_format, file_format_type, chrom_info_file, schema=VALIDATE_FILES_ARGS):
     args = schema[(file_format, file_format_type)]
     chrom_info_arg = 'chromInfo=' + chrom_info_file
@@ -546,6 +570,8 @@ def patch_file(portal_uri: str, portal_auth: PortalAuth, validation_record: file
 
 def main(args):
     portal_auth = PortalAuth(args.portal_key_id, args.portal_secret_key)
+    os.environ['IGVF_API_KEY'] = args.portal_key_id
+    os.environ['IGVF_SECRET_KEY'] = args.portal_secret_key
     if args.uuid:
         try:
             file_metadata = fetch_file_metadata_by_uuid(

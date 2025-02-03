@@ -4,8 +4,8 @@ import file
 import logformatter
 from pprint import pprint
 
+from checkfiles import TABULAR_FORMAT, MAX_NUM_ERROR_FOR_TABULAR_FILE, vcf_sequence_check, seqspec_file_check
 from version import get_checkfiles_version
-from checkfiles import TABULAR_FORMAT, MAX_NUM_ERROR_FOR_TABULAR_FILE, vcf_sequence_check
 from checkfiles import check_valid_gzipped_file_format, check_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, fasta_check, tabular_file_check, validate_files_check, validate_files_fastq_check
 
 logger = logging.getLogger(__name__)
@@ -68,6 +68,9 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
     elif file_format == 'vcf':
         vcf_check_error = vcf_sequence_check(input_file_path, assembly)
         validation_record.update_errors(vcf_check_error)
+    elif content_type == 'seqspec':
+        seqspec_check_error = seqspec_file_check(input_file_path)
+        validation_record.update_errors(seqspec_check_error)
 
     if validation_record.errors:
         validation_record.validation_success = False
@@ -112,7 +115,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--content_type', help='content type of the file to be checked.')
     parser.add_argument('--file_format', choices=['bam', 'bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe',
-                        'csv', 'fasta', 'fastq', 'tsv', 'txt', 'vcf'], required=True, help='file format of the file to be checked.')
+                        'csv', 'fasta', 'fastq', 'tsv', 'txt', 'vcf', 'yaml'], required=True, help='file format of the file to be checked.')
     # file_format_type is required for bed file and bigBed file
     parser.add_argument('--file_format_type',
                         help='file format type of the file to be checked.')
