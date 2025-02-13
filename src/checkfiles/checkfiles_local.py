@@ -63,7 +63,7 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
             logger.info(
                 'file content type and tabular file schema are not provided for the tabular file, will only perform tabular file based checks')
         tabular_file_check_error = tabular_file_check(
-            content_type, input_file_path, schema_path=tabular_file_schema_path, max_error=max_tabular_file_errors, allow_additional_fields=True)
+            content_type, input_file_path, is_gzipped, schema_path=tabular_file_schema_path, max_error=max_tabular_file_errors, allow_additional_fields=True)
         validation_record.update_errors(tabular_file_check_error)
     elif file_format == 'vcf':
         vcf_check_error = vcf_sequence_check(input_file_path, assembly)
