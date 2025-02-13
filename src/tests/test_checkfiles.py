@@ -149,13 +149,15 @@ def test_validate_files_fastq_check_pass():
 
 def test_tabular_file_check_guide_rna_sequences_valid():
     file_path = 'src/tests/data/guide_rna_sequences_valid.tsv'
-    error = tabular_file_check('guide RNA sequences', file_path)
+    is_gzipped = False
+    error = tabular_file_check('guide RNA sequences', file_path, is_gzipped)
     assert error == {}
 
 
 def test_tabular_file_check_guide_rna_sequences_invalid():
     file_path = 'src/tests/data/guide_rna_sequences_invalid.tsv'
-    error = tabular_file_check('guide RNA sequences', file_path)
+    is_gzipped = False
+    error = tabular_file_check('guide RNA sequences', file_path, is_gzipped)
     tabular_file_error = error['tabular_file_error']
     assert tabular_file_error['schema'] == 'src/schemas/table_schemas/guide_rna_sequences.json'
     assert tabular_file_error['error_number_limit'] == 1000
@@ -186,7 +188,8 @@ def test_tabular_file_check_guide_rna_sequences_invalid():
 
 def test_tabular_file_check_guide_rna_sequences_custom_check():
     file_path = 'src/tests/data/guide_rna_sequences_custom_check.tsv'
-    error = tabular_file_check('guide RNA sequences', file_path)
+    is_gzipped = False
+    error = tabular_file_check('guide RNA sequences', file_path, is_gzipped)
     tabular_file_error = error['tabular_file_error']
     assert tabular_file_error['schema'] == 'src/schemas/table_schemas/guide_rna_sequences.json'
     assert tabular_file_error['error_number_limit'] == 1000
@@ -206,14 +209,16 @@ def test_tabular_file_check_guide_rna_sequences_custom_check():
 
 
 def test_tabular_file_check_mpra_sequence_designs_valid():
+    is_gzipped = False
     file_path = 'src/tests/data/mpra_sequence_designs_valid.tsv'
-    error = tabular_file_check('MPRA sequence designs', file_path)
+    error = tabular_file_check('MPRA sequence designs', file_path, is_gzipped)
     assert error == {}
 
 
 def test_tabular_file_check_mpra_sequence_designs_invalid():
     file_path = 'src/tests/data/mpra_sequence_designs_invalid.tsv'
-    error = tabular_file_check('MPRA sequence designs', file_path)
+    is_gzipped = False
+    error = tabular_file_check('MPRA sequence designs', file_path, is_gzipped)
     tabular_file_error = error['tabular_file_error']
     assert tabular_file_error['schema'] == 'src/schemas/table_schemas/mpra_sequence_designs.json'
     assert tabular_file_error['error_number_limit'] == 1000
@@ -233,13 +238,17 @@ def test_tabular_file_check_mpra_sequence_designs_invalid():
 
 def test_tabular_file_check_prime_editing_guide_rna_sequences_valid():
     file_path = 'src/tests/data/prime_editing_guide_rna_sequences_valid.tsv'
-    error = tabular_file_check('prime editing guide RNA sequences', file_path)
+    is_gzipped = False
+    error = tabular_file_check(
+        'prime editing guide RNA sequences', file_path, is_gzipped)
     assert error == {}
 
 
 def test_tabular_file_check_prime_editing_guide_rna_sequences_invalid():
     file_path = 'src/tests/data/prime_editing_guide_rna_sequences_invalid.tsv'
-    error = tabular_file_check('prime editing guide RNA sequences', file_path)
+    is_gzipped = False
+    error = tabular_file_check(
+        'prime editing guide RNA sequences', file_path, is_gzipped)
     tabular_file_error = error['tabular_file_error']
     assert tabular_file_error['schema'] == 'src/schemas/table_schemas/prime_editing_guide_rna_sequences.json'
     assert tabular_file_error['error_number_limit'] == 1000
@@ -281,13 +290,15 @@ def test_sequence_file_check_invalid():
 
 def test_tabular_file_check_extra_fields_valid():
     file_path = 'src/tests/data/guide_rna_sequences_extra_valid.tsv'
-    error = tabular_file_check('guide RNA sequences', file_path)
+    is_gzipped = False
+    error = tabular_file_check('guide RNA sequences', file_path, is_gzipped)
     assert error == {}
 
 
 def test_tabular_file_check_extra_fields_invalid():
     file_path = 'src/tests/data/guide_rna_sequences_extra_invalid.tsv'
-    error = tabular_file_check('guide RNA sequences', file_path)
+    is_gzipped = False
+    error = tabular_file_check('guide RNA sequences', file_path, is_gzipped)
     tabular_file_error = error['tabular_file_error']
     assert tabular_file_error['number_of_errors'] == 1
     assert 'constraint-error' in tabular_file_error['error_types']
@@ -295,8 +306,25 @@ def test_tabular_file_check_extra_fields_invalid():
 
 def test_tabular_file_check_fragments_valid():
     file_path = 'src/tests/data/fragments_valid.tsv'
-    error = tabular_file_check('fragments', file_path)
+    is_gzipped = False
+    error = tabular_file_check('fragments', file_path, is_gzipped)
     assert error == {}
+
+
+def test_tabular_file_check_valid_grna_sequences_with_comment():
+    file_path = 'src/tests/data/valid_grna_sequences_with_comment.tsv.gz'
+    is_gzipped = True
+    error = tabular_file_check('guide RNA sequences', file_path, is_gzipped)
+    assert error == {}
+
+
+def test_tabular_file_check_invalid_grna_sequences_with_comment():
+    file_path = 'src/tests/data/invalid_grna_sequences_with_comment.tsv'
+    is_gzipped = False
+    error = tabular_file_check('guide RNA sequences', file_path, is_gzipped)
+    tabular_file_error = error['tabular_file_error']
+    assert tabular_file_error['number_of_errors'] == 1
+    assert 'incorrect-label' in tabular_file_error['error_types']
 
 
 def test_main_empty_file(mocker):

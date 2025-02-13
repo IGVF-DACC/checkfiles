@@ -199,7 +199,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         validation_record.update_errors(fasta_check_error)
     elif file_format in TABULAR_FORMAT:
         tabular_file_check_error = tabular_file_check(
-            content_type, local_file_path)
+            content_type, local_file_path, is_gzipped)
         validation_record.update_errors(tabular_file_check_error)
     elif file_format == 'vcf':
         vcf_check_error = vcf_sequence_check(local_file_path, assembly)
@@ -217,6 +217,20 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     else:
         validation_record.validation_success = True
         return validation_record
+
+
+def get_header_row(file_path, is_gzipped):
+    # right now we assume there is only one header row and header row should not be started with '#
+    count = 0
+    open_func = gzip.open if is_gzipped else open
+    with open_func(file_path, 'rt', encoding='utf-8') as f:
+        for line in f:
+            if line.startswith('#'):
+                count += 1
+            else:
+                break
+
+    return count + 1
 
 
 def check_valid_gzipped_file_format(is_gzipped, file_format, zip_file_format=ZIP_FILE_FORMAT):
@@ -314,12 +328,13 @@ def fasta_check(file_path, is_gzipped, info=FASTA_VALIDATION_INFO):
     return error
 
 
-def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE, allow_additional_fields=True, schema_path=None):
+def tabular_file_check(content_type, file_path, is_gzipped, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE, allow_additional_fields=True, schema_path=None):
     system.trusted = True
     error = {}
-    # Specifies char used to comment the rows.
-    dialect = Dialect(comment_char='#')
-    if content_type in NO_HEADER_CONTENT_TYPE:
+    if content_type not in NO_HEADER_CONTENT_TYPE:
+        header_row = get_header_row(file_path, is_gzipped)
+        dialect = Dialect(comment_char='#', header_rows=[header_row])
+    else:
         dialect = Dialect(header=False, comment_char='#')
     if not schema_path:
         schema_path = schemas.get(content_type)
@@ -335,12 +350,11 @@ def tabular_file_check(content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, ma
             report = validate(file_path, schema=schema_path,
                               limit_errors=max_error, checks=checks, dialect=dialect)
         else:
-            infer_schema = describe(file_path, type='schema')
+            infer_schema = describe(file_path, type='schema', dialect=dialect)
             schema = Schema.from_descriptor(schema_path)
             if len(infer_schema.fields) > len(schema.fields):
                 for i in range(len(schema.fields), len(infer_schema.fields)):
                     schema.add_field(infer_schema.fields[i])
-
             report = validate(file_path, schema=schema,
                               limit_errors=max_error, checks=checks, dialect=dialect)
 
