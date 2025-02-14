@@ -72,7 +72,7 @@ def create_checkfiles_instance(event, context):
         'Ebs': {
             'DeleteOnTermination': True,
             'Encrypted': False,
-            'VolumeSize': 200,
+            'VolumeSize': 500,
             'VolumeType': 'gp2',
         }
     }
