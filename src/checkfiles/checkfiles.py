@@ -60,6 +60,7 @@ ZIP_FILE_FORMAT = [
     'owl',
     'tagAlign',
     'tar',
+    'tbi',
     'tsv',
     'txt',
     'vcf',
