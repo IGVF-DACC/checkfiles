@@ -3,6 +3,7 @@ import datetime
 import gzip
 import json
 import logging
+from math import floor
 import multiprocessing
 import os
 import re
@@ -306,8 +307,12 @@ def fastq_get_average_read_length_and_number_of_reads(file_path):
     # b'read_count: 41437223\nminimum_read_length: 28\nmaximum_read_length: 28\nmean_read_length: 28\n' is what output looks like
     for item in output.decode().strip().split('\n'):
         split_item = item.split(': ')
-        # mean might not be an integer to begin with, but schema wants integer so floor it
-        info.update({split_item[0]: round(float(split_item[1]), 2)})
+        # should floor read_count, minimum_read_length and maximum_read_length. Round the mean_read_length
+        if split_item[0] == 'mean_read_length':
+            info.update({split_item[0]: round(float(split_item[1]), 2)})
+        else:
+            info.update({split_item[0]: floor(float(split_item[1]))})
+
     return info
 
 

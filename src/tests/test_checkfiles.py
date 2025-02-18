@@ -42,7 +42,7 @@ def test_fastq_get_average_read_length_and_number_of_reads():
     result = fastq_get_average_read_length_and_number_of_reads(file_path)
     assert result == {
         'read_count': 25,
-        'mean_read_length': 58,
+        'mean_read_length': 58.0,
         'maximum_read_length': 58,
         'minimum_read_length': 58
     }
@@ -392,7 +392,7 @@ def test_main_fastq(mocker):
         'content_md5sum': '1fa9f74aa895c4c938e1712bedf044ec',
         'file_size': 1371,
         'read_count': 25,
-        'mean_read_length': 58,
+        'mean_read_length': 58.0,
         'minimum_read_length': 58,
         'maximum_read_length': 58
     }

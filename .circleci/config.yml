@@ -36,7 +36,7 @@ jobs:
             cd ..
             pip install -r src/checkfiles/requirements.txt
             pip install coveralls
-            sudo wget -q --show-progress -O /usr/local/bin/validateFiles http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/validateFiles
+            sudo curl -sS -L -o /usr/local/bin/validateFiles https://raw.github.com/IGVF-DACC/validateFiles/main/validateFiles
             sudo chmod +x /usr/local/bin/validateFiles
             sudo wget https://github.com/EBIvariation/vcf-validator/releases/download/v0.10.0/vcf_assembly_checker_linux
             sudo chmod 755 vcf_assembly_checker_linux
