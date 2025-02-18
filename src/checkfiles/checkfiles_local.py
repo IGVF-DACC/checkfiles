@@ -115,7 +115,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--content_type', help='content type of the file to be checked.')
     parser.add_argument('--file_format', choices=['bam', 'bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe',
-                        'csv', 'fasta', 'fastq', 'mtx', 'tsv', 'txt', 'vcf', 'yaml'], required=True, help='file format of the file to be checked.')
+                        'csv', 'fasta', 'fastq', 'mtx', 'tbi', 'tsv', 'txt', 'vcf', 'yaml'], required=True, help='file format of the file to be checked.')
     # file_format_type is required for bed file and bigBed file
     parser.add_argument('--file_format_type',
                         help='file format type of the file to be checked.')
