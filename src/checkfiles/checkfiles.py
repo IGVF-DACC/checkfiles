@@ -318,9 +318,10 @@ def fastq_get_average_read_length_and_number_of_reads(file_path):
 
 def fasta_check(file_path, is_gzipped, info=FASTA_VALIDATION_INFO):
     error = {}
+    temp_file = tempfile.NamedTemporaryFile(
+        delete=False)  # Prevent auto-delete
     if is_gzipped:
         with gzip.open(file_path, 'rb') as f_in:
-            temp_file = tempfile.NamedTemporaryFile()
             with open(temp_file.name, 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
         file_path = temp_file.name
@@ -330,6 +331,9 @@ def fasta_check(file_path, is_gzipped, info=FASTA_VALIDATION_INFO):
             error['fasta_error'] = info[code]
     except Exception as e:
         error['fasta_error'] = str(e)
+    finally:
+        temp_file.close()  # Close before deleting
+        os.unlink(temp_file.name)  # Manually remove the file
     return error
 
 
