@@ -15,5 +15,5 @@ config = {
     'backend_uri_sandbox': 'https://api.sandbox.igvf.org',
     'backend_uri_production': 'https://api.data.igvf.org',
     'checkfiles_tag_sandbox': 'v17',
-    'checkfiles_tag_production': 'v16',
+    'checkfiles_tag_production': 'v17',
 }
