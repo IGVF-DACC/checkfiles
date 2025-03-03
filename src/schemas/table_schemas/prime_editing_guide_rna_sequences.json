@@ -9,9 +9,9 @@
             }
         },
         {
-            "name": "protospacer",
+            "name": "spacer",
             "type": "string",
-            "description": "sequence of protospacer",
+            "description": "the 5' to 3' targeting sequence of the gRNA (in DNA basepairs)",
             "constraints": {
                 "required": true
             }
@@ -43,12 +43,12 @@
         {
             "name": "guide_chr",
             "type": "string",
-            "description": "chromosome of guide, ex. chrX, chr2, chr10"
+            "description": "Chromosome of guide, ex. chrX, chr2, chr10. It is required if targeting is TRUE."
         },
         {
             "name": "guide_start",
             "type": "integer",
-            "description": "base start position of guide",
+            "description": "Base start position of guide. It is required if targeting is TRUE.",
             "constraints": {
                 "minimum": 0
             }
@@ -56,7 +56,7 @@
         {
             "name": "guide_end",
             "type": "integer",
-            "description": "base end position of guide",
+            "description": "Base end position of guide. It is required if targeting is TRUE.",
             "constraints": {
                 "minimum": 0
             }
@@ -64,7 +64,7 @@
         {
             "name": "strand",
             "type": "string",
-            "description": "Strand of guide, + or -. If strandedness is unclear or unnecessary, use 'NaN' for the strand",
+            "description": "Strand of guide, + or -. If strandedness is unclear or unnecessary, use 'NaN' for the strand. It is required if targeting is TRUE.",
             "constraints": {
                 "enum": [
                     "+",
@@ -75,7 +75,7 @@
         {
             "name": "pam",
             "type": "string",
-            "description": "protospacer adjacent motif"
+            "description": "Protospacer adjacent motif. It is required if targeting is TRUE."
         },
         {
             "name": "primer_binding_sequence",
