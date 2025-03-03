@@ -463,7 +463,7 @@ def test_main_tabular_tsv(mocker):
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
-        'file_size': 4522
+        'file_size': 4517
     }
     errors = result.errors['tabular_file_error']
     assert errors['schema'] == 'src/schemas/table_schemas/guide_rna_sequences.json'
@@ -484,7 +484,7 @@ def test_main_tabular_csv(mocker):
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/guide_rna_sequences_invalid.csv'
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
-    md5sum = '57946a79da3f1651b21b1c84681abc51'
+    md5sum = '23d15f36b2d8d5f70f3632c086173f46'
     file_format = 'csv'
     output_type = 'guide RNA sequences'
     file_format_type = None
@@ -508,7 +508,7 @@ def test_main_tabular_csv(mocker):
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
-        'file_size': 4561
+        'file_size': 4556
     }
     errors = result.errors['tabular_file_error']
     assert errors['schema'] == 'src/schemas/table_schemas/guide_rna_sequences.json'

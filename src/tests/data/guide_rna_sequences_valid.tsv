@@ -1,4 +1,4 @@
-guide_id	protospacer	targeting	type	guide_chr	guide_start	guide_end	strand	pam	genomic_element	intended_target_name	intended_target_chr	intended_target_start	intended_target_end	putative_target_genes	reporter	imperfect
+guide_id	spacer	targeting	type	guide_chr	guide_start	guide_end	strand	pam	genomic_element	intended_target_name	intended_target_chr	intended_target_start	intended_target_end	putative_target_genes	reporter	imperfect
 BACH2_8	TAAAGTTATTGTGAATGGGGA	True	targeting	chr6	90296930	90296951	-	GCGGGT	promoter	BACH2	chr6	90296843	90296844			
 BATF3_13	CCTGCGTCCGCCCCCCGGCGC	True	targeting	chr1	212700312	212700333	+	GGGGGT	promoter	BATF3	chr1	212699840	212699841			
 BATF3_18	CTGGAGGAGCGAGAGTGGCGC	True	targeting	chr1	212700381	212700402	-	CCGGAT	promoter	BATF3	chr1	212699840	212699841			
