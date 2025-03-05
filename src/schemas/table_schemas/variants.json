@@ -1,7 +1,7 @@
 {
     "fields": [
         {
-            "name": "Genome reference",
+            "name": "genome_reference",
             "type": "string",
             "description": "the reference genome being utilized",
             "constraints": {
@@ -13,7 +13,7 @@
             }
         },
         {
-            "name": "Chromosome",
+            "name": "chromosome",
             "type": "string",
             "description": "RefSeq ID of the variant's chromosom",
             "constraints": {
@@ -21,8 +21,8 @@
             }
         },
         {
-            "name": "Position",
-            "type": "string",
+            "name": "position",
+            "type": "integer",
             "description": "1-based position of the starting position of variant",
             "constraints": {
                 "minimum": 1,
@@ -30,34 +30,17 @@
             }
         },
         {
-            "name": "variant_start",
-            "type": "integer",
-            "description": "0-based position of the starting position of variant",
-            "constraints": {
-                "minimum": 0,
-                "required": true
-            }
-        },
-        {
-            "name": "variant_end",
-            "type": "integer",
-            "description": "0-based position of the end position of variant",
-            "constraints": {
-                "required": true
-            }
-        },
-        {
-            "name": "ref_allele",
+            "name": "reference_allele",
             "type": "string",
-            "description": "reference sequence of allele ",
+            "description": "reference sequence of allele",
             "constraints": {
                 "required": true
             }
         },
         {
-            "name": "alt_allele",
+            "name": "alternative_allele",
             "type": "string",
-            "description": "alternative sequence of allele ",
+            "description": "alternative sequence of allele, could be “-” for deletion",
             "constraints": {
                 "required": true
             }
@@ -82,9 +65,9 @@
             }
         },
         {
-            "name": "protein_change",
+            "name": "associated_protein_change",
             "type": "string",
-            "description": "description of variant's effect on corresponding protein"
+            "description": "description of variant's effect on corresponding protein, ex. nonsense mutation"
         },
         {
             "name": "associated_gene",
@@ -97,19 +80,32 @@
             "description": "phenotypic trait associated with variant. Should map to trait described in an ontology database (DOID, EFO, HP, MONDO, OBA)"
         },
         {
-            "name": "OMIM_ref",
+            "name": "OMIM",
             "type": "string",
             "description": "ID referencing an associated entry in the OMIM compendium"
         },
         {
-            "name": "pubmed_ref",
-            "type": "string",
-            "description": "ID referencing an associated paper in the PubMed catalog"
+            "name": "tissues_of_interest",
+            "type": "string"
         },
         {
-            "name": "annotation",
+            "name": "cell_types_of_interest",
+            "type": "string"
+        },
+        {
+            "name": "experiments",
             "type": "string",
-            "description": "flexible tag used to store any additional details associated with the variant"
+            "description": "experiments that will be conducted"
+        },
+        {
+            "name": "pubmed_ref",
+            "type": "string",
+            "description": "ID referencing an associated paper in the PubMed catalog, example: PMID:123456, doi :/10.10.20.30"
+        },
+        {
+            "name": "other",
+            "type": "string",
+            "description": "free text used to store any additional details associated with the variant"
         }
     ],
     "missingValues": [
