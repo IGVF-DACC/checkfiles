@@ -1,4 +1,4 @@
-guide_id	protospacer	targeting	type	guide_chr	guide_start	guide_end	strand	pam	genomic_element	intended_target_name	intended_target_chr	intended_target_start	intended_target_end	putative_target_genes	reporter	imperfect	extra
+guide_id	spacer	targeting	type	guide_chr	guide_start	guide_end	strand	pam	genomic_element	intended_target_name	intended_target_chr	intended_target_start	intended_target_end	putative_target_genes	reporter	imperfect	extra
 BACH2_8	AACAGGTATTTGTGAACTTT	TRUE	positive control	chr9	107546722	107546742	-	ATT	Gene	ABCA1	chr9	107547922	107546738	"[""gene a"", ""gene b""]"	TCTTTTAACAGGTATTTGTGAACTTTGCCAAG		Test1
 BATF3_13	TTTCAGGTTTGGAGATGGTT	TRUE	positive control	chr9	107547907	107547927	-	CCC	Gene	ABCA1	chr9	107547922	107547922		TCCTGCTTTCAGGTTTGGAGATGGTTATACAA		
 BATF3_18	TTTCAAGTTTGGAGATGGTT	TRUE	positive control	chr9	107547907	107547927	-	CCG	Gene	ABCA1	chr9	107547922	107547922		TCCTGCTTTCAGGTTTGGAGATGGTTATACAA	TTTCAGGTTTGGAGATGGTT	Test2
