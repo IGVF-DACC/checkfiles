@@ -39,8 +39,12 @@ def get_instance_type_from_number_of_files_pending(number_of_files_pending: int)
         return 'c6a.2xlarge'
     elif number_of_files_pending <= 16:
         return 'c6a.4xlarge'
-    else:
+    elif number_of_files_pending <= 32:
         return 'c6a.8xlarge'
+    elif number_of_files_pending <= 48:
+        return 'c6a.12xlarge'
+    else:
+        return 'c6a.16xlarge'
 
 
 def create_checkfiles_instance(event, context):
