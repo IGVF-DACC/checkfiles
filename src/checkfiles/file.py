@@ -1,6 +1,7 @@
 import gzip
 import hashlib
 import json
+import logging
 import os
 
 from typing import Optional
@@ -86,6 +87,12 @@ class FileValidationRecord:
 
     def update_info(self, info: dict):
         self.info.update(info)
+
+    @property
+    def content_md5sum(self):
+        if self.uuid:
+            logging.info(f'Getting content md5sum for uuid: {self.uuid}')
+        return self.file.content_md5sum
 
     @property
     def original_etag(self):
