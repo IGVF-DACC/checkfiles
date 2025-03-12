@@ -622,7 +622,8 @@ def main(args):
             assembly = file_metadata.get('assembly')
             content_type = file_metadata.get('content_type')
             file_format_type = file_metadata.get('file_format_type')
-            validate_onlist_files = file_metadata.get('validate_onlist_files')
+            validate_onlist_files = file_metadata.get(
+                'validate_onlist_files', True)
             submitted_md5sum = file_metadata['md5sum']
             file_validation_record = get_file_validation_record_from_metadata(
                 file_metadata)
@@ -663,7 +664,7 @@ def main(args):
                 content_type = file_metadata.get('content_type')
                 file_format_type = file_metadata.get('file_format_type')
                 validate_onlist_files = file_metadata.get(
-                    'validate_onlist_files')
+                    'validate_onlist_files', True)
                 submitted_md5sum = file_metadata['md5sum']
                 file_validation_record = get_file_validation_record_from_metadata(
                     file_metadata)
