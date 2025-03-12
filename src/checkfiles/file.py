@@ -90,8 +90,7 @@ class FileValidationRecord:
 
     @property
     def content_md5sum(self):
-        if self.uuid:
-            logging.info(f'Getting content md5sum for uuid: {self.uuid}')
+        logging.info(f'Getting content md5sum for uuid: {self.uuid}')
         try:
             content_md5sum = self.file.content_md5sum
         except Exception as e:
