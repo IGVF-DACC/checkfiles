@@ -92,7 +92,13 @@ class FileValidationRecord:
     def content_md5sum(self):
         if self.uuid:
             logging.info(f'Getting content md5sum for uuid: {self.uuid}')
-        return self.file.content_md5sum
+        try:
+            content_md5sum = self.file.content_md5sum
+        except Exception as e:
+            logging.error(f'Error getting content md5sum for uuid: {self.uuid}')
+            logging.error(e)
+            raise e
+        return content_md5sum
 
     @property
     def original_etag(self):
