@@ -630,8 +630,8 @@ def main(args):
             etag_original = fetch_etag_for_uuid(
                 args.server, args.uuid, portal_auth)
             file_validation_record.original_etag = etag_original
-            file_validation_complete_record = file_validation(args.server, portal_auth, file_validation_record,
-                                                              submitted_md5sum, content_type, file_format_type, assembly, validate_onlist_files)
+            file_validation_complete_record = file_validation(portal_url=args.server, portal_auth=portal_auth, validation_record=file_validation_record,
+                                                              submitted_md5sum=submitted_md5sum, content_type=content_type, file_format_type=file_format_type, assembly=assembly, validate_onlist_files=validate_onlist_files)
             if args.patch:
                 # check etag first
                 etag_after = fetch_etag_for_uuid(
