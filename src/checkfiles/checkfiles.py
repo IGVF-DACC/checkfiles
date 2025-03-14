@@ -165,11 +165,11 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     if is_gzipped:
         try:
             content_md5_error = check_content_md5sum(
-                validation_record.file.content_md5sum, uuid, portal_auth, portal_url)
+                validation_record.content_md5sum, uuid, portal_auth, portal_url)
             validation_record.update_info(
-                {'content_md5sum': validation_record.file.content_md5sum})
+                {'content_md5sum': validation_record.content_md5sum})
             logger.info(
-                f'{uuid} content_md5sum is {validation_record.file.content_md5sum}')
+                f'{uuid} content_md5sum is {validation_record.content_md5sum}')
             validation_record.update_errors(content_md5_error)
         except EOFError as e:
             logger.warning(
