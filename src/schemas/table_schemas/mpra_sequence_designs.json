@@ -40,8 +40,10 @@
                     "test",
                     "variant positive control",
                     "variant negative control",
+                    "variant universal control",
                     "element active control",
-                    "element inactive control"
+                    "element inactive control",
+                    "element universal control"
                 ]
             }
         },
@@ -96,6 +98,7 @@
                 "constraints": {
                     "enum": [
                         "SNV",
+                        "MNV",
                         "indel"
                     ]
                 }
