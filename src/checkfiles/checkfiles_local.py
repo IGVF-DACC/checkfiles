@@ -15,7 +15,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def file_validation(input_file_path, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly, tabular_file_schema_path, max_tabular_file_errors):
+def file_validation(input_file_path, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly, tabular_file_schema_path, max_tabular_file_errors, onlist_skip):
     logger.info(f'Checking file: {input_file_path}')
     validation_record.update_info(
         {'checkfiles_version': get_checkfiles_version()})
@@ -69,7 +69,11 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
         vcf_check_error = vcf_sequence_check(input_file_path, assembly)
         validation_record.update_errors(vcf_check_error)
     elif content_type == 'seqspec':
-        seqspec_check_error = seqspec_file_check(input_file_path)
+        validate_onlist_files = True
+        if onlist_skip:
+            validate_onlist_files = False
+        seqspec_check_error = seqspec_file_check(
+            input_file_path, validate_onlist_files)
         validation_record.update_errors(seqspec_check_error)
 
     if validation_record.errors:
@@ -90,7 +94,7 @@ def main(args):
     file_validation_record = file.FileValidationRecord(
         file.get_file(args.input_file_path, args.file_format))
     file_validation_complete_record = file_validation(args.input_file_path, file_validation_record,
-                                                      args.md5sum, args.content_type, args.file_format_type, args.assembly, args.tabular_file_schema_path, args.max_tabular_file_errors)
+                                                      args.md5sum, args.content_type, args.file_format_type, args.assembly, args.tabular_file_schema_path, args.max_tabular_file_errors, args.onlist_skip)
     if not file_validation_complete_record.file_not_found:
         if file_validation_complete_record.errors:
             logger.info(
@@ -124,6 +128,9 @@ if __name__ == '__main__':
                         help='the relative path to the schema file of the tabular file.')
     parser.add_argument('--max_tabular_file_errors', type=int, default=MAX_NUM_ERROR_FOR_TABULAR_FILE,
                         help='maximum number of errors to be scaned for the tabular file.')
+
+    parser.add_argument('--onlist_skip', action='store_true',
+                        help='whether to skip onlist files check.')
 
     args = parser.parse_args()
     main(args)

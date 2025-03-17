@@ -266,25 +266,39 @@ def test_tabular_file_check_prime_editing_guide_rna_sequences_invalid():
     assert 'constraint-error' in tabular_file_error['error_types']
 
 
-def test_sequence_file_check_valid():
+def test_seqspec_file_check_valid():
     file_path = 'src/tests/data/seqspec_valid.yaml.gz'
     error = seqspec_file_check(file_path)
     assert error == {}
 
 
-def test_sequence_file_check_valid_for_igvf():
+def test_seqspec_file_check_valid_for_igvf():
     file_path = 'src/tests/data/seqspec_valid_for_igvf.yaml.gz'
     error = seqspec_file_check(file_path)
     assert error == {}
 
 
-def test_sequence_file_check_invalid():
+def test_seqspec_file_check_invalid():
     file_path = 'src/tests/data/seqspec_invalid.yaml.gz'
     error = seqspec_file_check(file_path)
     assert error == {
-        'seqspec_error': [
-            "[error 1] 'atac-illumina_p5' sequence 'AATGATACGGCGACCACCGAGATCTACAC' has length 29, expected range (30, 30)"
-        ]
+        'seqspec_error':  [{'error_message': "'atac-illumina_p5' sequence 'AATGATACGGCGACCACCGAGATCTACAC' has length 29, expected range (30, 30)", 'error_object': 'region', 'error_type': 'check_sequence_lengths'}]} != {'seqspec_error': ["[error 1] 'atac-illumina_p5' sequence 'AATGATACGGCGACCACCGAGATCTACAC' has length 29, expected range (30, 30)"]
+                                                                                                                                                                                                                           }
+
+
+def test_seqspec_file_check_skip_onlist_valid():
+    file_path = 'src/tests/data/seqspec_valid_ignore_onlist.yaml.gz'
+    error = seqspec_file_check(file_path, validate_onlist_files=False)
+    assert error == {}
+
+
+def test_seqspec_file_check_onlist_invalid():
+    file_path = 'src/tests/data/seqspec_valid_ignore_onlist.yaml.gz'
+    error = seqspec_file_check(file_path)
+    assert error == {
+        'seqspec_error': [{'error_message': 'IGVFFI7587TJLC.tsv.gz does not exist',
+                           'error_object': 'onlist',
+                           'error_type': 'check_onlist_files_exist'}]
     }
 
 
