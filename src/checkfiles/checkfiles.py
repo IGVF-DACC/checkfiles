@@ -22,7 +22,8 @@ from typing import Optional
 from FastaValidator import fasta_validator
 from frictionless import system, validate, describe, Schema, Dialect
 from seqspec.utils import load_spec as seqspec_load_spec
-from seqspec.seqspec_check import check as seqspec_check
+from seqspec.seqspec_check import run_check as seqspec_check
+
 
 from guide_rna_sequences_check import GuideRnaSequencesCheck
 import file
@@ -132,7 +133,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly):
+def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly, validate_onlist_files=True):
     uuid = validation_record.uuid
     logger.info(f'Checking file uuid {uuid}')
     local_file_path = validation_record.file.path
@@ -207,7 +208,8 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         vcf_check_error = vcf_sequence_check(local_file_path, assembly)
         validation_record.update_errors(vcf_check_error)
     elif content_type == 'seqspec':
-        seqspec_check_error = seqspec_file_check(local_file_path)
+        seqspec_check_error = seqspec_file_check(
+            local_file_path, validate_onlist_files)
         validation_record.update_errors(seqspec_check_error)
 
     logger.info(
@@ -428,16 +430,17 @@ def vcf_sequence_check(file_path, assembly):
     return error
 
 
-def seqspec_file_check(file_path):
+def seqspec_file_check(file_path, validate_onlist_files=True):
     error = {}
     # check if IGVF_API_KEY and IGVF_SECRET_KEY are set
     if 'IGVF_API_KEY' not in os.environ or 'IGVF_SECRET_KEY' not in os.environ:
         logger.warning(
             f'IGVF_API_KEY and IGVF_SECRET_KEY are not set. seqspec check will not be able to access files that are not released.')
     try:
-        # validate seqspec yaml file without upgrading
-        spec = seqspec_load_spec(file_path)
-        errors = seqspec_check(spec, file_path, for_igvf=True)
+        if validate_onlist_files:
+            errors = seqspec_check(file_path, None, 'igvf')
+        else:
+            errors = seqspec_check(file_path, None, 'igvf_onlist_skip')
         if errors:
             error['seqspec_error'] = errors
     except Exception as e:
@@ -531,9 +534,9 @@ def upload_credentials_are_expired(portal_uri: str, file_uuid: str, portal_auth:
 
 def fetch_pending_files_metadata(portal_uri: str, portal_auth: PortalAuth, number_of_files: Optional[int] = None) -> list:
     if number_of_files is not None:
-        search = f'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&limit={number_of_files}'
+        search = f'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&field=validate_onlist_files&limit={number_of_files}'
     else:
-        search = 'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&limit=all'
+        search = 'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&field=validate_onlist_files&limit=all'
     search_uri = f'{portal_uri}/{search}'
     response = requests.get(search_uri, auth=portal_auth)
     metadata = response.json()['@graph']
@@ -619,14 +622,16 @@ def main(args):
             assembly = file_metadata.get('assembly')
             content_type = file_metadata.get('content_type')
             file_format_type = file_metadata.get('file_format_type')
+            validate_onlist_files = file_metadata.get(
+                'validate_onlist_files', True)
             submitted_md5sum = file_metadata['md5sum']
             file_validation_record = get_file_validation_record_from_metadata(
                 file_metadata)
             etag_original = fetch_etag_for_uuid(
                 args.server, args.uuid, portal_auth)
             file_validation_record.original_etag = etag_original
-            file_validation_complete_record = file_validation(args.server, portal_auth, file_validation_record,
-                                                              submitted_md5sum, content_type, file_format_type, assembly=assembly)
+            file_validation_complete_record = file_validation(portal_url=args.server, portal_auth=portal_auth, validation_record=file_validation_record,
+                                                              submitted_md5sum=submitted_md5sum, content_type=content_type, file_format_type=file_format_type, assembly=assembly, validate_onlist_files=validate_onlist_files)
             if args.patch:
                 # check etag first
                 etag_after = fetch_etag_for_uuid(
@@ -658,6 +663,8 @@ def main(args):
                 assembly = file_metadata.get('assembly')
                 content_type = file_metadata.get('content_type')
                 file_format_type = file_metadata.get('file_format_type')
+                validate_onlist_files = file_metadata.get(
+                    'validate_onlist_files', True)
                 submitted_md5sum = file_metadata['md5sum']
                 file_validation_record = get_file_validation_record_from_metadata(
                     file_metadata)
@@ -665,7 +672,7 @@ def main(args):
                     args.server, uuid, portal_auth)
                 file_validation_record.original_etag = etag_original
                 jobs.append((args.ignore_active_credentials, args.server, portal_auth, file_validation_record,
-                            submitted_md5sum, content_type, file_format_type, assembly))
+                            submitted_md5sum, content_type, file_format_type, assembly, validate_onlist_files))
             number_of_cpus = multiprocessing.cpu_count()
 
             if args.patch:

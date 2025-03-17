@@ -111,3 +111,9 @@ Validate seqspec yaml file:
 ```bash
 python src/checkfiles/checkfiles_local.py --input_file_path src/tests/data/seqspec_valid.yaml.gz --file_format yaml --content_type seqspec --md5sum f1859dd9d60554a8f8ab63b65b458267
 ```
+
+Validate seqspec yaml file while skip onlist files check:
+
+```bash
+python src/checkfiles/checkfiles_local.py --input_file_path src/tests/data/seqspec_valid.yaml.gz --file_format yaml --content_type seqspec --onlist_skip --md5sum f1859dd9d60554a8f8ab63b65b458267
+```
