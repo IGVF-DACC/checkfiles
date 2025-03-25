@@ -302,6 +302,14 @@ def test_seqspec_file_check_onlist_invalid():
     }
 
 
+def test_seqpec_file_check_old_version():
+    file_path = 'src/tests/data/seqspec_old_version.yaml.gz'
+    error = seqspec_file_check(file_path)
+    assert error == {
+        'seqspec_error': 'The seqspec file version is 0.2.0, while version 0.3.0 is required.'
+    }
+
+
 def test_tabular_file_check_extra_fields_valid():
     file_path = 'src/tests/data/guide_rna_sequences_extra_valid.tsv'
     is_gzipped = False
