@@ -218,7 +218,8 @@ class RunCheckfilesStepFunction(Stack):
             payload_response_only=True,
             result_selector={
                 'instance_id.$': '$.instance_id',
-                'instance_type.$': '$.instance_type'
+                'instance_type.$': '$.instance_type',
+                'iterator.$': '$.iterator'
             }
         )
 
@@ -275,7 +276,8 @@ class RunCheckfilesStepFunction(Stack):
             payload_response_only=True,
             result_selector={
                 'instance_id.$': '$.instance_id',
-                'command_id.$': '$.command_id'
+                'command_id.$': '$.command_id',
+                'iterator.$': '$.iterator'
             }
         )
 
@@ -330,15 +332,11 @@ class RunCheckfilesStepFunction(Stack):
             result_path=JsonPath.DISCARD,
         )
 
-        run_checkfiles_command.add_catch(
-            handler=terminate_instance
-        )
-
         wait_for_five_minutes = Wait(
             self,
             'WaitFiveMinutes',
             time=WaitTime.duration(
-                Duration.minutes(5)
+                Duration.minutes(1)
             )
         )
 
@@ -357,12 +355,12 @@ class RunCheckfilesStepFunction(Stack):
                 Condition.boolean_equals(
                     '$.files_pending', False), no_files_to_process
             ).otherwise(
-                create_checkfiles_instance.next(
+                initialize_counter.next(
+                    create_checkfiles_instance
+                ).next(
                     wait_instance_ssm_registration
                 ).next(
                     run_checkfiles_command
-                ).next(
-                    initialize_counter
                 ).next(
                     increment_counter
                 ).next(
