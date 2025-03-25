@@ -143,6 +143,32 @@ class RunCheckfilesStepFunction(Stack):
             }
         )
 
+        initialize_counter = Pass(
+            self,
+            'InitializeCounter',
+            parameters={
+                'iterator': {'index': 0, 'step': 1, 'count': 22}
+            }
+        )
+
+        increment_counter_lambda = PythonFunction(
+            self,
+            'IncrementCounterLambda',
+            entry='checkfiles_runner/lambdas/counter',
+            runtime=Runtime.PYTHON_3_11,
+            index='increment.py',
+            handler='increment_counter',
+            timeout=Duration.seconds(60),
+        )
+
+        increment_counter = LambdaInvoke(
+            self,
+            'IncrementCounter',
+            lambda_function=increment_counter_lambda,
+            payload_response_only=True,
+            result_path='$.iterator'
+        )
+
         create_checkfiles_instance_lambda = PythonFunction(
             self,
             'CreateCheckfilesInstanceLambda',
@@ -253,17 +279,17 @@ class RunCheckfilesStepFunction(Stack):
             }
         )
 
-        wait_for_checkfiles_lambda = PythonFunction(
+        get_checkfiles_command_status_lambda = PythonFunction(
             self,
-            'WaitForCheckfilesLambda',
+            'GetCheckfilesCommandStatusLambda',
             entry='checkfiles_runner/lambdas/wait_checkfiles',
             runtime=Runtime.PYTHON_3_11,
             index='main.py',
-            handler='wait_checkfiles_command_to_finish',
+            handler='get_checkfiles_command_status',
             timeout=Duration.seconds(180),
         )
 
-        wait_for_checkfiles_lambda.add_to_role_policy(
+        get_checkfiles_command_status_lambda.add_to_role_policy(
             PolicyStatement(
                 actions=[
                     'ssm:GetCommandInvocation'
@@ -272,24 +298,19 @@ class RunCheckfilesStepFunction(Stack):
             )
         )
 
-        wait_for_checkfiles = LambdaInvoke(
+        get_checkfiles_command_status = LambdaInvoke(
             self,
-            'WaitForCheckfiles',
-            lambda_function=wait_for_checkfiles_lambda,
+            'GetCheckfilesCommandStatus',
+            lambda_function=get_checkfiles_command_status_lambda,
             payload_response_only=True,
             result_selector={
                 'checkfiles_command_status.$': '$.checkfiles_command_status',
                 'instance_id.$': '$.instance_id',
                 'command_id.$': '$.command_id',
-                'instance_id_list.$': '$.instance_id_list'
+                'instance_id_list.$': '$.instance_id_list',
+                'in_progress.$': '$.in_progress',
+                'iterator.$': '$.iterator'
             }
-        )
-
-        wait_for_checkfiles.add_retry(
-            backoff_rate=1,
-            errors=['CommandInProgress'],
-            interval=Duration.seconds(3600),
-            max_attempts=22,
         )
 
         no_files_to_process = Succeed(
@@ -312,14 +333,21 @@ class RunCheckfilesStepFunction(Stack):
         run_checkfiles_command.add_catch(
             handler=terminate_instance
         )
-        wait_for_checkfiles.add_catch(
-            handler=terminate_instance
+
+        wait_for_five_minutes = Wait(
+            self,
+            'WaitFiveMinutes',
+            time=WaitTime.duration(
+                Duration.minutes(5)
+            )
         )
 
         send_pending_files_slack_notification = self.make_slack_notification_task(
             'SendPendingFilesCheckedSlackNotification')
         send_checkfiles_finished_slack_notification = self.make_slack_notification_task(
             'SendCheckfilesFinishedSlackNotification')
+
+        
 
         definition = check_pending_files.next(
             make_pending_files_checked_message
@@ -336,13 +364,31 @@ class RunCheckfilesStepFunction(Stack):
                 ).next(
                     run_checkfiles_command
                 ).next(
-                    wait_for_checkfiles
+                    initialize_counter
                 ).next(
-                    make_checkfiles_finished_message
+                    increment_counter
                 ).next(
-                    send_checkfiles_finished_slack_notification
+                    wait_for_five_minutes
                 ).next(
-                    terminate_instance
+                    get_checkfiles_command_status
+                ).next(
+                    Choice(self, 'Should continue?')
+                    .when(
+                        Condition.and_(
+                            Condition.boolean_equals(
+                                '$.in_progress', True
+                            ),
+                            Condition.boolean_equals(
+                                '$.iterator.continue', True
+                            )
+                        ), increment_counter
+                    ).otherwise(
+                        make_checkfiles_finished_message.next(
+                            send_checkfiles_finished_slack_notification
+                        ).next(
+                            terminate_instance
+                        )
+                    )
                 )
             )
         )

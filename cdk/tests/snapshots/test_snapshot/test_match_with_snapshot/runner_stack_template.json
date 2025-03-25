@@ -187,6 +187,132 @@
             },
             "Type": "AWS::IAM::Policy"
         },
+        "GetCheckfilesCommandStatusLambda1E37EF7D": {
+            "DependsOn": [
+                "GetCheckfilesCommandStatusLambdaServiceRoleDefaultPolicy8050EA03",
+                "GetCheckfilesCommandStatusLambdaServiceRole7F778A35"
+            ],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
+                    "S3Key": "e2e7b0ab4a8b4697c5392f7a5cc3dd818ad44e27ca56c4ca783372c7d5350410.zip"
+                },
+                "Handler": "main.get_checkfiles_command_status",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "GetCheckfilesCommandStatusLambdaServiceRole7F778A35",
+                        "Arn"
+                    ]
+                },
+                "Runtime": "python3.11",
+                "Timeout": 180
+            },
+            "Type": "AWS::Lambda::Function"
+        },
+        "GetCheckfilesCommandStatusLambdaServiceRole7F778A35": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "ManagedPolicyArns": [
+                    {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "arn:",
+                                {
+                                    "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                            ]
+                        ]
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "GetCheckfilesCommandStatusLambdaServiceRoleDefaultPolicy8050EA03": {
+            "Properties": {
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "ssm:GetCommandInvocation",
+                            "Effect": "Allow",
+                            "Resource": "*"
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "PolicyName": "GetCheckfilesCommandStatusLambdaServiceRoleDefaultPolicy8050EA03",
+                "Roles": [
+                    {
+                        "Ref": "GetCheckfilesCommandStatusLambdaServiceRole7F778A35"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Policy"
+        },
+        "IncrementCounterLambda27A5F523": {
+            "DependsOn": [
+                "IncrementCounterLambdaServiceRole214A07B1"
+            ],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
+                    "S3Key": "b2ecb837963b81c2b4573c3ec430af804fce6a99d61d3581263c5c05c21cbf48.zip"
+                },
+                "Handler": "increment.increment_counter",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "IncrementCounterLambdaServiceRole214A07B1",
+                        "Arn"
+                    ]
+                },
+                "Runtime": "python3.11",
+                "Timeout": 60
+            },
+            "Type": "AWS::Lambda::Function"
+        },
+        "IncrementCounterLambdaServiceRole214A07B1": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "ManagedPolicyArns": [
+                    {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "arn:",
+                                {
+                                    "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                            ]
+                        ]
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
         "RunCheckfilesCommandLambda7EB09D55": {
             "DependsOn": [
                 "RunCheckfilesCommandLambdaServiceRoleDefaultPolicyFD908447",
@@ -338,21 +464,28 @@
                                     "Arn"
                                 ]
                             },
-                            "\"},\"WaitForSSMReg\":{\"Type\":\"Wait\",\"Seconds\":120,\"Next\":\"RunCheckFilesCommand\"},\"RunCheckFilesCommand\":{\"Next\":\"WaitForCheckfiles\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Catch\":[{\"ErrorEquals\":[\"States.ALL\"],\"Next\":\"TerminateInstance\"}],\"Type\":\"Task\",\"ResultSelector\":{\"instance_id.$\":\"$.instance_id\",\"command_id.$\":\"$.command_id\"},\"Resource\":\"",
+                            "\"},\"WaitForSSMReg\":{\"Type\":\"Wait\",\"Seconds\":120,\"Next\":\"RunCheckFilesCommand\"},\"RunCheckFilesCommand\":{\"Next\":\"InitializeCounter\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Catch\":[{\"ErrorEquals\":[\"States.ALL\"],\"Next\":\"TerminateInstance\"}],\"Type\":\"Task\",\"ResultSelector\":{\"instance_id.$\":\"$.instance_id\",\"command_id.$\":\"$.command_id\"},\"Resource\":\"",
                             {
                                 "Fn::GetAtt": [
                                     "RunCheckfilesCommandLambda7EB09D55",
                                     "Arn"
                                 ]
                             },
-                            "\"},\"WaitForCheckfiles\":{\"Next\":\"MakeCheckfilesFinishedMessage\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2},{\"ErrorEquals\":[\"CommandInProgress\"],\"IntervalSeconds\":3600,\"MaxAttempts\":22,\"BackoffRate\":1}],\"Catch\":[{\"ErrorEquals\":[\"States.ALL\"],\"Next\":\"TerminateInstance\"}],\"Type\":\"Task\",\"ResultSelector\":{\"checkfiles_command_status.$\":\"$.checkfiles_command_status\",\"instance_id.$\":\"$.instance_id\",\"command_id.$\":\"$.command_id\",\"instance_id_list.$\":\"$.instance_id_list\"},\"Resource\":\"",
+                            "\"},\"InitializeCounter\":{\"Type\":\"Pass\",\"Parameters\":{\"iterator\":{\"index\":0,\"step\":1,\"count\":22}},\"Next\":\"IncrementCounter\"},\"IncrementCounter\":{\"Next\":\"WaitFiveMinutes\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultPath\":\"$.iterator\",\"Resource\":\"",
                             {
                                 "Fn::GetAtt": [
-                                    "WaitForCheckfilesLambdaBCE62619",
+                                    "IncrementCounterLambda27A5F523",
                                     "Arn"
                                 ]
                             },
-                            "\"},\"MakeCheckfilesFinishedMessage\":{\"Type\":\"Pass\",\"Parameters\":{\"detailType\":\"CheckfilesFinished\",\"source\":\"RunCheckfilesStepFunction\",\"detail\":{\"metadata\":{\"includes_slack_notification\":true},\"data\":{\"slack\":{\"text.$\":\"States.Format(':white_check_mark: *CheckFilesFinished* | command_status: {} | See log group checkfiles-log for details', $.checkfiles_command_status)\"}}},\"instance_id_list.$\":\"$.instance_id_list\"},\"Next\":\"SendCheckfilesFinishedSlackNotification\"},\"SendCheckfilesFinishedSlackNotification\":{\"Next\":\"TerminateInstance\",\"Type\":\"Task\",\"ResultPath\":null,\"Resource\":\"arn:",
+                            "\"},\"Should continue?\":{\"Type\":\"Choice\",\"Choices\":[{\"And\":[{\"Variable\":\"$.in_progress\",\"BooleanEquals\":true},{\"Variable\":\"$.iterator.continue\",\"BooleanEquals\":true}],\"Next\":\"IncrementCounter\"}],\"Default\":\"MakeCheckfilesFinishedMessage\"},\"GetCheckfilesCommandStatus\":{\"Next\":\"Should continue?\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"checkfiles_command_status.$\":\"$.checkfiles_command_status\",\"instance_id.$\":\"$.instance_id\",\"command_id.$\":\"$.command_id\",\"instance_id_list.$\":\"$.instance_id_list\",\"in_progress.$\":\"$.in_progress\",\"iterator.$\":\"$.iterator\"},\"Resource\":\"",
+                            {
+                                "Fn::GetAtt": [
+                                    "GetCheckfilesCommandStatusLambda1E37EF7D",
+                                    "Arn"
+                                ]
+                            },
+                            "\"},\"WaitFiveMinutes\":{\"Type\":\"Wait\",\"Seconds\":300,\"Next\":\"GetCheckfilesCommandStatus\"},\"MakeCheckfilesFinishedMessage\":{\"Type\":\"Pass\",\"Parameters\":{\"detailType\":\"CheckfilesFinished\",\"source\":\"RunCheckfilesStepFunction\",\"detail\":{\"metadata\":{\"includes_slack_notification\":true},\"data\":{\"slack\":{\"text.$\":\"States.Format(':white_check_mark: *CheckFilesFinished* | command_status: {} | See log group checkfiles-log for details', $.checkfiles_command_status)\"}}},\"instance_id_list.$\":\"$.instance_id_list\"},\"Next\":\"SendCheckfilesFinishedSlackNotification\"},\"SendCheckfilesFinishedSlackNotification\":{\"Next\":\"TerminateInstance\",\"Type\":\"Task\",\"ResultPath\":null,\"Resource\":\"arn:",
                             {
                                 "Ref": "AWS::Partition"
                             },
@@ -535,7 +668,7 @@
                             "Resource": [
                                 {
                                     "Fn::GetAtt": [
-                                        "WaitForCheckfilesLambdaBCE62619",
+                                        "IncrementCounterLambda27A5F523",
                                         "Arn"
                                     ]
                                 },
@@ -545,7 +678,33 @@
                                         [
                                             {
                                                 "Fn::GetAtt": [
-                                                    "WaitForCheckfilesLambdaBCE62619",
+                                                    "IncrementCounterLambda27A5F523",
+                                                    "Arn"
+                                                ]
+                                            },
+                                            ":*"
+                                        ]
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Action": "lambda:InvokeFunction",
+                            "Effect": "Allow",
+                            "Resource": [
+                                {
+                                    "Fn::GetAtt": [
+                                        "GetCheckfilesCommandStatusLambda1E37EF7D",
+                                        "Arn"
+                                    ]
+                                },
+                                {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "GetCheckfilesCommandStatusLambda1E37EF7D",
                                                     "Arn"
                                                 ]
                                             },
@@ -567,80 +726,6 @@
                 "Roles": [
                     {
                         "Ref": "StateMachineRoleB840431D"
-                    }
-                ]
-            },
-            "Type": "AWS::IAM::Policy"
-        },
-        "WaitForCheckfilesLambdaBCE62619": {
-            "DependsOn": [
-                "WaitForCheckfilesLambdaServiceRoleDefaultPolicyBECFD1FC",
-                "WaitForCheckfilesLambdaServiceRoleC8AEA694"
-            ],
-            "Properties": {
-                "Code": {
-                    "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
-                    "S3Key": "f92a633ec6e5b146e9454d259a24b876a0fd4eff383ab07519efdebe75cd4124.zip"
-                },
-                "Handler": "main.wait_checkfiles_command_to_finish",
-                "Role": {
-                    "Fn::GetAtt": [
-                        "WaitForCheckfilesLambdaServiceRoleC8AEA694",
-                        "Arn"
-                    ]
-                },
-                "Runtime": "python3.11",
-                "Timeout": 180
-            },
-            "Type": "AWS::Lambda::Function"
-        },
-        "WaitForCheckfilesLambdaServiceRoleC8AEA694": {
-            "Properties": {
-                "AssumeRolePolicyDocument": {
-                    "Statement": [
-                        {
-                            "Action": "sts:AssumeRole",
-                            "Effect": "Allow",
-                            "Principal": {
-                                "Service": "lambda.amazonaws.com"
-                            }
-                        }
-                    ],
-                    "Version": "2012-10-17"
-                },
-                "ManagedPolicyArns": [
-                    {
-                        "Fn::Join": [
-                            "",
-                            [
-                                "arn:",
-                                {
-                                    "Ref": "AWS::Partition"
-                                },
-                                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-                            ]
-                        ]
-                    }
-                ]
-            },
-            "Type": "AWS::IAM::Role"
-        },
-        "WaitForCheckfilesLambdaServiceRoleDefaultPolicyBECFD1FC": {
-            "Properties": {
-                "PolicyDocument": {
-                    "Statement": [
-                        {
-                            "Action": "ssm:GetCommandInvocation",
-                            "Effect": "Allow",
-                            "Resource": "*"
-                        }
-                    ],
-                    "Version": "2012-10-17"
-                },
-                "PolicyName": "WaitForCheckfilesLambdaServiceRoleDefaultPolicyBECFD1FC",
-                "Roles": [
-                    {
-                        "Ref": "WaitForCheckfilesLambdaServiceRoleC8AEA694"
                     }
                 ]
             },
