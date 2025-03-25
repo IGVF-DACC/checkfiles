@@ -347,8 +347,6 @@ class RunCheckfilesStepFunction(Stack):
         send_checkfiles_finished_slack_notification = self.make_slack_notification_task(
             'SendCheckfilesFinishedSlackNotification')
 
-        
-
         definition = check_pending_files.next(
             make_pending_files_checked_message
         ).next(
