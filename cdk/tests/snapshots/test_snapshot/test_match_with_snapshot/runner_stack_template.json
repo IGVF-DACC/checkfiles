@@ -268,7 +268,7 @@
             "Properties": {
                 "Code": {
                     "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
-                    "S3Key": "b2ecb837963b81c2b4573c3ec430af804fce6a99d61d3581263c5c05c21cbf48.zip"
+                    "S3Key": "8b089f2666fcd9c705c85240aebf9b13d7a1a2a06c616de4d46ea0a765157a0a.zip"
                 },
                 "Handler": "increment.increment_counter",
                 "Role": {
