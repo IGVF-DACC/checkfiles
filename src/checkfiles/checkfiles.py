@@ -125,7 +125,6 @@ FASTA_VALIDATION_INFO = {
 
 SEQSPEC_VERSION = '0.3.0'
 
-
 PortalAuth = namedtuple('PortalAuth', ['portal_key_id', 'portal_secret_key'])
 
 
@@ -443,7 +442,7 @@ def seqspec_file_check(file_path, validate_onlist_files=True):
         spec = seqspec_load_spec(file_path)
         version = seqspec_version(spec).split('\n')[-1].split(': ')[-1]
         if version != SEQSPEC_VERSION:
-            error['seqspec_error'] = f'The seqspec file version is {version}, while version 0.3.0 is required.'
+            error['seqspec_error'] = f'The seqspec file version is {version}, while version {SEQSPEC_VERSION} is required.'
             return error
         if validate_onlist_files:
             errors = seqspec_check(file_path, None, 'igvf')
