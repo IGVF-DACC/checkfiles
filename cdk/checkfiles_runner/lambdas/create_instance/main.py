@@ -112,7 +112,9 @@ def create_checkfiles_instance(event, context):
     instance = instances[0]
 
     instance.wait_until_running()
+    iterator = event['iterator']
 
     return {'instance_id': instance.id,
             'instance_type': instance.instance_type,
+            'iterator': iterator
             }
