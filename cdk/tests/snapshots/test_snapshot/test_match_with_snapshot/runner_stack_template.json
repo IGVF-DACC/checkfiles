@@ -457,7 +457,7 @@
                             {
                                 "Ref": "AWS::Partition"
                             },
-                            ":states:::events:putEvents\",\"Parameters\":{\"Entries\":[{\"Detail.$\":\"$.detail\",\"DetailType.$\":\"$.detailType\",\"Source.$\":\"$.source\"}]}},\"Pending files?\":{\"Type\":\"Choice\",\"Choices\":[{\"Variable\":\"$.files_pending\",\"BooleanEquals\":false,\"Next\":\"No files to process.\"}],\"Default\":\"InitializeCounter\"},\"InitializeCounter\":{\"Type\":\"Pass\",\"Parameters\":{\"iterator\":{\"index\":0,\"step\":1,\"count\":22}},\"Next\":\"CreateCheckfilesInstance\"},\"CreateCheckfilesInstance\":{\"Next\":\"WaitForSSMReg\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"instance_id.$\":\"$.instance_id\",\"instance_type.$\":\"$.instance_type\",\"iterator.$\":\"$.iterator\"},\"Resource\":\"",
+                            ":states:::events:putEvents\",\"Parameters\":{\"Entries\":[{\"Detail.$\":\"$.detail\",\"DetailType.$\":\"$.detailType\",\"Source.$\":\"$.source\"}]}},\"Pending files?\":{\"Type\":\"Choice\",\"Choices\":[{\"Variable\":\"$.files_pending\",\"BooleanEquals\":false,\"Next\":\"No files to process.\"}],\"Default\":\"InitializeCounter\"},\"InitializeCounter\":{\"Type\":\"Pass\",\"Parameters\":{\"iterator\":{\"index\":0,\"step\":1,\"count\":22},\"number_of_files_pending.$\":\"$.number_of_files_pending\"},\"Next\":\"CreateCheckfilesInstance\"},\"CreateCheckfilesInstance\":{\"Next\":\"WaitForSSMReg\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"instance_id.$\":\"$.instance_id\",\"instance_type.$\":\"$.instance_type\",\"iterator.$\":\"$.iterator\"},\"Resource\":\"",
                             {
                                 "Fn::GetAtt": [
                                     "CreateCheckfilesInstanceLambda9EE361EE",
@@ -471,7 +471,7 @@
                                     "Arn"
                                 ]
                             },
-                            "\"},\"IncrementCounter\":{\"Next\":\"WaitFiveMinutes\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultPath\":\"$.iterator\",\"Resource\":\"",
+                            "\"},\"IncrementCounter\":{\"Next\":\"WaitSixtyMinutes\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultPath\":\"$.iterator\",\"Resource\":\"",
                             {
                                 "Fn::GetAtt": [
                                     "IncrementCounterLambda27A5F523",
@@ -485,7 +485,7 @@
                                     "Arn"
                                 ]
                             },
-                            "\"},\"WaitFiveMinutes\":{\"Type\":\"Wait\",\"Seconds\":60,\"Next\":\"GetCheckfilesCommandStatus\"},\"MakeCheckfilesFinishedMessage\":{\"Type\":\"Pass\",\"Parameters\":{\"detailType\":\"CheckfilesFinished\",\"source\":\"RunCheckfilesStepFunction\",\"detail\":{\"metadata\":{\"includes_slack_notification\":true},\"data\":{\"slack\":{\"text.$\":\"States.Format(':white_check_mark: *CheckFilesFinished* | command_status: {} | See log group checkfiles-log for details', $.checkfiles_command_status)\"}}},\"instance_id_list.$\":\"$.instance_id_list\"},\"Next\":\"SendCheckfilesFinishedSlackNotification\"},\"SendCheckfilesFinishedSlackNotification\":{\"Next\":\"TerminateInstance\",\"Type\":\"Task\",\"ResultPath\":null,\"Resource\":\"arn:",
+                            "\"},\"WaitSixtyMinutes\":{\"Type\":\"Wait\",\"Seconds\":3600,\"Next\":\"GetCheckfilesCommandStatus\"},\"MakeCheckfilesFinishedMessage\":{\"Type\":\"Pass\",\"Parameters\":{\"detailType\":\"CheckfilesFinished\",\"source\":\"RunCheckfilesStepFunction\",\"detail\":{\"metadata\":{\"includes_slack_notification\":true},\"data\":{\"slack\":{\"text.$\":\"States.Format(':white_check_mark: *CheckFilesFinished* | command_status: {} | See log group checkfiles-log for details', $.checkfiles_command_status)\"}}},\"instance_id_list.$\":\"$.instance_id_list\"},\"Next\":\"SendCheckfilesFinishedSlackNotification\"},\"SendCheckfilesFinishedSlackNotification\":{\"Next\":\"TerminateInstance\",\"Type\":\"Task\",\"ResultPath\":null,\"Resource\":\"arn:",
                             {
                                 "Ref": "AWS::Partition"
                             },
