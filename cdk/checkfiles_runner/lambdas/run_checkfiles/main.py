@@ -40,5 +40,9 @@ def run_checkfiles_command(event, context):
             'CloudWatchOutputEnabled': True,
         }
     )
+    iterator = event['iterator']
 
-    return {'instance_id': instance_id, 'command_id': response['Command']['CommandId']}
+    return {'instance_id': instance_id,
+            'command_id': response['Command']['CommandId'],
+            'iterator': iterator
+            }
