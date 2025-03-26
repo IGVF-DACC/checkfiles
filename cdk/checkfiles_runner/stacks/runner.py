@@ -146,8 +146,10 @@ class RunCheckfilesStepFunction(Stack):
         initialize_counter = Pass(
             self,
             'InitializeCounter',
+
             parameters={
-                'iterator': {'index': 0, 'step': 1, 'count': 22}
+                'iterator': {'index': 0, 'step': 1, 'count': 22},
+                'number_of_files_pending.$': '$.number_of_files_pending',
             }
         )
 
@@ -332,11 +334,11 @@ class RunCheckfilesStepFunction(Stack):
             result_path=JsonPath.DISCARD,
         )
 
-        wait_for_five_minutes = Wait(
+        wait_for_sixty_minutes = Wait(
             self,
-            'WaitFiveMinutes',
+            'WaitSixtyMinutes',
             time=WaitTime.duration(
-                Duration.minutes(1)
+                Duration.minutes(60)
             )
         )
 
@@ -364,7 +366,7 @@ class RunCheckfilesStepFunction(Stack):
                 ).next(
                     increment_counter
                 ).next(
-                    wait_for_five_minutes
+                    wait_for_sixty_minutes
                 ).next(
                     get_checkfiles_command_status
                 ).next(
