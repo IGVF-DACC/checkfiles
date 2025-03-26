@@ -46,6 +46,7 @@ ZIP_FILE_FORMAT = [
     'bam',
     'bed',
     'bedpe',
+    'cram',
     'csfasta',
     'csqual',
     'csv',
@@ -180,8 +181,8 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
                 {'file_content_error': 'EOFError: Compressed file ended before the end-of-stream marker was reached'}
             )
             return validation_record
-    if file_format == 'bam':
-        bam_check_result = bam_pysam_check(local_file_path)
+    if file_format in ['bam', 'cram']:
+        bam_check_result = bam_pysam_check(local_file_path, file_format)
         if 'bam_error' in bam_check_result:
             validation_record.update_errors(bam_check_result)
         else:
@@ -277,12 +278,12 @@ def check_content_md5sum(content_md5sum, uuid, portal_auth: Optional[PortalAuth]
     return error
 
 
-def bam_pysam_check(file_path):
+def bam_pysam_check(file_path, file_format='bam'):
     try:
         pysam.quickcheck(file_path)
         result = pysam.stats(file_path)
         if 'SN\tis sorted:\t0' in result:
-            error = {'bam_error': 'the bam file is not sorted'}
+            error = {'bam_error': f'the {file_format} file is not sorted'}
             return error
         else:
             samfile = pysam.AlignmentFile(file_path, 'rb')
@@ -293,7 +294,7 @@ def bam_pysam_check(file_path):
             return info
     except pysam.utils.SamtoolsError as e:
         error = {
-            'bam_error': f'file is not valid bam file by SamtoolsError: {str(e)}'}
+            'bam_error': f'file is not valid {file_format} file by SamtoolsError: {str(e)}'}
         return error
 
 
