@@ -38,8 +38,8 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
     md5_sum_error = check_md5sum(
         submitted_md5sum, validation_record.file.md5sum)
     validation_record.update_errors(md5_sum_error)
-    if file_format == 'bam':
-        bam_check_result = bam_pysam_check(input_file_path)
+    if file_format in ['bam', 'cram']:
+        bam_check_result = bam_pysam_check(input_file_path, file_format)
         if 'bam_error' in bam_check_result:
             validation_record.update_errors(bam_check_result)
         else:
@@ -118,7 +118,7 @@ if __name__ == '__main__':
         '--assembly', choices=['GRCh38', 'GRCm39'], help='assembly of the file to be checked.')
     parser.add_argument(
         '--content_type', help='content type of the file to be checked.')
-    parser.add_argument('--file_format', choices=['bam', 'bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe',
+    parser.add_argument('--file_format', choices=['bam', 'bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe', 'cram',
                         'csv', 'fasta', 'fastq', 'mtx', 'tbi', 'tsv', 'txt', 'vcf', 'yaml'], required=True, help='file format of the file to be checked.')
     # file_format_type is required for bed file and bigBed file
     parser.add_argument('--file_format_type',
