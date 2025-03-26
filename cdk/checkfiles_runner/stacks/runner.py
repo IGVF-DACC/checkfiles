@@ -286,7 +286,7 @@ class RunCheckfilesStepFunction(Stack):
         get_checkfiles_command_status_lambda = PythonFunction(
             self,
             'GetCheckfilesCommandStatusLambda',
-            entry='checkfiles_runner/lambdas/wait_checkfiles',
+            entry='checkfiles_runner/lambdas/get_status',
             runtime=Runtime.PYTHON_3_11,
             index='main.py',
             handler='get_checkfiles_command_status',
