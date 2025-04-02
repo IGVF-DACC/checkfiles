@@ -463,7 +463,7 @@ def test_main_bam(mocker):
     }
 
 
-def test_main_crai_uncompressed(mocker):
+def test_main_crai_uncompressed():
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/uncompressed.crai'
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
@@ -477,13 +477,6 @@ def test_main_crai_uncompressed(mocker):
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
     validation_record.original_etag = 'foobar'
-
-    mock_response_session = mocker.Mock()
-    mock_response_session.json.return_value = {
-        '@graph': []
-    }
-    mocker.patch('checkfiles.checkfiles.requests.Session.get',
-                 return_value=mock_response_session)
 
     result = file_validation(portal_url, portal_auth, validation_record,
                              md5sum, output_type, file_format_type, assembly)
