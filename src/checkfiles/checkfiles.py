@@ -47,7 +47,6 @@ ZIP_FILE_FORMAT = [
     'bam',
     'bed',
     'bedpe',
-    'cram',
     'csfasta',
     'csqual',
     'csv',
@@ -70,6 +69,11 @@ ZIP_FILE_FORMAT = [
     'wig',
     'xml',
     'yaml',
+]
+# those files in general are not gzip compatible, but sometime they are.
+GZIP_CHECK_IGNORED_FILE_FORMAT = [
+    'cram',
+    'crai',
 ]
 
 NO_HEADER_CONTENT_TYPE = [
@@ -242,6 +246,8 @@ def get_header_row(file_path, is_gzipped):
 
 def check_valid_gzipped_file_format(is_gzipped, file_format, zip_file_format=ZIP_FILE_FORMAT):
     error = {}
+    if file_format in GZIP_CHECK_IGNORED_FILE_FORMAT:
+        return error
     if file_format in zip_file_format and not is_gzipped:
         error = {'gzip': f'{file_format} file should be gzipped'}
     elif file_format not in zip_file_format and is_gzipped:
