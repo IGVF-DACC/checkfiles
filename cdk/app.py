@@ -5,7 +5,6 @@ from aws_cdk import Environment
 
 from checkfiles_runner.stacks.runner import RunCheckfilesStepFunctionProps
 from checkfiles_runner.stacks.runner import RunCheckfilesStepFunction
-from checkfiles_runner.stacks.runner import RunCheckfilesStepFunctionSandbox
 from checkfiles_runner.stacks.runner import RunCheckfilesStepFunctionProduction
 from checkfiles_runner.config import config
 
