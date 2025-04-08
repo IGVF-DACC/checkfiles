@@ -18,14 +18,8 @@ $ python -m venv venv
 $ pip install -r requirements.txt -r requirements-dev.txt
 ```
 
-Deploy sandbox stack:
+Deploy lattice stack:
 
 ```bash
-$ cdk deploy RunCheckfilesStepFunctionSandbox --profile igvf-staging
-```
-
-Deploy production stack:
-
-```bash
-$ cdk deploy RunCheckfilesStepFunctionProduction --profile igvf-prod
+$ cdk deploy RunCheckfilesStepFunctionSandbox --profile lattice-prod
 ```
