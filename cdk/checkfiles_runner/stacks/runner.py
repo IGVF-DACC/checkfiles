@@ -76,7 +76,7 @@ class RunCheckfilesStepFunction(Stack):
                 'source': 'RunCheckfilesStepFunction',
                 'detail': {
                     'metadata': {
-                        'includes_slack_notification': True
+                        'includes_slack_notification': False
                     },
                     'data': {
                         'slack': {
@@ -100,7 +100,7 @@ class RunCheckfilesStepFunction(Stack):
                 'source': 'RunCheckfilesStepFunction',
                 'detail': {
                     'metadata': {
-                        'includes_slack_notification': True
+                        'includes_slack_notification': False
                     },
                     'data': {
                         'slack': {
@@ -341,7 +341,7 @@ class RunCheckfilesStepFunction(Stack):
                 Duration.minutes(60)
             )
         )
-        
+
         send_pending_files_slack_notification = self.make_slack_notification_task(
             'SendPendingFilesCheckedSlackNotification')
         send_checkfiles_finished_slack_notification = self.make_slack_notification_task(
