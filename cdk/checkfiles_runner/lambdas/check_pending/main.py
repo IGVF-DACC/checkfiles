@@ -12,7 +12,7 @@ logging.basicConfig(
 )
 
 
-PENDING_FILES_SEARCH = '/search?type=File&upload_status=pending'
+PENDING_FILES_SEARCH = '/search/?type=SequenceAlignmentFile&lab.title=Benjamin+Humphreys%2C+WashU'
 
 
 def get_secret_arn():

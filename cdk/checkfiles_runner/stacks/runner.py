@@ -341,7 +341,7 @@ class RunCheckfilesStepFunction(Stack):
                 Duration.minutes(60)
             )
         )
-
+        
         send_pending_files_slack_notification = self.make_slack_notification_task(
             'SendPendingFilesCheckedSlackNotification')
         send_checkfiles_finished_slack_notification = self.make_slack_notification_task(
@@ -427,11 +427,6 @@ class RunCheckfilesStepFunction(Stack):
             result_path=JsonPath.DISCARD,
         )
         return task
-
-
-class RunCheckfilesStepFunctionSandbox(RunCheckfilesStepFunction):
-    pass
-
-
+    
 class RunCheckfilesStepFunctionProduction(RunCheckfilesStepFunction):
     pass

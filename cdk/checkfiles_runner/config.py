@@ -7,5 +7,5 @@ config = {
     'instance_profile_arn_production': 'arn:aws:iam::585222078325:instance-profile/checkfiles-instance',
     'instance_security_group_production': 'sg-b90e6acb',
     'backend_uri_production': 'https://www.lattice-data.org',
-    'checkfiles_tag_production': 'version-0',
+    'checkfiles_tag_production': 'version-alpha',
 }
