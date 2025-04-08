@@ -3,7 +3,6 @@ import datetime
 import gzip
 import json
 import logging
-from math import floor
 import multiprocessing
 import os
 import re
@@ -13,122 +12,27 @@ import shutil
 import subprocess
 import sys
 import tempfile
-
-import pysam
-
 from collections import namedtuple
+from math import floor
 from typing import Optional
 
+import pysam
 from FastaValidator import fasta_validator
 from frictionless import system, validate, describe, Schema, Dialect
 from seqspec.utils import load_spec as seqspec_load_spec
 from seqspec.seqspec_version import version as seqspec_version
 from seqspec.seqspec_check import run_check as seqspec_check
 
-
-from guide_rna_sequences_check import GuideRnaSequencesCheck
 import file
+import logformatter
+from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE
+from constants import MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE, ASSEMBLY_REPORT_FILE_PATH, ZIP_FILE_FORMAT
+from constants import GZIP_CHECK_IGNORED_FILE_FORMAT, NO_HEADER_CONTENT_TYPE, TABULAR_FORMAT, TABULAR_FILE_SCHEMAS
+from constants import VALIDATE_FILES_ARGS, ASSEMBLY_TO_CHROMINFO_PATH_MAP, ASSEMBLY, ASSEMBLY_TO_SEQUENCE_FILE_MAP
+from constants import FASTA_VALIDATION_INFO, SEQSPEC_FILE_VERSION
+from guide_rna_sequences_check import GuideRnaSequencesCheck
 from version import get_checkfiles_version
 
-import logformatter
-
-
-SCHEMA_DIR = 'src/schemas/'
-CHROM_INFO_DIR = SCHEMA_DIR + 'genome_builds'
-MAX_NUM_ERROR_FOR_TABULAR_FILE = 1000
-MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE = 2
-ASSEMBLY_REPORT_FILE_PATH = {
-    # this file is downloaded here:https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_assembly_report.txt
-    'GRCh38': 'src/checkfiles/supporting_files/GCF_000001405.40_GRCh38.p14_assembly_report.txt',
-    # this file is downloaded here: https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/635/GCF_000001635.27_GRCm39/GCF_000001635.27_GRCm39_assembly_report.txt
-    'GRCm39': 'src/checkfiles/supporting_files/GCF_000001635.27_GRCm39_assembly_report.txt',
-}
-ZIP_FILE_FORMAT = [
-    'bam',
-    'bed',
-    'bedpe',
-    'csfasta',
-    'csqual',
-    'csv',
-    'dat',
-    'fasta',
-    'fastq',
-    'gaf',
-    'gds',
-    'gff',
-    'gtf',
-    'mtx',
-    'obo',
-    'owl',
-    'tagAlign',
-    'tar',
-    'tbi',
-    'tsv',
-    'txt',
-    'vcf',
-    'wig',
-    'xml',
-    'yaml',
-]
-# those files in general are not gzip compatible, but sometime they are.
-GZIP_CHECK_IGNORED_FILE_FORMAT = [
-    'cram',
-    'crai',
-]
-
-NO_HEADER_CONTENT_TYPE = [
-    'fragments'
-]
-TABULAR_FORMAT = [
-    'tsv',
-    'csv',
-]
-
-TABULAR_FILE_SCHEMAS = {
-    'guide RNA sequences': 'src/schemas/table_schemas/guide_rna_sequences.json',
-    'MPRA sequence designs': 'src/schemas/table_schemas/mpra_sequence_designs.json',
-    'prime editing guide RNA sequences': 'src/schemas/table_schemas/prime_editing_guide_rna_sequences.json',
-}
-
-VALIDATE_FILES_ARGS = {
-    ('bed', 'bed3'): ['-type=bed3'],
-    ('bed', 'bed3+'): ['-tab', '-type=bed3+'],
-    ('bed', 'bed5'): ['-type=bed5'],
-    ('bed', 'bed6'): ['-type=bed6'],
-    ('bed', 'bed6+'): ['-tab', '-type=bed6+'],
-    ('bed', 'bed9'): ['-type=bed9'],
-    ('bed', 'bed9+'): ['-tab', '-type=bed9+'],
-    ('bed', 'bed12'): ['-type=bed12'],
-    ('bed', 'bedGraph'): ['-type=bedGraph'],
-    ('bed', 'mpra_starr'): ['-type=bed6+5', '-as=src/schemas/as/mpra_starr.as'],
-    ('bedpe', None): ['-type=bed3+'],
-    ('bigBed', 'bed3'): ['-type=bigBed3'],
-    ('bigBed', 'bed3+'): ['-tab', '-type=bigBed3+'],
-    ('bigWig', None): ['-type=bigWig'],
-    ('bigInteract', None): ['-type=bigBed5+13', '-as=src/schemas/as/interact.as'],
-
-}
-
-ASSEMBLY_TO_CHROMINFO_PATH_MAP = {
-    'GRCh38': 'src/schemas/genome_builds/chrom_sizes/GRCh38.chrom.sizes',
-    'GRCm39': 'src/schemas/genome_builds/chrom_sizes/mm39.chrom.sizes',
-}
-
-ASSEMBLY = ['GRCh38', 'GRCm39']
-
-ASSEMBLY_TO_SEQUENCE_FILE_MAP = {
-    'GRCh38': 'src/checkfiles/supporting_files/grch38.fa',
-    'GRCm39': 'src/checkfiles/supporting_files/grcm39.fa',
-}
-
-FASTA_VALIDATION_INFO = {
-    0: 'this is a valid fasta file',
-    1: 'the first line does not start with a > (rule 1 violated).',
-    2: 'there are duplicate sequence identifiers in the file (rule 7 violated)',
-    4: 'there are characters in a sequence line other than [A-Za-z]'
-}
-
-SEQSPEC_FILE_VERSION = '0.3.0'
 
 PortalAuth = namedtuple('PortalAuth', ['portal_key_id', 'portal_secret_key'])
 
