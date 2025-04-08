@@ -463,6 +463,62 @@ def test_main_bam(mocker):
     }
 
 
+def test_main_crai_uncompressed():
+    portal_url = 'url_to_portal'
+    file_path = 'src/tests/data/uncompressed.crai'
+    uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
+    md5sum = '154e39d90e082c5a9d0946ce581fb2f3'
+    file_format = 'crai'
+    output_type = None
+    file_format_type = None
+    assembly = None
+    portal_auth = None
+
+    file = get_file(file_path, file_format)
+    validation_record = FileValidationRecord(file, uuid)
+    validation_record.original_etag = 'foobar'
+
+    result = file_validation(portal_url, portal_auth, validation_record,
+                             md5sum, output_type, file_format_type, assembly)
+    assert result.validation_success == True
+    assert result.info == {
+        'checkfiles_version': get_checkfiles_version(),
+        'file_size': 282843,
+    }
+
+
+def test_main_crai_gzipped(mocker):
+    portal_url = 'url_to_portal'
+    file_path = 'src/tests/data/gzipped.crai'
+    uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
+    md5sum = '0bcf7eefc757d75a50d3e3dbf06c7a27'
+    file_format = 'crai'
+    output_type = None
+    file_format_type = None
+    assembly = None
+    portal_auth = None
+
+    file = get_file(file_path, file_format)
+    validation_record = FileValidationRecord(file, uuid)
+    validation_record.original_etag = 'foobar'
+
+    mock_response_session = mocker.Mock()
+    mock_response_session.json.return_value = {
+        '@graph': []
+    }
+    mocker.patch('checkfiles.checkfiles.requests.Session.get',
+                 return_value=mock_response_session)
+
+    result = file_validation(portal_url, portal_auth, validation_record,
+                             md5sum, output_type, file_format_type, assembly)
+    assert result.validation_success == True
+    assert result.info == {
+        'checkfiles_version': get_checkfiles_version(),
+        'file_size': 129671,
+        'content_md5sum': '154e39d90e082c5a9d0946ce581fb2f3'
+    }
+
+
 def test_main_tabular_tsv(mocker):
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/guide_rna_sequences_invalid.tsv'
