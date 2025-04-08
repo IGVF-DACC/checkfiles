@@ -8,9 +8,9 @@ ENV VIRTUAL_ENV=/opt/venv
 
 RUN useradd -u 1444 -m checkfiles
 
-# default aws buckdet is the test folder: checkfiles-test in igvf-dev
+# default aws buckdet is the test folder: lattice-files
 ARG AWS_BUCKET_NAME
-ENV AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-checkfiles-test}
+ENV AWS_BUCKET_NAME=${AWS_BUCKET_NAME:lattice-files}
 ENV AWS_DATA_DIR /s3
 RUN apt-get update && apt-get install -y \
     python3-pip \
