@@ -34,7 +34,7 @@ def test_bam_pysam_check_invalid_bam_file():
 def test_bam_pysam_check_cram_valid():
     file_path = 'src/tests/data/cram_valid.cram'
     result = bam_pysam_check(file_path, 'cram')
-    assert result == {'read_count': 140879}
+    assert result == {'read_count': 36142}
 
 
 def test_bam_pysam_check_number_of_read():

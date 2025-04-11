@@ -6,11 +6,7 @@ import file
 import logformatter
 from checkfiles import vcf_sequence_check, seqspec_file_check
 from checkfiles import check_valid_gzipped_file_format, check_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, fasta_check, tabular_file_check, validate_files_check, validate_files_fastq_check
-from constants import SCHEMA_DIR, CHROM_INFO_DIR, MAX_NUM_ERROR_FOR_TABULAR_FILE
-from constants import MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE, ASSEMBLY_REPORT_FILE_PATH, ZIP_FILE_FORMAT
-from constants import GZIP_CHECK_IGNORED_FILE_FORMAT, NO_HEADER_CONTENT_TYPE, TABULAR_FORMAT, TABULAR_FILE_SCHEMAS
-from constants import VALIDATE_FILES_ARGS, ASSEMBLY_TO_CHROMINFO_PATH_MAP, ASSEMBLY, ASSEMBLY_TO_SEQUENCE_FILE_MAP
-from constants import FASTA_VALIDATION_INFO, SEQSPEC_FILE_VERSION
+from constants import  MAX_NUM_ERROR_FOR_TABULAR_FILE
 from version import get_checkfiles_version
 
 logger = logging.getLogger(__name__)
