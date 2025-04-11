@@ -6,7 +6,7 @@ import file
 import logformatter
 from checkfiles import vcf_sequence_check, seqspec_file_check
 from checkfiles import check_valid_gzipped_file_format, check_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, fasta_check, tabular_file_check, validate_files_check, validate_files_fastq_check
-from constants import  MAX_NUM_ERROR_FOR_TABULAR_FILE
+from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE
 from version import get_checkfiles_version
 
 logger = logging.getLogger(__name__)
