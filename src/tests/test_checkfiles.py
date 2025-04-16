@@ -1,6 +1,8 @@
 import datetime
+import gzip
+from io import BytesIO
 
-from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check, vcf_sequence_check, seqspec_file_check
+from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check, get_reference_file_path, vcf_sequence_check, seqspec_file_check, cram_pysam_check
 from checkfiles.checkfiles import make_content_md5sum_search_url, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, file_validation
 from checkfiles.checkfiles import get_validate_files_args, validate_files_check, validate_files_fastq_check, tabular_file_check
 from checkfiles.checkfiles import PortalAuth
@@ -30,11 +32,52 @@ def test_bam_pysam_check_invalid_bam_file():
     error = bam_pysam_check(file_path)
     assert error == {'bam_error': "file is not valid bam file by SamtoolsError: 'samtools returned with error 8: stdout=, stderr=src/tests/data/ENCFF594AYI.fastq.gz had no targets in header.\\n'"}
 
+def test_get_reference_file_path(mocker):
+   
+    reference_file = '/reference-files/TSTFI36924773/'
+    portal_auth = None
+    fasta_content = '>chr1\nACTG\n'
+    gzipped_data = BytesIO()
+    with gzip.GzipFile(fileobj=gzipped_data, mode='wb') as f:
+        f.write(fasta_content.encode('utf-8'))
+    gzipped_data.seek(0)
+    # Mock requests.Session and .get()
+    mock_session = mocker.Mock()
+    mock_session.get.return_value.status_code = 200
+    mock_session.get.return_value.content = gzipped_data.read()
+    mocker.patch('checkfiles.checkfiles.requests.Session', return_value=mock_session)
 
-def test_bam_pysam_check_cram_valid():
+
+    reference_file_path = get_reference_file_path(reference_file, portal_auth)
+    assert reference_file_path == 'src/checkfiles/supporting_files/TSTFI36924773.fasta'
+    
+def test_cram_pysam_check_cram_valid(mocker):
     file_path = 'src/tests/data/cram_valid.cram'
-    result = bam_pysam_check(file_path, 'cram')
+    reference_file_path = 'mock_reference.fasta'
+
+    # Mock the first Popen (samtools view)
+    mock_p1 = mocker.MagicMock()
+    mock_p1.__enter__.return_value.communicate.return_value = ("", "")
+    mock_p1.__enter__.return_value.stdout = mocker.MagicMock()
+    mock_p1.__enter__.return_value.stdout.close = mocker.Mock()
+
+    # Mock the second Popen (samtools stats)
+    mock_p2 = mocker.MagicMock()
+    mock_p2.__enter__.return_value.communicate.return_value = ("SN\tis sorted:\t1", "")
+
+    # Patch subprocess.Popen to return mock_p1 then mock_p2
+    mocker.patch('checkfiles.checkfiles.subprocess.Popen', side_effect=[mock_p1, mock_p2])
+
+    # Mock AlignmentFile and count
+    mock_cram = mocker.Mock()
+    mock_cram.count.return_value = 36142
+    mock_alignment_file = mocker.patch('checkfiles.checkfiles.pysam.AlignmentFile')
+    mock_alignment_file.return_value.__enter__.return_value = mock_cram
+
+    result = cram_pysam_check(file_path, reference_file_path)
+
     assert result == {'read_count': 36142}
+    
 
 
 def test_bam_pysam_check_number_of_read():
@@ -366,6 +409,7 @@ def test_main_empty_file(mocker):
     file_format_type = None
     assembly = None
     portal_auth = None
+    reference_files = None
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
@@ -381,7 +425,7 @@ def test_main_empty_file(mocker):
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_session)
     result = file_validation(portal_url, portal_auth, validation_record,
-                             md5sum, output_type, file_format_type, assembly)
+                             md5sum, output_type, file_format_type, assembly, reference_files)
     assert result.errors == {'file_size': 'file has zero size'}
 
 
@@ -396,6 +440,7 @@ def test_main_fastq(mocker):
     file_format_type = None
     assembly = None
     portal_auth = None
+    reference_files = None
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
@@ -411,7 +456,7 @@ def test_main_fastq(mocker):
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_session)
     result = file_validation(portal_url, portal_auth, validation_record,
-                             md5sum, output_type, file_format_type, assembly)
+                             md5sum, output_type, file_format_type, assembly, reference_files)
 
     assert result.validation_success == False
     assert result.original_etag == 'foobar'
@@ -440,6 +485,7 @@ def test_main_bam(mocker):
     file_format_type = None
     assembly = None
     portal_auth = None
+    reference_files = None
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
@@ -453,7 +499,7 @@ def test_main_bam(mocker):
                  return_value=mock_response_session)
 
     result = file_validation(portal_url, portal_auth, validation_record,
-                             md5sum, output_type, file_format_type, assembly)
+                             md5sum, output_type, file_format_type, assembly, reference_files)
     assert result.validation_success == True
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
@@ -473,13 +519,13 @@ def test_main_crai_uncompressed():
     file_format_type = None
     assembly = None
     portal_auth = None
-
+    reference_files = None
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
     validation_record.original_etag = 'foobar'
 
     result = file_validation(portal_url, portal_auth, validation_record,
-                             md5sum, output_type, file_format_type, assembly)
+                             md5sum, output_type, file_format_type, assembly, reference_files)
     assert result.validation_success == True
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
@@ -497,6 +543,7 @@ def test_main_crai_gzipped(mocker):
     file_format_type = None
     assembly = None
     portal_auth = None
+    reference_files = None
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
@@ -510,7 +557,7 @@ def test_main_crai_gzipped(mocker):
                  return_value=mock_response_session)
 
     result = file_validation(portal_url, portal_auth, validation_record,
-                             md5sum, output_type, file_format_type, assembly)
+                             md5sum, output_type, file_format_type, assembly, reference_files)
     assert result.validation_success == True
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
@@ -529,6 +576,7 @@ def test_main_tabular_tsv(mocker):
     file_format_type = None
     assembly = None
     portal_auth = None
+    reference_files = None
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
@@ -542,7 +590,7 @@ def test_main_tabular_tsv(mocker):
                  return_value=mock_response_get_local_file_path)
 
     result = file_validation(portal_url, portal_auth, validation_record,
-                             md5sum, output_type, file_format_type, assembly)
+                             md5sum, output_type, file_format_type, assembly, reference_files)
     assert result.validation_success == False
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.info == {
@@ -574,6 +622,7 @@ def test_main_tabular_csv(mocker):
     file_format_type = None
     assembly = None
     portal_auth = None
+    reference_files = None
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
@@ -587,7 +636,7 @@ def test_main_tabular_csv(mocker):
                  return_value=mock_response_get_local_file_path)
 
     result = file_validation(portal_url, portal_auth, validation_record,
-                             md5sum, output_type, file_format_type, assembly)
+                             md5sum, output_type, file_format_type, assembly, reference_files)
     assert result.validation_success == False
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.info == {
@@ -619,6 +668,7 @@ def test_main_tabular_skip_type_error(mocker):
     file_format_type = None
     assembly = None
     portal_auth = None
+    reference_files = None
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
@@ -632,7 +682,7 @@ def test_main_tabular_skip_type_error(mocker):
                  return_value=mock_response_get_local_file_path)
 
     result = file_validation(portal_url, portal_auth, validation_record,
-                             md5sum, output_type, file_format_type, assembly)
+                             md5sum, output_type, file_format_type, assembly, reference_files)
     assert result.validation_success == False
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.errors == {'gzip': 'csv file should be gzipped'}
@@ -677,6 +727,7 @@ def test_main_bed(mocker):
     file_format_type = 'bed3'
     assembly = 'GRCh38'
     portal_auth = None
+    reference_files = None
 
     file = get_file(file_path, file_format)
     validation_record = FileValidationRecord(file, uuid)
@@ -693,7 +744,7 @@ def test_main_bed(mocker):
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_session)
     result = file_validation(portal_url, portal_auth, validation_record,
-                             md5sum, output_type, file_format_type, assembly)
+                             md5sum, output_type, file_format_type, assembly, reference_files)
     assert result.validation_success == False
     assert result.uuid == 'a3c64b51-5838-4ad2-a6c3-dc289786f626'
     assert result.info == {

@@ -1,3 +1,4 @@
+ 
 
 ASSEMBLY = ['GRCh38', 'GRCm39']
 
@@ -38,6 +39,8 @@ MAX_NUM_ERROR_FOR_TABULAR_FILE = 1000
 NO_HEADER_CONTENT_TYPE = [
     'fragments'
 ]
+
+SUPPORTING_FILES_FOLDER = 'src/checkfiles/supporting_files'
 
 TABULAR_FILE_SCHEMAS = {
     'guide RNA sequences': 'src/schemas/table_schemas/guide_rna_sequences.json',
