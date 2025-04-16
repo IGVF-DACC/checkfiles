@@ -104,22 +104,22 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
                 f'{uuid} the cram file is missing reference files.')
             validation_record.update_errors(
                 {'cram_error': 'the cram file is missing reference files.'})
-            return validation_record
-        try:
-            reference_file_path = get_reference_file_path(
-                reference_files[0], portal_auth)
-        except Exception as e:
-            logger.warning(
-                f'{uuid} failed to download reference file: {str(e)}')
-            validation_record.update_errors(
-                {'cram_error': f'failed to download reference file: {str(e)}'})
-            return validation_record
-        cram_check_result = cram_pysam_check(
-            local_file_path, reference_file_path)
-        if 'cram_error' in cram_check_result:
-            validation_record.update_errors(cram_check_result)
         else:
-            validation_record.update_info(cram_check_result)
+            try:
+                reference_file_path = get_reference_file_path(
+                    reference_files[0], portal_auth)
+            except Exception as e:
+                logger.warning(
+                    f'{uuid} failed to download reference file: {str(e)}')
+                validation_record.update_errors(
+                    {'cram_error': f'failed to download reference file: {str(e)}'})
+            if reference_file_path:
+                cram_check_result = cram_pysam_check(
+                    local_file_path, reference_file_path)
+                if 'cram_error' in cram_check_result:
+                    validation_record.update_errors(cram_check_result)
+                else:
+                    validation_record.update_info(cram_check_result)
     elif file_format == 'fastq':
         validate_files_fastq_check_error = validate_files_fastq_check(
             local_file_path)
