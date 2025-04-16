@@ -247,7 +247,7 @@ def get_reference_file_path(reference_file, portal_auth):
         response = session.get(download_link)
         if response.status_code == 200:
             try:
-                # Decompress gzip and write .fa file
+                # Decompress gzip and write .fasta file
                 with gzip.open(BytesIO(response.content), 'rt') as gz_file:
                     with open(reference_file_path, 'w') as f:
                         f.write(gz_file.read())
@@ -636,6 +636,7 @@ def main(args):
             validate_onlist_files = file_metadata.get(
                 'validate_onlist_files', True)
             submitted_md5sum = file_metadata['md5sum']
+            reference_files = file_metadata.get('reference_files')
             file_validation_record = get_file_validation_record_from_metadata(
                 file_metadata)
             etag_original = fetch_etag_for_uuid(
