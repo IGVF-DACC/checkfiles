@@ -46,7 +46,8 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
         else:
             validation_record.update_info(bam_check_result)
     elif file_format == 'cram':
-        cram_check_result = cram_pysam_check(input_file_path, reference_file_path)
+        cram_check_result = cram_pysam_check(
+            input_file_path, reference_file_path)
         if 'cram_error' in cram_check_result:
             validation_record.update_errors(cram_check_result)
         else:

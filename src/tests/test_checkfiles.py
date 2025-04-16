@@ -32,8 +32,9 @@ def test_bam_pysam_check_invalid_bam_file():
     error = bam_pysam_check(file_path)
     assert error == {'bam_error': "file is not valid bam file by SamtoolsError: 'samtools returned with error 8: stdout=, stderr=src/tests/data/ENCFF594AYI.fastq.gz had no targets in header.\\n'"}
 
+
 def test_get_reference_file_path(mocker):
-   
+
     reference_file = '/reference-files/TSTFI36924773/'
     portal_auth = None
     fasta_content = '>chr1\nACTG\n'
@@ -45,39 +46,42 @@ def test_get_reference_file_path(mocker):
     mock_session = mocker.Mock()
     mock_session.get.return_value.status_code = 200
     mock_session.get.return_value.content = gzipped_data.read()
-    mocker.patch('checkfiles.checkfiles.requests.Session', return_value=mock_session)
-
+    mocker.patch('checkfiles.checkfiles.requests.Session',
+                 return_value=mock_session)
 
     reference_file_path = get_reference_file_path(reference_file, portal_auth)
     assert reference_file_path == 'src/checkfiles/supporting_files/TSTFI36924773.fasta'
-    
+
+
 def test_cram_pysam_check_cram_valid(mocker):
     file_path = 'src/tests/data/cram_valid.cram'
     reference_file_path = 'mock_reference.fasta'
 
     # Mock the first Popen (samtools view)
     mock_p1 = mocker.MagicMock()
-    mock_p1.__enter__.return_value.communicate.return_value = ("", "")
+    mock_p1.__enter__.return_value.communicate.return_value = ('', '')
     mock_p1.__enter__.return_value.stdout = mocker.MagicMock()
     mock_p1.__enter__.return_value.stdout.close = mocker.Mock()
 
     # Mock the second Popen (samtools stats)
     mock_p2 = mocker.MagicMock()
-    mock_p2.__enter__.return_value.communicate.return_value = ("SN\tis sorted:\t1", "")
+    mock_p2.__enter__.return_value.communicate.return_value = (
+        'SN\tis sorted:\t1', '')
 
     # Patch subprocess.Popen to return mock_p1 then mock_p2
-    mocker.patch('checkfiles.checkfiles.subprocess.Popen', side_effect=[mock_p1, mock_p2])
+    mocker.patch('checkfiles.checkfiles.subprocess.Popen',
+                 side_effect=[mock_p1, mock_p2])
 
     # Mock AlignmentFile and count
     mock_cram = mocker.Mock()
     mock_cram.count.return_value = 36142
-    mock_alignment_file = mocker.patch('checkfiles.checkfiles.pysam.AlignmentFile')
+    mock_alignment_file = mocker.patch(
+        'checkfiles.checkfiles.pysam.AlignmentFile')
     mock_alignment_file.return_value.__enter__.return_value = mock_cram
 
     result = cram_pysam_check(file_path, reference_file_path)
 
     assert result == {'read_count': 36142}
-    
 
 
 def test_bam_pysam_check_number_of_read():

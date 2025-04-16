@@ -106,14 +106,16 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
                 {'cram_error': 'the cram file is missing reference files.'})
             return validation_record
         try:
-            reference_file_path = get_reference_file_path(reference_files[0], portal_auth)
+            reference_file_path = get_reference_file_path(
+                reference_files[0], portal_auth)
         except Exception as e:
             logger.warning(
                 f'{uuid} failed to download reference file: {str(e)}')
             validation_record.update_errors(
                 {'cram_error': f'failed to download reference file: {str(e)}'})
             return validation_record
-        cram_check_result = cram_pysam_check(local_file_path, reference_file_path)
+        cram_check_result = cram_pysam_check(
+            local_file_path, reference_file_path)
         if 'cram_error' in cram_check_result:
             validation_record.update_errors(cram_check_result)
         else:
@@ -229,11 +231,13 @@ def bam_pysam_check(file_path):
         error = {
             'bam_error': f'file is not valid bam file by SamtoolsError: {str(e)}'}
         return error
-    
+
+
 def get_reference_file_path(reference_file, portal_auth):
     # reference_file looks like this: /reference-files/TSTFI36924773/
     accession = reference_file.split('/')[-2]
-    reference_file_path = os.path.join(SUPPORTING_FILES_FOLDER, accession + '.fasta')
+    reference_file_path = os.path.join(
+        SUPPORTING_FILES_FOLDER, accession + '.fasta')
     if not os.path.exists(reference_file_path):
         # a download link looks like this: https://api.sandbox.igvf.org/reference-files/TSTFI36924773/@@download/TSTFI36924773.fasta.gz
         download_link = f'https://api.sandbox.igvf.org/reference-files/{accession}/@@download/{accession}.fasta.gz'
@@ -248,26 +252,28 @@ def get_reference_file_path(reference_file, portal_auth):
                     with open(reference_file_path, 'w') as f:
                         f.write(gz_file.read())
             except Exception as e:
-                raise RuntimeError(f"Failed to decompress or save the reference file: {e}")
+                raise RuntimeError(
+                    f'Failed to decompress or save the reference file: {e}')
         else:
-            raise RuntimeError(f"Failed to download file: {download_link} (status {response.status_code})")
+            raise RuntimeError(
+                f'Failed to download file: {download_link} (status {response.status_code})')
     return reference_file_path
 
-    
+
 def cram_pysam_check(file_path, reference_file_path):
     error = {}
     try:
         pysam.quickcheck(file_path)
         # First command: samtools view
         view_cmd = [
-            "samtools", "view",
-            "-h",
-            "-T", reference_file_path,
+            'samtools', 'view',
+            '-h',
+            '-T', reference_file_path,
             file_path
         ]
         # Second command: samtools stats -
         stats_cmd = [
-            "samtools", "stats", "-"
+            'samtools', 'stats', '-'
         ]
 
         with subprocess.Popen(view_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p1:
@@ -284,7 +290,7 @@ def cram_pysam_check(file_path, reference_file_path):
                 if 'SN\tis sorted:\t0' in output:
                     error = {'cram_error': f'the cram file is not sorted'}
                     return error
-                with pysam.AlignmentFile(file_path, "rc", reference_filename=reference_file_path) as cram:
+                with pysam.AlignmentFile(file_path, 'rc', reference_filename=reference_file_path) as cram:
 
                     count = cram.count(until_eof=True)
                     logger.info(f'the number of reads: {count}')
@@ -295,7 +301,6 @@ def cram_pysam_check(file_path, reference_file_path):
         error = {
             'cram_error': f'file is not valid cram file by SamtoolsError: {str(e)}'}
         return error
-
 
 
 def fastq_get_average_read_length_and_number_of_reads(file_path):
