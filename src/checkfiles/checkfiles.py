@@ -107,7 +107,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         else:
             try:
                 reference_file_path = get_reference_file_path(
-                    reference_files[0], portal_auth)
+                    reference_files[0], portal_url, portal_auth)
             except Exception as e:
                 logger.warning(
                     f'{uuid} failed to download reference file: {str(e)}')
@@ -233,74 +233,76 @@ def bam_pysam_check(file_path):
         return error
 
 
-def get_reference_file_path(reference_file, portal_auth):
+def get_reference_file_path(reference_file, portal_url, portal_auth):
     # reference_file looks like this: /reference-files/TSTFI36924773/
-    accession = reference_file.split('/')[-2]
-    reference_file_path = os.path.join(
-        SUPPORTING_FILES_FOLDER, accession + '.fasta')
-    if not os.path.exists(reference_file_path):
-        # a download link looks like this: https://api.sandbox.igvf.org/reference-files/TSTFI36924773/@@download/TSTFI36924773.fasta.gz
-        download_link = f'https://api.sandbox.igvf.org/reference-files/{accession}/@@download/{accession}.fasta.gz'
-        # download the file
-        session = requests.Session()
-        session.auth = portal_auth
-        response = session.get(download_link)
-        if response.status_code == 200:
-            try:
-                # Decompress gzip and write .fasta file
-                with gzip.open(BytesIO(response.content), 'rt') as gz_file:
-                    with open(reference_file_path, 'w') as f:
-                        f.write(gz_file.read())
-            except Exception as e:
-                raise RuntimeError(
-                    f'Failed to decompress or save the reference file: {e}')
-        else:
-            raise RuntimeError(
-                f'Failed to download file: {download_link} (status {response.status_code})')
+    search_url = f'{portal_url}{reference_file}'
+    session = requests.Session()
+    session.auth = portal_auth
+    metadata = session.get(search_url).json()
+    reference_file_path = os.environ.get(
+        'HOME') + make_local_path_from_s3_uri(metadata['s3_uri'])
     return reference_file_path
 
 
+def is_zipped(file_path):
+    try:
+        gzip.GzipFile(filename=file_path).read(1)
+        return True
+    except gzip.BadGzipFile:
+        return False
+
+
 def cram_pysam_check(file_path, reference_file_path):
-    error = {}
+    info = {}
+    # unzip the reference file to a temporary file using tempfile if reference_file_path is gzipped
+    gzipped = is_zipped(reference_file_path)
+    if gzipped:
+        temp_file = tempfile.NamedTemporaryFile(
+            delete=False)  # Prevent auto-delete
+        with gzip.open(reference_file_path, 'rb') as f_in:
+            with open(temp_file.name, 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+        reference_file_path = temp_file.name
     try:
         pysam.quickcheck(file_path)
+
         # First command: samtools view
-        view_cmd = [
-            'samtools', 'view',
-            '-h',
-            '-T', reference_file_path,
-            file_path
-        ]
+        view_cmd = shlex.split(
+            f'samtools view -h -T {reference_file_path} {file_path}')
+
         # Second command: samtools stats -
-        stats_cmd = [
-            'samtools', 'stats', '-'
-        ]
+        stats_cmd = shlex.split('samtools stats -')
 
         with subprocess.Popen(view_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p1:
             with subprocess.Popen(stats_cmd, stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p2:
                 p1.stdout.close()  # Let p1 receive SIGPIPE if p2 exits
                 _, err_view = p1.communicate()  # Capture stderr from view
                 if err_view:
-                    error = {'cram_error': f'samtools view error: {err_view}'}
-                    return error
-                output, err_stats = p2.communicate()
-                if err_stats:
-                    error = {'cram_error': f'samtools stats error: {err_stats}'}
-                    return error
-                if 'SN\tis sorted:\t0' in output:
-                    error = {'cram_error': f'the cram file is not sorted'}
-                    return error
-                with pysam.AlignmentFile(file_path, 'rc', reference_filename=reference_file_path) as cram:
-
-                    count = cram.count(until_eof=True)
-                    logger.info(f'the number of reads: {count}')
-                    info = {'read_count': count}
-                    return info
+                    info = {'cram_error': f'samtools view error: {err_view}'}
+                else:
+                    output, err_stats = p2.communicate()
+                    if err_stats:
+                        info = {
+                            'cram_error': f'samtools stats error: {err_stats}'}
+                    else:
+                        if 'SN\tis sorted:\t0' in output:
+                            info = {'cram_error': f'the cram file is not sorted'}
+                        else:
+                            with pysam.AlignmentFile(file_path, 'rc', reference_filename=reference_file_path) as cram:
+                                count = cram.count(until_eof=True)
+                                logger.info(f'the number of reads: {count}')
+                                info = {'read_count': count}
 
     except pysam.utils.SamtoolsError as e:
-        error = {
+        info = {
             'cram_error': f'file is not valid cram file by SamtoolsError: {str(e)}'}
-        return error
+    except subprocess.CalledProcessError as e:
+        info['cram_error'] = f'Subprocess error ({e.cmd}): {e.stderr.strip()}'
+    finally:
+        if gzipped:
+            temp_file.close()
+            os.unlink(temp_file.name)  # Manually remove the file
+    return info
 
 
 def fastq_get_average_read_length_and_number_of_reads(file_path):

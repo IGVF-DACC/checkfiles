@@ -37,26 +37,26 @@ def test_get_reference_file_path(mocker):
 
     reference_file = '/reference-files/TSTFI36924773/'
     portal_auth = None
-    fasta_content = '>chr1\nACTG\n'
-    gzipped_data = BytesIO()
-    with gzip.GzipFile(fileobj=gzipped_data, mode='wb') as f:
-        f.write(fasta_content.encode('utf-8'))
-    gzipped_data.seek(0)
+    portal_url = 'url_to_portal'
+
     # Mock requests.Session and .get()
     mock_session = mocker.Mock()
-    mock_session.get.return_value.status_code = 200
-    mock_session.get.return_value.content = gzipped_data.read()
-    mocker.patch('checkfiles.checkfiles.requests.Session',
+    mock_session.json.return_value = {
+        's3_uri': 's3://igvf-files/2023/05/26/dd49b369-b6be-4a4b-a3a5-84516a00f9b4/IGVFFI0653VCGH.fasta.gz',
+    }
+    mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_session)
+    mocker.patch('checkfiles.checkfiles.os.environ.get',
+                 return_value='/home/ubuntu')
 
-    reference_file_path = get_reference_file_path(reference_file, portal_auth)
-    assert reference_file_path == 'src/checkfiles/supporting_files/TSTFI36924773.fasta'
+    reference_file_path = get_reference_file_path(
+        reference_file, portal_url, portal_auth)
+    assert reference_file_path == '/home/ubuntu/igvf-files/2023/05/26/dd49b369-b6be-4a4b-a3a5-84516a00f9b4/IGVFFI0653VCGH.fasta.gz'
 
 
 def test_cram_pysam_check_cram_valid(mocker):
     file_path = 'src/tests/data/cram_valid.cram'
-    reference_file_path = 'mock_reference.fasta'
-
+    reference_file_path = 'src/tests/data/ENCFF329FTG.fasta.gz'
     # Mock the first Popen (samtools view)
     mock_p1 = mocker.MagicMock()
     mock_p1.__enter__.return_value.communicate.return_value = ('', '')
