@@ -64,6 +64,12 @@ Validating bam file:
 python src/checkfiles/checkfiles_local.py --input_file_path src/tests/data/ENCFF206HGF.bam --file_format bam --md5sum 2d3b7df013d257c7052c084d93ff9026
 ```
 
+Validating cram file:
+
+```bash
+python src/checkfiles/checkfiles_local.py --input_file_path src/tests/data/cram_valid.cram --file_format cram --reference_file_path src/checkfiles/supporting_files/grch38.fa --md5sum 2d3b7df013d257c7052c084d93ff9026
+```
+
 Validating bed, bigWig, bigInteract, bigBed and bedpe file:
 
 ```bash

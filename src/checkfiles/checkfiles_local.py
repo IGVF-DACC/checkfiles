@@ -4,9 +4,9 @@ from pprint import pprint
 
 import file
 import logformatter
-from checkfiles import vcf_sequence_check, seqspec_file_check
+from checkfiles import vcf_sequence_check, seqspec_file_check, cram_pysam_check
 from checkfiles import check_valid_gzipped_file_format, check_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, fasta_check, tabular_file_check, validate_files_check, validate_files_fastq_check
-from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE
+from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE, TABULAR_FORMAT
 from version import get_checkfiles_version
 
 logger = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def file_validation(input_file_path, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly, tabular_file_schema_path, max_tabular_file_errors, onlist_skip):
+def file_validation(input_file_path, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly, tabular_file_schema_path, max_tabular_file_errors, reference_file_path, onlist_skip):
     logger.info(f'Checking file: {input_file_path}')
     validation_record.update_info(
         {'checkfiles_version': get_checkfiles_version()})
@@ -39,12 +39,19 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
     md5_sum_error = check_md5sum(
         submitted_md5sum, validation_record.file.md5sum)
     validation_record.update_errors(md5_sum_error)
-    if file_format in ['bam', 'cram']:
+    if file_format == 'bam':
         bam_check_result = bam_pysam_check(input_file_path, file_format)
         if 'bam_error' in bam_check_result:
             validation_record.update_errors(bam_check_result)
         else:
             validation_record.update_info(bam_check_result)
+    elif file_format == 'cram':
+        cram_check_result = cram_pysam_check(
+            input_file_path, reference_file_path)
+        if 'cram_error' in cram_check_result:
+            validation_record.update_errors(cram_check_result)
+        else:
+            validation_record.update_info(cram_check_result)
     elif file_format == 'fastq':
         validate_files_fastq_check_error = validate_files_fastq_check(
             input_file_path)
@@ -95,7 +102,7 @@ def main(args):
     file_validation_record = file.FileValidationRecord(
         file.get_file(args.input_file_path, args.file_format))
     file_validation_complete_record = file_validation(args.input_file_path, file_validation_record,
-                                                      args.md5sum, args.content_type, args.file_format_type, args.assembly, args.tabular_file_schema_path, args.max_tabular_file_errors, args.onlist_skip)
+                                                      args.md5sum, args.content_type, args.file_format_type, args.assembly, args.tabular_file_schema_path, args.max_tabular_file_errors, args.reference_file_path, args.onlist_skip)
     if not file_validation_complete_record.file_not_found:
         if file_validation_complete_record.errors:
             logger.info(
@@ -132,6 +139,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--onlist_skip', action='store_true',
                         help='whether to skip onlist files check.')
+    parser.add_argument('--reference_file_path',
+                        help='path to the reference file for checking cram file.')
 
     args = parser.parse_args()
     main(args)
