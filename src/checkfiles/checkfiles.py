@@ -26,7 +26,7 @@ from seqspec.seqspec_check import run_check as seqspec_check
 
 import file
 import logformatter
-from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE, SUPPORTING_FILES_FOLDER
+from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE
 from constants import MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE, ASSEMBLY_REPORT_FILE_PATH, ZIP_FILE_FORMAT
 from constants import GZIP_CHECK_IGNORED_FILE_FORMAT, NO_HEADER_CONTENT_TYPE, TABULAR_FORMAT, TABULAR_FILE_SCHEMAS
 from constants import VALIDATE_FILES_ARGS, ASSEMBLY_TO_CHROMINFO_PATH_MAP, ASSEMBLY, ASSEMBLY_TO_SEQUENCE_FILE_MAP
@@ -105,21 +105,14 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
             validation_record.update_errors(
                 {'cram_error': 'the cram file is missing reference files.'})
         else:
-            try:
-                reference_file_path = get_reference_file_path(
-                    reference_files[0], portal_url, portal_auth)
-            except Exception as e:
-                logger.warning(
-                    f'{uuid} failed to download reference file: {str(e)}')
-                validation_record.update_errors(
-                    {'cram_error': f'failed to download reference file: {str(e)}'})
-            if reference_file_path:
-                cram_check_result = cram_pysam_check(
-                    local_file_path, reference_file_path)
-                if 'cram_error' in cram_check_result:
-                    validation_record.update_errors(cram_check_result)
-                else:
-                    validation_record.update_info(cram_check_result)
+            reference_file_path = get_reference_file_path(
+                reference_files[0], portal_url, portal_auth)
+            cram_check_result = cram_pysam_check(
+                local_file_path, reference_file_path)
+            if 'cram_error' in cram_check_result:
+                validation_record.update_errors(cram_check_result)
+            else:
+                validation_record.update_info(cram_check_result)
     elif file_format == 'fastq':
         validate_files_fastq_check_error = validate_files_fastq_check(
             local_file_path)
