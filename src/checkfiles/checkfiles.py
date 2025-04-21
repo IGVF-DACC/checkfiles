@@ -1,6 +1,7 @@
 import argparse
 import datetime
 import gzip
+from io import BytesIO
 import json
 import logging
 import multiprocessing
@@ -44,7 +45,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly, validate_onlist_files=True):
+def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly, reference_files, validate_onlist_files=True):
     uuid = validation_record.uuid
     logger.info(f'Checking file uuid {uuid}')
     local_file_path = validation_record.file.path
@@ -91,12 +92,27 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
                 {'file_content_error': 'EOFError: Compressed file ended before the end-of-stream marker was reached'}
             )
             return validation_record
-    if file_format in ['bam', 'cram']:
-        bam_check_result = bam_pysam_check(local_file_path, file_format)
+    if file_format == 'bam':
+        bam_check_result = bam_pysam_check(local_file_path)
         if 'bam_error' in bam_check_result:
             validation_record.update_errors(bam_check_result)
         else:
             validation_record.update_info(bam_check_result)
+    elif file_format == 'cram':
+        if not reference_files:
+            logger.warning(
+                f'{uuid} the cram file is missing reference files.')
+            validation_record.update_errors(
+                {'cram_error': 'the cram file is missing reference files.'})
+        else:
+            reference_file_path = get_reference_file_path(
+                reference_files[0], portal_url, portal_auth)
+            cram_check_result = cram_pysam_check(
+                local_file_path, reference_file_path)
+            if 'cram_error' in cram_check_result:
+                validation_record.update_errors(cram_check_result)
+            else:
+                validation_record.update_info(cram_check_result)
     elif file_format == 'fastq':
         validate_files_fastq_check_error = validate_files_fastq_check(
             local_file_path)
@@ -190,12 +206,12 @@ def check_content_md5sum(content_md5sum, uuid, portal_auth: Optional[PortalAuth]
     return error
 
 
-def bam_pysam_check(file_path, file_format='bam'):
+def bam_pysam_check(file_path):
     try:
         pysam.quickcheck(file_path)
         result = pysam.stats(file_path)
         if 'SN\tis sorted:\t0' in result:
-            error = {'bam_error': f'the {file_format} file is not sorted'}
+            error = {'bam_error': f'the bam file is not sorted'}
             return error
         else:
             samfile = pysam.AlignmentFile(file_path, 'rb')
@@ -206,8 +222,80 @@ def bam_pysam_check(file_path, file_format='bam'):
             return info
     except pysam.utils.SamtoolsError as e:
         error = {
-            'bam_error': f'file is not valid {file_format} file by SamtoolsError: {str(e)}'}
+            'bam_error': f'file is not valid bam file by SamtoolsError: {str(e)}'}
         return error
+
+
+def get_reference_file_path(reference_file, portal_url, portal_auth):
+    # reference_file looks like this: /reference-files/TSTFI36924773/
+    search_url = f'{portal_url}{reference_file}'
+    session = requests.Session()
+    session.auth = portal_auth
+    metadata = session.get(search_url).json()
+    reference_file_path = os.environ.get(
+        'HOME') + make_local_path_from_s3_uri(metadata['s3_uri'])
+    return reference_file_path
+
+
+def is_zipped(file_path):
+    try:
+        gzip.GzipFile(filename=file_path).read(1)
+        return True
+    except gzip.BadGzipFile:
+        return False
+
+
+def cram_pysam_check(file_path, reference_file_path):
+    info = {}
+    # unzip the reference file to a temporary file using tempfile if reference_file_path is gzipped
+    gzipped = is_zipped(reference_file_path)
+    if gzipped:
+        temp_file = tempfile.NamedTemporaryFile(
+            delete=False)  # Prevent auto-delete
+        with gzip.open(reference_file_path, 'rb') as f_in:
+            with open(temp_file.name, 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+        reference_file_path = temp_file.name
+    try:
+        pysam.quickcheck(file_path)
+
+        # First command: samtools view
+        view_cmd = shlex.split(
+            f'samtools view -h -T {reference_file_path} {file_path}')
+
+        # Second command: samtools stats -
+        stats_cmd = shlex.split('samtools stats -')
+
+        with subprocess.Popen(view_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p1:
+            with subprocess.Popen(stats_cmd, stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p2:
+                p1.stdout.close()  # Let p1 receive SIGPIPE if p2 exits
+                _, err_view = p1.communicate()  # Capture stderr from view
+                if err_view:
+                    info = {'cram_error': f'samtools view error: {err_view}'}
+                else:
+                    output, err_stats = p2.communicate()
+                    if err_stats:
+                        info = {
+                            'cram_error': f'samtools stats error: {err_stats}'}
+                    else:
+                        if 'SN\tis sorted:\t0' in output:
+                            info = {'cram_error': f'the cram file is not sorted'}
+                        else:
+                            with pysam.AlignmentFile(file_path, 'rc', reference_filename=reference_file_path) as cram:
+                                count = cram.count(until_eof=True)
+                                logger.info(f'the number of reads: {count}')
+                                info = {'read_count': count}
+
+    except pysam.utils.SamtoolsError as e:
+        info = {
+            'cram_error': f'file is not valid cram file by SamtoolsError: {str(e)}'}
+    except subprocess.CalledProcessError as e:
+        info['cram_error'] = f'Subprocess error ({e.cmd}): {e.stderr.strip()}'
+    finally:
+        if gzipped:
+            temp_file.close()
+            os.unlink(temp_file.name)  # Manually remove the file
+    return info
 
 
 def fastq_get_average_read_length_and_number_of_reads(file_path):
@@ -452,9 +540,9 @@ def upload_credentials_are_expired(portal_uri: str, file_uuid: str, portal_auth:
 
 def fetch_pending_files_metadata(portal_uri: str, portal_auth: PortalAuth, number_of_files: Optional[int] = None) -> list:
     if number_of_files is not None:
-        search = f'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&field=validate_onlist_files&limit={number_of_files}'
+        search = f'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&field=validate_onlist_files&field=reference_files&limit={number_of_files}'
     else:
-        search = 'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&field=validate_onlist_files&limit=all'
+        search = 'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&field=validate_onlist_files&field=reference_files&limit=all'
     search_uri = f'{portal_uri}/{search}'
     response = requests.get(search_uri, auth=portal_auth)
     metadata = response.json()['@graph']
@@ -543,13 +631,14 @@ def main(args):
             validate_onlist_files = file_metadata.get(
                 'validate_onlist_files', True)
             submitted_md5sum = file_metadata['md5sum']
+            reference_files = file_metadata.get('reference_files')
             file_validation_record = get_file_validation_record_from_metadata(
                 file_metadata)
             etag_original = fetch_etag_for_uuid(
                 args.server, args.uuid, portal_auth)
             file_validation_record.original_etag = etag_original
             file_validation_complete_record = file_validation(portal_url=args.server, portal_auth=portal_auth, validation_record=file_validation_record,
-                                                              submitted_md5sum=submitted_md5sum, content_type=content_type, file_format_type=file_format_type, assembly=assembly, validate_onlist_files=validate_onlist_files)
+                                                              submitted_md5sum=submitted_md5sum, content_type=content_type, file_format_type=file_format_type, assembly=assembly, reference_files=reference_files, validate_onlist_files=validate_onlist_files)
             if args.patch:
                 # check etag first
                 etag_after = fetch_etag_for_uuid(
@@ -581,6 +670,7 @@ def main(args):
                 assembly = file_metadata.get('assembly')
                 content_type = file_metadata.get('content_type')
                 file_format_type = file_metadata.get('file_format_type')
+                reference_files = file_metadata.get('reference_files')
                 validate_onlist_files = file_metadata.get(
                     'validate_onlist_files', True)
                 submitted_md5sum = file_metadata['md5sum']
@@ -590,7 +680,7 @@ def main(args):
                     args.server, uuid, portal_auth)
                 file_validation_record.original_etag = etag_original
                 jobs.append((args.ignore_active_credentials, args.server, portal_auth, file_validation_record,
-                            submitted_md5sum, content_type, file_format_type, assembly, validate_onlist_files))
+                            submitted_md5sum, content_type, file_format_type, assembly, reference_files, validate_onlist_files))
             number_of_cpus = multiprocessing.cpu_count()
 
             if args.patch:
