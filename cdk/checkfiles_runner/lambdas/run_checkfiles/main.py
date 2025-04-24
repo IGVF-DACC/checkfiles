@@ -22,6 +22,7 @@ def run_checkfiles_command(event, context):
     secret_arn = get_secret_arn()
     put_portal_key_to_env_cmd = f"export PORTAL_KEY=$(aws secretsmanager get-secret-value --region us-west-2 --secret-id {secret_arn} --output text | awk '{{print $4}}' | jq -r .PORTAL_KEY)"
     put_secret_key_to_env_cmd = f"export PORTAL_SECRET_KEY=$(aws secretsmanager get-secret-value --region us-west-2 --secret-id {secret_arn} --output text | awk '{{print $4}}' | jq -r .PORTAL_SECRET_KEY)"
+    put_home_to_env_cmd = 'export HOME=/home/ubuntu'
     run_checkfiles_cmd = f'venv/bin/python src/checkfiles/checkfiles.py --server {backend_uri} --portal-key-id $(echo $PORTAL_KEY) --portal-secret-key $(echo $PORTAL_SECRET_KEY) --patch'
     ssm = boto3.client('ssm')
     response = ssm.send_command(
@@ -30,6 +31,7 @@ def run_checkfiles_command(event, context):
         Parameters={'commands': [
             put_portal_key_to_env_cmd,
             put_secret_key_to_env_cmd,
+            put_home_to_env_cmd,
             run_checkfiles_cmd,
         ],
             'workingDirectory': ['/home/ubuntu/checkfiles'],
