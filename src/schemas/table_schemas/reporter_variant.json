@@ -1,0 +1,94 @@
+{
+    "fields": [
+        {
+            "name": "variant_id",
+            "type": "string",
+            "description": "Variant ID in Canonical SPDI format"
+        },
+        {
+            "name": "log2FoldChange",
+            "type": "number",
+            "description": "Fold change (normalized output/input ratio, in log2 space)"
+        },
+        {
+            "name": "inputCountRef",
+            "type": "number",
+            "description": "Input count reference allele, normalized (CPM), mean across replicates"
+        },
+        {
+            "name": "outputCountRef",
+            "type": "number",
+            "description": "Output count reference allele, normalized (CPM), mean across replicates"
+        },
+        {
+            "name": "inputCountAlt",
+            "type": "number",
+            "description": "Input count alternative allele, normalized (CPM), mean across replicates"
+        },
+        {
+            "name": "outputCountAlt",
+            "type": "number",
+            "description": "Output count alternative allele, normalized (CPM), mean across replicates"
+        },
+        {
+            "name": "minusLog10PValue",
+            "type": "number",
+            "description": "-log10 of P-value"
+        },
+        {
+            "name": "minusLog10QValue",
+            "type": "number",
+            "description": "-log10 of Q-value (FDR)"
+        },
+        {
+            "name": "postProbEffect",
+            "type": "number",
+            "description": "Posterior probability of a regulatory effect"
+        },
+        {
+            "name": "CI_lower_95",
+            "type": "number",
+            "description": "Lower bound of a 95% interval for the variant effect"
+        },
+        {
+            "name": "CI_upper_95",
+            "type": "number",
+            "description": "Upper bound of a 95% interval for the variant effect"
+        },
+        {
+            "name": "variantPos",
+            "type": "integer",
+            "description": "0-based position of the start of the variant in the tested sequence. -1 if aggregation of multiple positions within tested sequences."
+        },
+        {
+            "name": "refAllele",
+            "type": "string",
+            "description": "Normalized Canonical SPDI reference variant sequence, allowed chars [A,T,G,C]",
+            "constraints": {
+                "enum": [
+                    "A",
+                    "T",
+                    "G",
+                    "C"
+                ]
+            }
+        },
+        {
+            "name": "altAllele",
+            "type": "string",
+            "description": "Normalized Canonical SPDI alternative variant sequence, allowed chars [A,T,G,C]",
+            "constraints": {
+                "enum": [
+                    "A",
+                    "T",
+                    "G",
+                    "C"
+                ]
+            }
+        }
+    ],
+    "missingValues": [
+        "NaN",
+        ""
+    ]
+}
