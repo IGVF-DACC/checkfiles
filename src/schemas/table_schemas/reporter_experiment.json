@@ -1,0 +1,57 @@
+{
+    "fields": [
+        {
+            "name": "replicate",
+            "type": "string",
+            "description": "name of the replicate"
+        },
+        {
+            "name": "oligo_name",
+            "type": "string",
+            "description": "name of the oligo of the design"
+        },
+        {
+            "name": "dna_counts",
+            "type": "integer",
+            "description": "Number of raw dna counts",
+            "constraints": {
+                "minimum": 0
+            }
+        },
+        {
+            "name": "rna_counts",
+            "type": "integer",
+            "description": "Number of raw rna counts",
+            "constraints": {
+                "minimum": 0
+            }
+        },
+        {
+            "name": "dna_normalized",
+            "type": "number",
+            "description": "Number of normalized/scaled dna counts (CPM), 4 decimals"
+        },
+        {
+            "name": "rna_normalized",
+            "type": "number",
+            "description": "Number of normalized/scaled rna counts (CPM), 4 decimals"
+        },
+        {
+            "name": "log2FoldChange",
+            "type": "number",
+            "description": "Fold change (normalized rna/dna ratio, in log2 space), 4 decimals"
+        },
+        {
+            "name": "n_bc",
+            "type": "integer",
+            "description": "Number of observed barcodes for the oligo",
+            "constraints": {
+                "minimum": 0
+            }
+        }
+    ],
+    "missingValues": [
+        "NaN",
+        ""
+    ]
+}
