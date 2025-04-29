@@ -63,28 +63,12 @@
         {
             "name": "refAllele",
             "type": "string",
-            "description": "Normalized Canonical SPDI reference variant sequence, allowed chars [A,T,G,C]",
-            "constraints": {
-                "enum": [
-                    "A",
-                    "T",
-                    "G",
-                    "C"
-                ]
-            }
+            "description": "Normalized Canonical SPDI reference variant sequence, allowed chars [A,T,G,C]"
         },
         {
             "name": "altAllele",
             "type": "string",
-            "description": "Normalized Canonical SPDI alternative variant sequence, allowed chars [A,T,G,C]",
-            "constraints": {
-                "enum": [
-                    "A",
-                    "T",
-                    "G",
-                    "C"
-                ]
-            }
+            "description": "Normalized Canonical SPDI alternative variant sequence, allowed chars [A,T,G,C]"
         }
     ],
     "missingValues": [
