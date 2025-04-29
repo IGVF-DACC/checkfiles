@@ -45,8 +45,6 @@ TABULAR_FILE_SCHEMAS = {
     'prime editing guide RNA sequences': 'src/schemas/table_schemas/prime_editing_guide_rna_sequences.json',
     'reporter elements': 'src/schemas/table_schemas/reporter_elements.json',
     'reporter experiment': 'src/schemas/table_schemas/reporter_experiment.json',
-    'reporter genomic element effects': 'src/schemas/table_schemas/reporter_genomic_element_effects.json',
-    'reporter genomic variant effects': 'src/schemas/table_schemas/reporter_genomic_variant_effects.json',
     'reporter variants': 'src/schemas/table_schemas/reporter_variants.json',
 }
 
