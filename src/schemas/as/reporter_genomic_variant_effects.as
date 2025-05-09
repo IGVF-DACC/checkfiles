@@ -1,0 +1,23 @@
+table mpra_variant
+"BED6+10 MPRA variant level common file format"
+(
+string  chrom;  "Reference sequence chromosome or scaffold"
+uint    chromStart;  "Start position of the variant in chromosome, 0-based inclusive"
+uint    chromEnd;  "End position of the variant in chromosome, 0-based exclusive"
+string  name;  "Name of tested variant"
+uint    score;  "Indicates how dark the peak will be displayed in the browser (0-1000)"
+char[1] strand;  "+ or - for strand the variant was tested in, . for unknown"
+float   log2FoldChange;  "Fold change (alt output/input ratio divided by ref output/input ratio , in log2 space)"
+float   inputCountRef;  "Input count reference allele, normalized (CPM), mean across replicates"
+float   outputCountRef;  "Output count reference allele, normalized (CPM), mean across replicates"
+float   inputCountAlt;  "Input count alternative allele, normalized (CPM), mean across replicates"
+float   outputCountAlt;  "Output count alternative allele, normalized (CPM), mean across replicates"
+float   minusLog10PValue;  "-log10 of P-value"
+float   minusLog10QValue;  "-log10 of Q-value (FDR)"
+float   postProbEffect;  "Posterior probability of a regulatory effect"
+float   CI_lower_95;  "Lower bound of a 95% interval for the variant effect"
+float   CI_upper_95;  "Upper bound of a 95% interval for the variant effect"
+uint    variantPos;  “0-based position of the start of the variant in the tested sequence, -1 if aggregated effect over multiple positions”
+string  refAllele;  “normalized Canonical SPDI reference variant sequence, allowed chars [A,T,G,C]”
+string  altAllele;  “normalized Canonical SPDI alternative variant sequence, allowed chars [A,T,G,C]”
+)

@@ -26,7 +26,7 @@ from seqspec.seqspec_check import run_check as seqspec_check
 
 import file
 import logformatter
-from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE
+from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE, VALIDATE_FILES_ARGS_BED6_PLUS
 from constants import MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE, ASSEMBLY_REPORT_FILE_PATH, ZIP_FILE_FORMAT
 from constants import GZIP_CHECK_IGNORED_FILE_FORMAT, NO_HEADER_CONTENT_TYPE, TABULAR_FORMAT, TABULAR_FILE_SCHEMAS
 from constants import VALIDATE_FILES_ARGS, ASSEMBLY_TO_CHROMINFO_PATH_MAP, ASSEMBLY, ASSEMBLY_TO_SEQUENCE_FILE_MAP
@@ -463,7 +463,16 @@ def get_validate_files_args(file_format, file_format_type, chrom_info_file, sche
     return args
 
 
-def validate_files_check(file_path, file_format, file_format_type, assembly, chrominfo_file_paths=ASSEMBLY_TO_CHROMINFO_PATH_MAP):
+def get_validate_files_args_bed6(file_format, file_format_type, content_type, chrom_info_file, schema=VALIDATE_FILES_ARGS_BED6_PLUS):
+    args = schema.get((file_format, file_format_type, content_type))
+    if not args:
+        return None
+    chrom_info_arg = 'chromInfo=' + chrom_info_file
+    args.append(chrom_info_arg)
+    return args
+
+
+def validate_files_check(file_path, file_format, file_format_type, content_type, assembly, chrominfo_file_paths=ASSEMBLY_TO_CHROMINFO_PATH_MAP):
     error = {}
     try:
         chrom_info_file_path = chrominfo_file_paths[assembly]
@@ -471,13 +480,20 @@ def validate_files_check(file_path, file_format, file_format_type, assembly, chr
         error_message = f'{assembly} is not a valid assembly. Valid assemblies: {list(chrominfo_file_paths.keys())}'
         error['validate_files'] = error_message
         return error
-    try:
-        validate_args = get_validate_files_args(
-            file_format, file_format_type, chrom_info_file_path)
-    except KeyError:
-        error_message = f'file_format: {file_format} file_format_type: {file_format_type} combination not allowed.'
-        error['validate_files'] = error_message
-        return error
+    validate_args = None
+    if file_format_type == 'bed6+':
+        validate_args = get_validate_files_args_bed6(
+            file_format, file_format_type, content_type, chrom_info_file_path)
+    print(f'validate args: {validate_args}')
+    if not validate_args:
+        try:
+            validate_args = get_validate_files_args(
+                file_format, file_format_type, chrom_info_file_path)
+        except KeyError:
+            error_message = f'file_format: {file_format} file_format_type: {file_format_type} combination not allowed.'
+            error['validate_files'] = error_message
+            return error
+    print(f'validate args: {validate_args}')
     command = ['validateFiles'] + validate_args + [file_path]
     try:
         output = subprocess.check_output(command, stderr=subprocess.STDOUT)

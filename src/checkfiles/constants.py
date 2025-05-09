@@ -68,6 +68,10 @@ VALIDATE_FILES_ARGS = {
     ('bigInteract', None): ['-type=bigBed5+13', '-as=src/schemas/as/interact.as'],
 
 }
+VALIDATE_FILES_ARGS_BED6_PLUS = {
+    ('bed', 'bed6', 'reporter genomic element effects'): ['-type=bed6+5', '-as=src/schemas/as/reporter_genomic_element_effects.as'],
+    ('bed', 'bed6', 'reporter genomic variant effects'): ['-type=bed6+10', '-as=src/schemas/as/reporter_genomic_variant_effects.as'],
+}
 
 SEQSPEC_FILE_VERSION = '0.3.0'
 
