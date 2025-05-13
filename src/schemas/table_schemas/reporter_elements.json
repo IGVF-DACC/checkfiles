@@ -32,7 +32,7 @@
         }
     ],
     "missingValues": [
-        "NaN",
+        "NA",
         ""
     ]
 }
