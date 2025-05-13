@@ -1,0 +1,38 @@
+{
+    "fields": [
+        {
+            "name": "oligo_name",
+            "type": "string",
+            "description": "Name of tested oligo"
+        },
+        {
+            "name": "log2FoldChange",
+            "type": "number",
+            "description": "Fold change (normalized output/input ratio, in log2 space)"
+        },
+        {
+            "name": "inputCount",
+            "type": "number",
+            "description": "Input count (DNA), normalized (CPM), mean across replicates"
+        },
+        {
+            "name": "outputCount",
+            "type": "number",
+            "description": "Output count (RNA), normalized (CPM), mean across replicates"
+        },
+        {
+            "name": "minusLog10PValue",
+            "type": "number",
+            "description": "-log10 of P-value"
+        },
+        {
+            "name": "minusLog10QValue",
+            "type": "number",
+            "description": "-log10 of Q-value (FDR)"
+        }
+    ],
+    "missingValues": [
+        "NA",
+        ""
+    ]
+}

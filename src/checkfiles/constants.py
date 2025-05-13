@@ -43,6 +43,9 @@ TABULAR_FILE_SCHEMAS = {
     'guide RNA sequences': 'src/schemas/table_schemas/guide_rna_sequences.json',
     'MPRA sequence designs': 'src/schemas/table_schemas/mpra_sequence_designs.json',
     'prime editing guide RNA sequences': 'src/schemas/table_schemas/prime_editing_guide_rna_sequences.json',
+    'reporter elements': 'src/schemas/table_schemas/reporter_elements.json',
+    'reporter experiment': 'src/schemas/table_schemas/reporter_experiment.json',
+    'reporter variants': 'src/schemas/table_schemas/reporter_variants.json',
 }
 
 TABULAR_FORMAT = [
