@@ -169,6 +169,16 @@ def test_validate_files_check_mpra_variant_invalid():
     assert error == {'validate_files': 'Error [file=src/tests/data/reporter_genomic_variant_effects_invalid.bed.gz, line=107]: found 18 columns, expected 19 [chr1\t46537730\t46537732\tNC_000001.11:46537730:AA:\t8\t+\t-0.0110\t0.5647\t0.2818\t0.5504\t0.2608\t0.2830\t0.1436\t0.0007\t-0.0469\t0.0248\t98\tAA\t]\nAborting ... found error.'}
 
 
+def test_validate_files_check_mpra_variant_valid():
+    file_path = 'src/tests/data/reporter_genomic_variant_effects_valid.bed'
+    file_format = 'bed'
+    file_format_type = 'mpra_variant'
+    assembly = 'GRCh38'
+    error = validate_files_check(
+        file_path, file_format, file_format_type, assembly)
+    assert error == {}
+
+
 def test_fasta_check_pass():
     file_path = 'src/tests/data/ENCFF329FTG.fasta.gz'
     is_gzipped = True
