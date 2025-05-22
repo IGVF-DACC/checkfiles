@@ -64,6 +64,8 @@ VALIDATE_FILES_ARGS = {
     ('bed', 'bed12'): ['-type=bed12'],
     ('bed', 'bedGraph'): ['-type=bedGraph'],
     ('bed', 'mpra_starr'): ['-type=bed6+5', '-as=src/schemas/as/mpra_starr.as'],
+    ('bed', 'mpra_element'): ['-type=bed6+5', '-as=src/schemas/as/reporter_genomic_element_effects.as'],
+    ('bed', 'mpra_variant'): ['-type=bed6+13', '-as=src/schemas/as/reporter_genomic_variant_effects.as'],
     ('bedpe', None): ['-type=bed3+'],
     ('bigBed', 'bed3'): ['-type=bigBed3'],
     ('bigBed', 'bed3+'): ['-tab', '-type=bigBed3+'],
