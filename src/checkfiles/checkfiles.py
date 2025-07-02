@@ -129,7 +129,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         validation_record.update_errors(fasta_check_error)
     elif file_format in TABULAR_FORMAT:
         tabular_file_check_error = tabular_file_check(
-            content_type, local_file_path, is_gzipped)
+            file_format, content_type, local_file_path, is_gzipped)
         validation_record.update_errors(tabular_file_check_error)
     elif file_format == 'vcf':
         vcf_check_error = vcf_sequence_check(local_file_path, assembly)
@@ -341,7 +341,7 @@ def fasta_check(file_path, is_gzipped, info=FASTA_VALIDATION_INFO):
     return error
 
 
-def tabular_file_check(content_type, file_path, is_gzipped, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE, allow_additional_fields=True, schema_path=None):
+def tabular_file_check(file_format, content_type, file_path, is_gzipped, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE, allow_additional_fields=True, schema_path=None):
     system.trusted = True
     error = {}
     if content_type not in NO_HEADER_CONTENT_TYPE:
@@ -349,6 +349,7 @@ def tabular_file_check(content_type, file_path, is_gzipped, schemas=TABULAR_FILE
         dialect = Dialect(comment_char='#', header_rows=[header_row])
     else:
         dialect = Dialect(header=False, comment_char='#')
+
     if not schema_path:
         schema_path = schemas.get(content_type)
     if not schema_path:
@@ -361,15 +362,16 @@ def tabular_file_check(content_type, file_path, is_gzipped, schemas=TABULAR_FILE
             checks = [GuideRnaSequencesCheck()]
         if not allow_additional_fields:
             report = validate(file_path, schema=schema_path,
-                              limit_errors=max_error, checks=checks, dialect=dialect)
+                              limit_errors=max_error, checks=checks, dialect=dialect, format=file_format)
         else:
-            infer_schema = describe(file_path, type='schema', dialect=dialect)
+            infer_schema = describe(
+                file_path, type='schema', dialect=dialect, format=file_format)
             schema = Schema.from_descriptor(schema_path)
             if len(infer_schema.fields) > len(schema.fields):
                 for i in range(len(schema.fields), len(infer_schema.fields)):
                     schema.add_field(infer_schema.fields[i])
             report = validate(file_path, schema=schema,
-                              limit_errors=max_error, checks=checks, dialect=dialect)
+                              limit_errors=max_error, checks=checks, dialect=dialect, format=file_format)
 
     if not report.valid:
         report = report.flatten(
