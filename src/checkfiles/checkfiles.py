@@ -355,7 +355,7 @@ def tabular_file_check(file_format, content_type, file_path, is_gzipped, schemas
     if not schema_path:
         # if no schema, we can ignore type-error
         report = validate(file_path, limit_errors=max_error,
-                          skip_errors=['type-error'], dialect=dialect)
+                          skip_errors=['type-error'], dialect=dialect, format=file_format)
     else:
         checks = []
         if content_type in ['guide RNA sequences', 'prime editing guide RNA sequences']:
