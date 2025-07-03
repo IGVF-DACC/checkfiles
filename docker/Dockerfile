@@ -68,21 +68,26 @@ COPY --chown=checkfiles:checkfiles scripts/entrypoint.sh /scripts/entrypoint.sh
 
 RUN chmod +x /scripts/entrypoint.sh
 
+# Create the base directory structure
 WORKDIR /checkfiles
 
-# Copy checkfiles source code
-COPY --chown=checkfiles:checkfiles src/checkfiles .
+# Copy entire src directory to maintain repository structure
+COPY --chown=checkfiles:checkfiles src/ /checkfiles/src/
+
+# Change working directory to checkfiles module
+WORKDIR /checkfiles/src/checkfiles
 
 # Install Python dependencies
 RUN python -m pip install -r requirements.txt
 
-# Create supporting_files directory and download reference files for VCF validation
-RUN mkdir -p /checkfiles/supporting_files
-RUN python utils/download_ref_files.py --local-dir /checkfiles/supporting_files/
+# Download reference files for VCF validation to the correct location
+RUN python utils/download_ref_files.py --local-dir /checkfiles/src/checkfiles/supporting_files/
 
-# Change ownership of downloaded reference files to checkfiles user
-RUN chown -R checkfiles:checkfiles /checkfiles/supporting_files/
+# Change ownership of all files to checkfiles user
+RUN chown -R checkfiles:checkfiles /checkfiles/
 
 USER checkfiles
+
+WORKDIR /checkfiles
 
 ENTRYPOINT ["/scripts/entrypoint.sh"]
