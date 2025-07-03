@@ -5,7 +5,7 @@ class GuideRnaSequencesCheck(Check):
     Errors = [errors.ConstraintError]
 
     def validate_row(self, row):
-        if row['targeting'] == True or row['type'] == 'targeting-no coordinate':
+        if row['targeting'] == True and row['type'] != 'targeting-no coordinate':
             if not row['guide_chr']:
                 note = 'guide_chr is required when targeting is True'
                 yield errors.ConstraintError.from_row(row, note=note, field_name='guide_chr')
