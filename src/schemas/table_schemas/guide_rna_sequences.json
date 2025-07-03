@@ -39,8 +39,7 @@
                     "variant",
                     "targeting-no coordinate"
                 ],
-                "enum_descriptions":
-                {
+                "enum_descriptions": {
                     "safe-targeting": "Refers to a guide designed to target genomic sites with no annotated function.",
                     "non-targeting": "Refers to a guide that was designed to not bind to a genomic target.",
                     "targeting": "Refers to a guide that was designed to bind to a genomic target.",
