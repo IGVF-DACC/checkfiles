@@ -19,7 +19,7 @@
         {
             "name": "targeting",
             "type": "boolean",
-            "description": "'TRUE' or 'FALSE', depending on whether or not the guide is targeting a locus of the genome relevant to the experiment. If guide is safe-targeting or non-targeting, targeting = False. 'safe-targeting' refers to guides designed to target genomic sites with no annotated function, used as negative controls, if targeting == False, guide_chr, guide_start, guide_end, strand, and pam can be set to NaN",
+            "description": "'TRUE' or 'FALSE', depending on whether or not the guide is targeting a locus of the genome relevant to the experiment. if targeting == False, guide_chr, guide_start, guide_end, strand, and pam can be set to NaN.",
             "constraints": {
                 "required": true
             }
@@ -36,8 +36,19 @@
                     "targeting",
                     "positive control",
                     "negative control",
-                    "variant"
-                ]
+                    "variant",
+                    "targeting-no coordinate"
+                ],
+                "enum_descriptions":
+                {
+                    "safe-targeting": "Refers to a guide designed to target genomic sites with no annotated function.",
+                    "non-targeting": "Refers to a guide that was designed to not bind to a genomic target.",
+                    "targeting": "Refers to a guide that was designed to bind to a genomic target.",
+                    "positive control": "",
+                    "negative control": "",
+                    "variant": "Refers to a guide that was designed to target a variant.",
+                    "targeting-no coordinate": "Refers to guide designed to target a genomic element which does not have genomic coordiantes."
+                }
             }
         },
         {
