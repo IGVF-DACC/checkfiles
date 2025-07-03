@@ -1,4 +1,4 @@
-VERSION = 'v25'
+VERSION = 'v26'
 
 
 def get_checkfiles_version():
