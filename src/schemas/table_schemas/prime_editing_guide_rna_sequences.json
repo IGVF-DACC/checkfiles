@@ -38,16 +38,16 @@
                     "negative control",
                     "variant",
                     "targeting-no coordinate"
-                ],
-                "enum_descriptions": {
-                    "safe-targeting": "Refers to a guide designed to target genomic sites with no annotated function.",
-                    "non-targeting": "Refers to a guide that was designed to not bind to a genomic target.",
-                    "targeting": "Refers to a guide that was designed to bind to a genomic target.",
-                    "positive control": "",
-                    "negative control": "",
-                    "variant": "Refers to a guide that was designed to target a variant.",
-                    "targeting-no coordinate": "Refers to guide designed to target a genomic element which does not have genomic coordiantes."
-                }
+                ]
+            },
+            "enum_descriptions": {
+                "safe-targeting": "Refers to a guide designed to target genomic sites with no annotated function.",
+                "non-targeting": "Refers to a guide that was designed to not bind to a genomic target.",
+                "targeting": "Refers to a guide that was designed to bind to a genomic target.",
+                "positive control": "",
+                "negative control": "",
+                "variant": "Refers to a guide that was designed to target a variant.",
+                "targeting-no coordinate": "Refers to guide designed to target a genomic element which does not have genomic coordiantes."
             }
         },
         {

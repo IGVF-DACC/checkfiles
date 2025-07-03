@@ -45,7 +45,7 @@ def test_main_tabular_tsv(mocker):
         'details': [
             {'row_number': 2, 'field_number': 1,
                 'note': 'constraint "required" is "True"'},
-            {'row_number': 2, 'field_number': 4, 'note': 'constraint "enum" is "[\'safe-targeting\', \'non-targeting\', \'targeting\', \'positive control\', \'negative control\', \'variant\']"'}]
+            {'row_number': 2, 'field_number': 4, 'note': 'constraint "enum" is "[\'safe-targeting\', \'non-targeting\', \'targeting\', \'positive control\', \'negative control\', \'variant\', \'targeting-no coordinate\']"'}]
     }
     assert 'constraint-error' in errors['error_types']
 
@@ -91,7 +91,7 @@ def test_main_tabular_csv(mocker):
         'details': [
             {'row_number': 2, 'field_number': 1,
                 'note': 'constraint "required" is "True"'},
-            {'row_number': 2, 'field_number': 4, 'note': 'constraint "enum" is "[\'safe-targeting\', \'non-targeting\', \'targeting\', \'positive control\', \'negative control\', \'variant\']"'}]
+            {'row_number': 2, 'field_number': 4, 'note': 'constraint "enum" is "[\'safe-targeting\', \'non-targeting\', \'targeting\', \'positive control\', \'negative control\', \'variant\', \'targeting-no coordinate\']"'}]
     }
     assert 'constraint-error' in errors['error_types']
 
