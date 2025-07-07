@@ -60,15 +60,16 @@ fi
 FILENAME=$(basename "$INPUT_FILE_PATH")
 
 # Build the docker run command
-DOCKER_CMD="docker run --platform linux/amd64 -v \"$INPUT_FILE_PATH:/input_data/$FILENAME:ro\""
+DOCKER_CMD="docker run --platform linux/amd64 -v $INPUT_FILE_PATH:/input_data/$FILENAME:ro"
 
 # Add IGVF credentials as environment variables if provided
 if [[ -n "$IGVF_API_KEY" && -n "$IGVF_SECRET_KEY" ]]; then
-    DOCKER_CMD="$DOCKER_CMD -e IGVF_API_KEY=\"$IGVF_API_KEY\" -e IGVF_SECRET_KEY=\"$IGVF_SECRET_KEY\""
+    DOCKER_CMD="$DOCKER_CMD -e IGVF_API_KEY=$IGVF_API_KEY -e IGVF_SECRET_KEY=$IGVF_SECRET_KEY"
 fi
 
 # Complete the docker command
-DOCKER_CMD="$DOCKER_CMD \"$DOCKER_IMAGE:$TAG\" python src/checkfiles/checkfiles_local.py --input_file_path \"/input_data/$FILENAME\" \"${ARGS[@]}\""
+DOCKER_CMD="$DOCKER_CMD $DOCKER_IMAGE:$TAG python src/checkfiles/checkfiles_local.py --input_file_path /input_data/$FILENAME ${ARGS[@]}"
 
 # Execute the docker command
-eval $DOCKER_CMD 
+echo "Executing: $DOCKER_CMD"
+eval $DOCKER_CMD

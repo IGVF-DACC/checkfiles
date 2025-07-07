@@ -41,17 +41,18 @@ def create_fai_file(fasta_path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Download reference files for VCF validation')
-    parser.add_argument('--local-dir', 
-                       default='./src/checkfiles/supporting_files/',
-                       help='Directory to store downloaded reference files (default: ./src/checkfiles/supporting_files/)')
-    
+    parser = argparse.ArgumentParser(
+        description='Download reference files for VCF validation')
+    parser.add_argument('--local-dir',
+                        default='./src/checkfiles/supporting_files/',
+                        help='Directory to store downloaded reference files (default: ./src/checkfiles/supporting_files/)')
+
     args = parser.parse_args()
     local_dir = Path(args.local_dir)
-    
+
     # Create directory if it doesn't exist
     local_dir.mkdir(parents=True, exist_ok=True)
-    
+
     for assembly, url in FILE_URLS.items():
         fasta_path = local_dir / (assembly.lower() + '.fa')
         if not fasta_path.exists():

@@ -36,4 +36,4 @@ jobs:
             igvf/checkfiles-local:${{ steps.tag.outputs.tag }}
             igvf/checkfiles-local:latest
           cache-from: type=gha
-          cache-to: type=gha,mode=max 
+          cache-to: type=gha,mode=max
