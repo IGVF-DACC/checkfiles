@@ -4,6 +4,14 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV VIRTUAL_ENV=/opt/venv
 
+# Add build arguments for IGVF API credentials
+ARG IGVF_API_KEY=""
+ARG IGVF_SECRET_KEY=""
+
+# Set as environment variables
+ENV IGVF_API_KEY=$IGVF_API_KEY
+ENV IGVF_SECRET_KEY=$IGVF_SECRET_KEY
+
 # Create non-root user
 RUN useradd -u 1444 -m checkfiles
 
