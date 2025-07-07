@@ -691,6 +691,8 @@ def main(args):
                 validate_onlist_files = file_metadata.get(
                     'validate_onlist_files', True)
                 submitted_md5sum = file_metadata['md5sum']
+                externally_hosted = file_metadata.get(
+                    'externally_hosted', False)
                 file_validation_record = get_file_validation_record_from_metadata(
                     file_metadata)
                 etag_original = fetch_etag_for_uuid(
