@@ -45,22 +45,33 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly, reference_files, validate_onlist_files=True):
+def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly, reference_files, validate_onlist_files=True, externally_hosted=False):
     uuid = validation_record.uuid
     logger.info(f'Checking file uuid {uuid}')
     local_file_path = validation_record.file.path
     validation_record.update_info(
         {'checkfiles_version': get_checkfiles_version()})
+    if externally_hosted:
+        logger.info(f'file {uuid} is externally hosted')
+        validation_record.validation_exempted = True
+        logger.info(
+            f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.get_upload_status()}')
+        return validation_record
     try:
         true_file_size_bytes = validation_record.file.size
         validation_record.update_info({'file_size': true_file_size_bytes})
         if true_file_size_bytes == 0:
             validation_record.update_errors(
                 {'file_size': 'file has zero size'})
+            validation_record.validation_success = False
+            logger.info(
+                f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.get_upload_status()}')
             return validation_record
     except FileNotFoundError:
         logger.warning(f'File not found for {uuid}')
         validation_record.file_not_found = True
+        logger.info(
+            f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.get_upload_status()}')
         return validation_record
     logger.info(f'{uuid} file size {true_file_size_bytes} bytes')
     file_format = validation_record.file.file_format
@@ -91,6 +102,9 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
             validation_record.update_errors(
                 {'file_content_error': 'EOFError: Compressed file ended before the end-of-stream marker was reached'}
             )
+            validation_record.validation_success = False
+            logger.info(
+                f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.get_upload_status()}')
             return validation_record
     if file_format == 'bam':
         bam_check_result = bam_pysam_check(local_file_path)
@@ -140,7 +154,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         validation_record.update_errors(seqspec_check_error)
 
     logger.info(
-        f'Completed file validation for file uuid {uuid}.')
+        f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.get_upload_status()}')
 
     if validation_record.errors:
         validation_record.validation_success = False
@@ -542,9 +556,9 @@ def upload_credentials_are_expired(portal_uri: str, file_uuid: str, portal_auth:
 
 def fetch_pending_files_metadata(portal_uri: str, portal_auth: PortalAuth, number_of_files: Optional[int] = None) -> list:
     if number_of_files is not None:
-        search = f'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&field=validate_onlist_files&field=reference_files&limit={number_of_files}'
+        search = f'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&field=validate_onlist_files&field=reference_files&field=externally_hosted&limit={number_of_files}'
     else:
-        search = 'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&field=validate_onlist_files&field=reference_files&limit=all'
+        search = 'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&field=validate_onlist_files&field=reference_files&field=externally_hosted&limit=all'
     search_uri = f'{portal_uri}/{search}'
     response = requests.get(search_uri, auth=portal_auth)
     metadata = response.json()['@graph']
@@ -634,13 +648,14 @@ def main(args):
                 'validate_onlist_files', True)
             submitted_md5sum = file_metadata['md5sum']
             reference_files = file_metadata.get('reference_files')
+            externally_hosted = file_metadata.get('externally_hosted', False)
             file_validation_record = get_file_validation_record_from_metadata(
                 file_metadata)
             etag_original = fetch_etag_for_uuid(
                 args.server, args.uuid, portal_auth)
             file_validation_record.original_etag = etag_original
             file_validation_complete_record = file_validation(portal_url=args.server, portal_auth=portal_auth, validation_record=file_validation_record,
-                                                              submitted_md5sum=submitted_md5sum, content_type=content_type, file_format_type=file_format_type, assembly=assembly, reference_files=reference_files, validate_onlist_files=validate_onlist_files)
+                                                              submitted_md5sum=submitted_md5sum, content_type=content_type, file_format_type=file_format_type, assembly=assembly, reference_files=reference_files, validate_onlist_files=validate_onlist_files, externally_hosted=externally_hosted)
             if args.patch:
                 # check etag first
                 etag_after = fetch_etag_for_uuid(
@@ -682,7 +697,7 @@ def main(args):
                     args.server, uuid, portal_auth)
                 file_validation_record.original_etag = etag_original
                 jobs.append((args.ignore_active_credentials, args.server, portal_auth, file_validation_record,
-                            submitted_md5sum, content_type, file_format_type, assembly, reference_files, validate_onlist_files))
+                            submitted_md5sum, content_type, file_format_type, assembly, reference_files, validate_onlist_files, externally_hosted))
             number_of_cpus = multiprocessing.cpu_count()
 
             if args.patch:

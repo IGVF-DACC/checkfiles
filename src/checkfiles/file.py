@@ -79,6 +79,7 @@ class FileValidationRecord:
         self.errors = {}
         self.info = {}
         self.file_not_found = False
+        self.validation_exempted = False
         self.validation_success = None
         self.__original_etag = None
 
@@ -122,4 +123,16 @@ class FileValidationRecord:
             payload.update({'upload_status': 'validated'})
         if self.file_not_found:
             payload.update({'upload_status': 'file not found'})
+        if self.validation_exempted:
+            payload.update({'upload_status': 'validation exempted'})
         return json.dumps(payload)
+
+    def get_upload_status(self):
+        if self.validation_exempted:
+            return 'validation exempted'
+        elif self.validation_success:
+            return 'validated'
+        elif self.file_not_found:
+            return 'file not found'
+        else:
+            return 'invalidated'
