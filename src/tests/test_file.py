@@ -67,3 +67,18 @@ def test_make_payload():
         {'info': 'some stuff calculated before things went wrong'})
     assert record.make_payload(
     ) == '{"validation_error_detail": "{\\"error\\": \\"error that was caused by things going wrong\\"}", "upload_status": "invalidated", "info": "some stuff calculated before things went wrong"}'
+
+
+def test_get_upload_status():
+    file = 'somefile'
+    record = FileValidationRecord(file, uuid='abc')
+    record.validation_success = False
+    assert record.get_upload_status() == 'invalidated'
+
+    record = FileValidationRecord(file, uuid='abc')
+    record.validation_success = True
+    assert record.get_upload_status() == 'validated'
+
+    record = FileValidationRecord(file, uuid='abc')
+    record.file_not_found = True
+    assert record.get_upload_status() == 'file not found'

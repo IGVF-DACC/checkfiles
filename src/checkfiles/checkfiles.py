@@ -57,10 +57,15 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         if true_file_size_bytes == 0:
             validation_record.update_errors(
                 {'file_size': 'file has zero size'})
+            validation_record.validation_success = False
+            logger.info(
+                f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.get_upload_status()}')
             return validation_record
     except FileNotFoundError:
         logger.warning(f'File not found for {uuid}')
         validation_record.file_not_found = True
+        logger.info(
+            f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.get_upload_status()}')
         return validation_record
     logger.info(f'{uuid} file size {true_file_size_bytes} bytes')
     file_format = validation_record.file.file_format
@@ -91,6 +96,9 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
             validation_record.update_errors(
                 {'file_content_error': 'EOFError: Compressed file ended before the end-of-stream marker was reached'}
             )
+            validation_record.validation_success = False
+            logger.info(
+                f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.get_upload_status()}')
             return validation_record
     if file_format == 'bam':
         bam_check_result = bam_pysam_check(local_file_path)
@@ -144,10 +152,11 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
 
     if validation_record.errors:
         validation_record.validation_success = False
-        return validation_record
     else:
         validation_record.validation_success = True
-        return validation_record
+    logger.info(
+        f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.get_upload_status()}')
+    return validation_record
 
 
 def get_header_row(file_path, is_gzipped):
