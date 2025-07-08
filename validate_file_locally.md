@@ -82,5 +82,3 @@ Validate seqspec yaml file with IGVF API credentials (for accessing non-released
 ```bash
 ./scripts/checkfiles_local.sh --input_file_path [Absolute path to]src/tests/data/seqspec_valid.yaml.gz --file_format yaml --content_type seqspec --igvf-api-key "your-api-key" --igvf-secret-key "your-secret-key" --md5sum f1859dd9d60554a8f8ab63b65b458267
 ```
-
-
