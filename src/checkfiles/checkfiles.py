@@ -59,13 +59,13 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
                 {'file_size': 'file has zero size'})
             validation_record.validation_success = False
             logger.info(
-                f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.get_upload_status()}')
+                f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.upload_status}')
             return validation_record
     except FileNotFoundError:
         logger.warning(f'File not found for {uuid}')
         validation_record.file_not_found = True
         logger.info(
-            f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.get_upload_status()}')
+            f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.upload_status}')
         return validation_record
     logger.info(f'{uuid} file size {true_file_size_bytes} bytes')
     file_format = validation_record.file.file_format
@@ -98,7 +98,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
             )
             validation_record.validation_success = False
             logger.info(
-                f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.get_upload_status()}')
+                f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.upload_status}')
             return validation_record
     if file_format == 'bam':
         bam_check_result = bam_pysam_check(local_file_path)
@@ -155,7 +155,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     else:
         validation_record.validation_success = True
     logger.info(
-        f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.get_upload_status()}')
+        f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.upload_status}')
     return validation_record
 
 
