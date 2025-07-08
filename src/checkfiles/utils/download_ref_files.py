@@ -1,15 +1,13 @@
-
 from pathlib import Path
 import subprocess
 import requests
 import pysam
+import argparse
 
 FILE_URLS = {
     'GRCh38': 'https://api.data.igvf.org/reference-files/IGVFFI6815WBWB/@@download/IGVFFI6815WBWB.fasta.gz',
     'GRCm39': 'https://api.data.igvf.org/reference-files/IGVFFI9282QLXO/@@download/IGVFFI9282QLXO.fasta.gz',
 }
-
-LOCAL_DIR = Path('./src/checkfiles/supporting_files/')
 
 
 def download_file(key, url, dir_path):
@@ -43,10 +41,22 @@ def create_fai_file(fasta_path):
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description='Download reference files for VCF validation')
+    parser.add_argument('--local-dir',
+                        default='./src/checkfiles/supporting_files/',
+                        help='Directory to store downloaded reference files (default: ./src/checkfiles/supporting_files/)')
+
+    args = parser.parse_args()
+    local_dir = Path(args.local_dir)
+
+    # Create directory if it doesn't exist
+    local_dir.mkdir(parents=True, exist_ok=True)
+
     for assembly, url in FILE_URLS.items():
-        fasta_path = LOCAL_DIR / (assembly.lower() + '.fa')
+        fasta_path = local_dir / (assembly.lower() + '.fa')
         if not fasta_path.exists():
-            download_file(assembly, url, LOCAL_DIR)
+            download_file(assembly, url, local_dir)
             create_fai_file(fasta_path)
 
 

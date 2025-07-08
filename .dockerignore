@@ -1,6 +1,7 @@
 test-reports
 sandbox
 packer
+cdk
 .test-results
 .circleci
 .git
