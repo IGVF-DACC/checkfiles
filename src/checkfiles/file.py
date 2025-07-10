@@ -123,3 +123,12 @@ class FileValidationRecord:
         if self.file_not_found:
             payload.update({'upload_status': 'file not found'})
         return json.dumps(payload)
+
+    @property
+    def upload_status(self):
+        if self.validation_success:
+            return 'validated'
+        elif self.file_not_found:
+            return 'file not found'
+        else:
+            return 'invalidated'
