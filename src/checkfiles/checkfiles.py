@@ -21,8 +21,8 @@ import pysam
 from FastaValidator import fasta_validator
 from frictionless import system, validate, describe, Schema, Dialect
 from seqspec.utils import load_spec as seqspec_load_spec
-from seqspec.seqspec_version import version as seqspec_version
-from seqspec.seqspec_check import run_check as seqspec_check
+from seqspec.seqspec_version import seqspec_version
+from seqspec.seqspec_check import seqspec_check
 
 import file
 import logformatter
@@ -441,14 +441,14 @@ def seqspec_file_check(file_path, validate_onlist_files=True):
             f'IGVF_API_KEY and IGVF_SECRET_KEY are not set. seqspec check will not be able to access files that are not released.')
     try:
         spec = seqspec_load_spec(file_path)
-        version = seqspec_version(spec).split('\n')[-1].split(': ')[-1]
+        version = seqspec_version(spec)['file_version']
         if version != SEQSPEC_FILE_VERSION:
             error['seqspec_error'] = f'The seqspec file version is {version}, while version {SEQSPEC_FILE_VERSION} is required.'
             return error
         if validate_onlist_files:
-            errors = seqspec_check(file_path, None, 'igvf')
+            errors = seqspec_check(spec, file_path, 'igvf')
         else:
-            errors = seqspec_check(file_path, None, 'igvf_onlist_skip')
+            errors = seqspec_check(spec, file_path, 'igvf_onlist_skip')
         if errors:
             error['seqspec_error'] = errors
     except Exception as e:
