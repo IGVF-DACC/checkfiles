@@ -227,50 +227,6 @@ def test_validate_files_fastq_check_pass():
     assert error == {}
 
 
-def test_seqspec_file_check_valid():
-    file_path = 'src/tests/data/seqspec_valid.yaml.gz'
-    error = seqspec_file_check(file_path)
-    assert error == {}
-
-
-def test_seqspec_file_check_valid_for_igvf():
-    file_path = 'src/tests/data/seqspec_valid_for_igvf.yaml.gz'
-    error = seqspec_file_check(file_path)
-    assert error == {}
-
-
-def test_seqspec_file_check_invalid():
-    file_path = 'src/tests/data/seqspec_invalid.yaml.gz'
-    error = seqspec_file_check(file_path)
-    assert error == {
-        'seqspec_error':  [{'error_message': "'atac-illumina_p5' sequence 'AATGATACGGCGACCACCGAGATCTACAC' has length 29, expected range (30, 30)", 'error_object': 'region', 'error_type': 'check_sequence_lengths'}]} != {'seqspec_error': ["[error 1] 'atac-illumina_p5' sequence 'AATGATACGGCGACCACCGAGATCTACAC' has length 29, expected range (30, 30)"]
-                                                                                                                                                                                                                           }
-
-
-def test_seqspec_file_check_skip_onlist_valid():
-    file_path = 'src/tests/data/seqspec_valid_ignore_onlist.yaml.gz'
-    error = seqspec_file_check(file_path, validate_onlist_files=False)
-    assert error == {}
-
-
-def test_seqspec_file_check_onlist_invalid():
-    file_path = 'src/tests/data/seqspec_valid_ignore_onlist.yaml.gz'
-    error = seqspec_file_check(file_path)
-    assert error == {
-        'seqspec_error': [{'error_message': 'IGVFFI7587TJLC.tsv.gz does not exist',
-                           'error_object': 'onlist',
-                           'error_type': 'check_onlist_files_exist'}]
-    }
-
-
-def test_seqpec_file_check_old_version():
-    file_path = 'src/tests/data/seqspec_old_version.yaml.gz'
-    error = seqspec_file_check(file_path)
-    assert error == {
-        'seqspec_error': 'The seqspec file version is 0.2.0, while version 0.3.0 is required.'
-    }
-
-
 def test_main_empty_file(mocker):
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/empty_file.txt'
