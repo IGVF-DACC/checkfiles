@@ -73,7 +73,7 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
         tabular_file_check_error = tabular_file_check(
             file_format, content_type, input_file_path, is_gzipped, schema_path=tabular_file_schema_path, max_error=max_tabular_file_errors, allow_additional_fields=True)
         validation_record.update_errors(tabular_file_check_error)
-    elif file_format == 'vcf':
+    elif file_format in ['vcf', 'gvcf']:
         vcf_check_error = vcf_sequence_check(input_file_path, assembly)
         validation_record.update_errors(vcf_check_error)
     elif content_type == 'seqspec':

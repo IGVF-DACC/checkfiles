@@ -139,7 +139,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         tabular_file_check_error = tabular_file_check(
             file_format, content_type, local_file_path, is_gzipped)
         validation_record.update_errors(tabular_file_check_error)
-    elif file_format == 'vcf':
+    elif file_format in ['vcf', 'gvcf']:
         vcf_check_error = vcf_sequence_check(local_file_path, assembly)
         validation_record.update_errors(vcf_check_error)
     elif content_type == 'seqspec':
