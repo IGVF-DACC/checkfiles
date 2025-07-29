@@ -68,8 +68,8 @@ if [[ -n "$IGVF_API_KEY" && -n "$IGVF_SECRET_KEY" ]]; then
 fi
 
 # Complete the docker command
-DOCKER_CMD="$DOCKER_CMD $DOCKER_IMAGE:$TAG python src/checkfiles/checkfiles_local.py --input_file_path /input_data/$FILENAME ${ARGS[@]}"
+DOCKER_CMD="$DOCKER_CMD $DOCKER_IMAGE:$TAG python src/checkfiles/checkfiles_local.py --input_file_path /input_data/$FILENAME"
 
 # Execute the docker command
-echo "Executing: $DOCKER_CMD"
-eval $DOCKER_CMD
+echo "Executing: $DOCKER_CMD ${ARGS[@]}"
+$DOCKER_CMD "${ARGS[@]}"
