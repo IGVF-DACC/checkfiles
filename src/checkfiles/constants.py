@@ -90,6 +90,7 @@ ZIP_FILE_FORMAT = [
     'gds',
     'gff',
     'gtf',
+    'gvcf',
     'mtx',
     'obo',
     'owl',
