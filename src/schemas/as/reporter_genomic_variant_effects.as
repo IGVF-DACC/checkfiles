@@ -17,7 +17,7 @@ float   minusLog10QValue;  "-log10 of Q-value (FDR)"
 float   postProbEffect;  "Posterior probability of a regulatory effect"
 float   CI_lower_95;  "Lower bound of a 95% interval for the variant effect"
 float   CI_upper_95;  "Upper bound of a 95% interval for the variant effect"
-uint    variantPos;  "0-based position of the start of the variant in the tested sequence, -1 if aggregated effect over multiple positions"
+int    variantPos;  "0-based position of the start of the variant in the tested sequence, -1 if aggregated effect over multiple positions"
 string  refAllele;  "normalized Canonical SPDI reference variant sequence, allowed chars [A,T,G,C,0], 0 if the sequence is empty"
 string  altAllele;  "normalized Canonical SPDI alternative variant sequence, allowed chars [A,T,G,C,0], 0 if the sequence is empty"
 )
