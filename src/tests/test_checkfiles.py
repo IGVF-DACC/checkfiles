@@ -517,3 +517,26 @@ def test_make_content_md5sum_search_url():
     search_url = make_content_md5sum_search_url(
         content_md5sum, uuid, portal_url)
     assert search_url == 'https://api.data.igvf.org/search/?type=File&format=json&status!=replaced&status!=deleted&uuid!=unique-id-123&content_md5sum=123456'
+
+def test_main_not_gzipped_file_format_error(mocker):
+    portal_url = 'url_to_portal'
+    file_path = 'src/tests/data/guide_rna_sequences_invalid.tsv'
+    uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
+    md5sum = '4b0b3c68fafc5a26d0fc6150baadaa5b'
+    file_format = 'tsv'
+    output_type = 'reads'
+    file_format_type = None
+    assembly = None
+    portal_auth = None
+    reference_files = None
+
+    file = get_file(file_path, file_format)
+    validation_record = FileValidationRecord(file, uuid)
+    validation_record.original_etag = 'foobar'
+
+    result = file_validation(portal_url, portal_auth, validation_record,
+                             md5sum, output_type, file_format_type, assembly, reference_files)
+    assert result.validation_success == False
+    assert result.errors == {
+        'gzip': 'tsv file should be gzipped'
+    }
