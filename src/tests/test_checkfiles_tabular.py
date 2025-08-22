@@ -6,7 +6,7 @@ from checkfiles.version import get_checkfiles_version
 
 def test_main_tabular_tsv(mocker):
     portal_url = 'url_to_portal'
-    file_path = 'src/tests/data/guide_rna_sequences_invalid.tsv'
+    file_path = 'src/tests/data/guide_rna_sequences_invalid.tsv.gz'
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
     md5sum = '4b0b3c68fafc5a26d0fc6150baadaa5b'
     file_format = 'tsv'
@@ -33,26 +33,20 @@ def test_main_tabular_tsv(mocker):
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
-        'file_size': 4517
+        'file_size': 444,
+        'content_md5sum': '0c603f11eb040115cf371dcc55ef602f'
     }
     errors = result.errors['tabular_file_error']
     assert errors['schema'] == 'src/schemas/table_schemas/guide_rna_sequences.json'
     assert errors['error_number_limit'] == 1000
-    assert errors['number_of_errors'] == 2
-    assert errors['constraint-error'] == {
-        'count': 2,
-        'description': 'A field value does not conform to a constraint.',
-        'details': [
-            {'row_number': 2, 'field_number': 1,
-                'note': 'constraint "required" is "True"'},
-            {'row_number': 2, 'field_number': 4, 'note': 'constraint "enum" is "[\'safe-targeting\', \'non-targeting\', \'targeting\', \'positive control\', \'negative control\', \'variant\']"'}]
-    }
+    assert errors['number_of_errors'] == 63
+    assert errors['constraint-error']['count'] == 15
     assert 'constraint-error' in errors['error_types']
 
 
 def test_main_tabular_csv(mocker):
     portal_url = 'url_to_portal'
-    file_path = 'src/tests/data/guide_rna_sequences_invalid.csv'
+    file_path = 'src/tests/data/guide_rna_sequences_invalid.csv.gz'
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
     md5sum = '23d15f36b2d8d5f70f3632c086173f46'
     file_format = 'csv'
@@ -79,7 +73,8 @@ def test_main_tabular_csv(mocker):
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
-        'file_size': 4556
+        'file_size': 1505,
+        'content_md5sum': '23d15f36b2d8d5f70f3632c086173f46'
     }
     errors = result.errors['tabular_file_error']
     assert errors['schema'] == 'src/schemas/table_schemas/guide_rna_sequences.json'
