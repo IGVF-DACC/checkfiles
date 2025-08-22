@@ -518,6 +518,7 @@ def test_make_content_md5sum_search_url():
         content_md5sum, uuid, portal_url)
     assert search_url == 'https://api.data.igvf.org/search/?type=File&format=json&status!=replaced&status!=deleted&uuid!=unique-id-123&content_md5sum=123456'
 
+
 def test_main_not_gzipped_file_format_error(mocker):
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/guide_rna_sequences_invalid.tsv'
