@@ -1,0 +1,55 @@
+{
+    "fields": [
+        {
+            "name": "barcode",
+            "type": "string",
+            "description": "the actual barcode",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "sample accession",
+            "type": "string",
+            "description": "the IGVF accession. this can be a comma separated list",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "sample description",
+            "type": "string",
+            "description": "Lab alias or English definition of the sample. this can be a comma separated list",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "position",
+            "type": "integer",
+            "description": "Optional for use with complex barcoding systems,  position is the zero based array offset location of the start of the sample identifying barcode sequence",
+            "constraints": {
+                "minimum": 0
+            }
+        },
+        {
+            "name": "parse barcode type",
+            "type": "string",
+            "description": "Optional for parse seq (R for random or T for poly-A primed)",
+            "constraints": {
+                "enum": [
+                    "R",
+                    "T"
+                ]
+            }
+        },
+        {
+            "name": "well",
+            "type": "string",
+            "description": "Optional for multi-well samples"
+        }
+    ],
+    "missingValues": [
+        ""
+    ]
+}

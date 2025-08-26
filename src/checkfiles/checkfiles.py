@@ -32,6 +32,7 @@ from constants import GZIP_CHECK_IGNORED_FILE_FORMAT, NO_HEADER_CONTENT_TYPE, TA
 from constants import VALIDATE_FILES_ARGS, ASSEMBLY_TO_CHROMINFO_PATH_MAP, ASSEMBLY, ASSEMBLY_TO_SEQUENCE_FILE_MAP
 from constants import FASTA_VALIDATION_INFO, SEQSPEC_FILE_VERSION
 from guide_rna_sequences_check import GuideRnaSequencesCheck
+from barcode_to_sample_mapping_check import BarcodeToSampleMappingCheck
 from version import get_checkfiles_version
 
 
@@ -374,6 +375,8 @@ def tabular_file_check(file_format, content_type, file_path, is_gzipped, schemas
         checks = []
         if content_type in ['guide RNA sequences', 'prime editing guide RNA sequences']:
             checks = [GuideRnaSequencesCheck()]
+        elif content_type == 'barcode to sample mapping':
+            checks = [BarcodeToSampleMappingCheck()]
         if not allow_additional_fields:
             report = validate(file_path, schema=schema_path,
                               limit_errors=max_error, checks=checks, dialect=dialect, format=file_format)
