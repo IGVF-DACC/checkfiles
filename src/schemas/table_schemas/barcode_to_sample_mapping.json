@@ -13,7 +13,8 @@
             "type": "string",
             "description": "the IGVF accession. this can be a comma separated list",
             "constraints": {
-                "required": true
+                "required": true,
+                "pattern": "^IGVFSM[0-9][0-9][0-9][0-9][A-Z][A-Z][A-Z][A-Z](,IGVFSM[0-9][0-9][0-9][0-9][A-Z][A-Z][A-Z][A-Z])*$"
             }
         },
         {
