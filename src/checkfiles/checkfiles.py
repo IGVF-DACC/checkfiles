@@ -199,7 +199,8 @@ def check_md5sum(expected_md5sum, calculated_md5sum):
 
 
 def make_content_md5sum_search_url(content_md5sum, uuid, portal_url):
-    search_url = f'{portal_url}/search/?type=File&format=json&status!=replaced&status!=deleted&uuid!={uuid}&content_md5sum={content_md5sum}'
+    search_url = f'{portal_url}/search /?type = File & format = json & status != replaced & status != deleted & uuid != {
+        uuid} & content_md5sum = {content_md5sum}'
     logger.info(f'content_md5sum search url: {search_url}')
     return search_url
 
@@ -318,7 +319,8 @@ def fastq_get_average_read_length_and_number_of_reads(file_path):
     try:
         output = subprocess.check_output(command)
     except subprocess.CalledProcessError as e:
-        message = f'error when calculating stats for fastq in {file_path}: {str(e)}'
+        message = f'error when calculating stats for fastq in {
+            file_path}: {str(e)}'
         logger.exception(message)
         # checker should have updated error by this point
         return {}
@@ -459,7 +461,8 @@ def seqspec_file_check(file_path, validate_onlist_files=True):
         spec = seqspec_format(spec)
         version = seqspec_version(spec)['file_version']
         if version not in SEQSPEC_FILE_VERSIONS:
-            error['seqspec_error'] = f'The seqspec file version is {version}, while the required version should be in {SEQSPEC_FILE_VERSIONS}.'
+            error['seqspec_error'] = f'The seqspec file version is {
+                version}, while the required version should be in {SEQSPEC_FILE_VERSIONS}.'
             return error
         if validate_onlist_files:
             errors = seqspec_check(spec, 'igvf')
@@ -486,14 +489,16 @@ def validate_files_check(file_path, file_format, file_format_type, assembly, chr
     try:
         chrom_info_file_path = chrominfo_file_paths[assembly]
     except KeyError:
-        error_message = f'{assembly} is not a valid assembly. Valid assemblies: {list(chrominfo_file_paths.keys())}'
+        error_message = f'{assembly} is not a valid assembly. Valid assemblies: {
+            list(chrominfo_file_paths.keys())}'
         error['validate_files'] = error_message
         return error
     try:
         validate_args = get_validate_files_args(
             file_format, file_format_type, chrom_info_file_path)
     except KeyError:
-        error_message = f'file_format: {file_format} file_format_type: {file_format_type} combination not allowed.'
+        error_message = f'file_format: {file_format} file_format_type: {
+            file_format_type} combination not allowed.'
         error['validate_files'] = error_message
         return error
     command = ['validateFiles'] + validate_args + [file_path]
@@ -558,7 +563,8 @@ def upload_credentials_are_expired(portal_uri: str, file_uuid: str, portal_auth:
 
 def fetch_pending_files_metadata(portal_uri: str, portal_auth: PortalAuth, number_of_files: Optional[int] = None) -> list:
     if number_of_files is not None:
-        search = f'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&field=validate_onlist_files&field=reference_files&limit={number_of_files}'
+        search = f'search?type = File & upload_status = pending & field = uuid & field = upload_status & field = md5sum & field = file_format & field = file_format_type & field = s3_uri & field = assembly & field = content_type & field = validate_onlist_files & field = reference_files & limit = {
+            number_of_files}'
     else:
         search = 'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&field=validate_onlist_files&field=reference_files&limit=all'
     search_uri = f'{portal_uri}/{search}'
@@ -672,7 +678,8 @@ def main(args):
                         args.server, portal_auth, file_validation_complete_record)
                     print(json.dumps(patch_response))
         except Exception as err:
-            message = f'exception occurred when checking file uuid {args.uuid}: {str(err)}'
+            message = f'exception occurred when checking file uuid {
+                args.uuid}: {str(err)}'
             logger.exception(message)
             sys.exit(1)  # Retry Job Task by exiting the process
     else:
