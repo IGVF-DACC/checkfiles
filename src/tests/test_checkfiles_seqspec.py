@@ -16,9 +16,12 @@ def test_seqspec_file_check_valid_for_igvf():
 def test_seqspec_file_check_invalid():
     file_path = 'src/tests/data/seqspec_invalid.yaml.gz'
     error = seqspec_file_check(file_path)
-    assert error == {
-        'seqspec_error':  [{'error_message': "'atac-illumina_p5' sequence 'AATGATACGGCGACCACCGAGATCTACAC' has length 29, expected range (30, 30)", 'error_object': 'region', 'error_type': 'check_sequence_lengths'}]} != {'seqspec_error': ["[error 1] 'atac-illumina_p5' sequence 'AATGATACGGCGACCACCGAGATCTACAC' has length 29, expected range (30, 30)"]
-                                                                                                                                                                                                                           }
+    assert len(error['seqspec_error']) == 2
+    assert error['seqspec_error'][0]['error_type'] == 'check_sequence_lengths'
+    assert error['seqspec_error'][0][
+        'error_message'] == "'atac-illumina_p5' sequence 'AATGATACGGCGACCACCGAGATCTACAC' has length 29, expected range (30, 30)"
+    assert error['seqspec_error'][0]['error_object'] == 'region'
+    assert error['seqspec_error'][1]['error_type'] == 'check_sequence_lengths'
 
 
 def test_seqspec_file_check_skip_onlist_valid():
@@ -41,7 +44,7 @@ def test_seqpec_file_check_old_version():
     file_path = 'src/tests/data/seqspec_old_version.yaml.gz'
     error = seqspec_file_check(file_path)
     assert error == {
-        'seqspec_error': 'The seqspec file version is 0.2.0, while version 0.3.0 is required.'
+        'seqspec_error': 'The seqspec file version is 0.2.0, while the required version should be in [\'0.3.0\', \'0.4.0\'].'
     }
 
 
@@ -53,3 +56,9 @@ def test_seqspec_file_check_invalid_read_id():
         {'error_type': 'check_schema',
             'error_message': "'FI1165AJSO' does not match '^IGVF.*' in spec['sequence_spec'][0]['read_id']", 'error_object': "'read_id'"}
     ]
+
+
+def test_seqspec_file_check_version_0_4_0():
+    file_path = 'src/tests/data/seqspec_version_040_valid.yaml.gz'
+    error = seqspec_file_check(file_path)
+    assert error == {}

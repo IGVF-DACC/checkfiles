@@ -23,6 +23,7 @@ from frictionless import system, validate, describe, Schema, Dialect
 from seqspec.utils import load_spec as seqspec_load_spec
 from seqspec.seqspec_version import seqspec_version
 from seqspec.seqspec_check import seqspec_check
+from seqspec.seqspec_format import seqspec_format
 
 import file
 import logformatter
@@ -30,7 +31,7 @@ from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE
 from constants import MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE, ASSEMBLY_REPORT_FILE_PATH, ZIP_FILE_FORMAT
 from constants import GZIP_CHECK_IGNORED_FILE_FORMAT, NO_HEADER_CONTENT_TYPE, TABULAR_FORMAT, TABULAR_FILE_SCHEMAS
 from constants import VALIDATE_FILES_ARGS, ASSEMBLY_TO_CHROMINFO_PATH_MAP, ASSEMBLY, ASSEMBLY_TO_SEQUENCE_FILE_MAP
-from constants import FASTA_VALIDATION_INFO, SEQSPEC_FILE_VERSION
+from constants import FASTA_VALIDATION_INFO, SEQSPEC_FILE_VERSIONS
 from guide_rna_sequences_check import GuideRnaSequencesCheck
 from version import get_checkfiles_version
 
@@ -454,15 +455,16 @@ def seqspec_file_check(file_path, validate_onlist_files=True):
         logger.warning(
             f'IGVF_API_KEY and IGVF_SECRET_KEY are not set. seqspec check will not be able to access files that are not released.')
     try:
-        spec = seqspec_load_spec(file_path)
+        spec = seqspec_load_spec(file_path, strict=False)
+        spec = seqspec_format(spec)
         version = seqspec_version(spec)['file_version']
-        if version != SEQSPEC_FILE_VERSION:
-            error['seqspec_error'] = f'The seqspec file version is {version}, while version {SEQSPEC_FILE_VERSION} is required.'
+        if version not in SEQSPEC_FILE_VERSIONS:
+            error['seqspec_error'] = f'The seqspec file version is {version}, while the required version should be in {SEQSPEC_FILE_VERSIONS}.'
             return error
         if validate_onlist_files:
-            errors = seqspec_check(spec, file_path, 'igvf')
+            errors = seqspec_check(spec, 'igvf')
         else:
-            errors = seqspec_check(spec, file_path, 'igvf_onlist_skip')
+            errors = seqspec_check(spec, 'igvf_onlist_skip')
         if errors:
             error['seqspec_error'] = errors
     except Exception as e:

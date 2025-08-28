@@ -61,9 +61,15 @@ def create_checkfiles_instance(event, context):
     # clone checkfiles code and build the virtual environment
     user_data = f'''#!/bin/bash
     cd /home/ubuntu
+    # Install Python 3.12
+    sudo apt update
+    sudo apt install -y software-properties-common
+    sudo add-apt-repository -y ppa:deadsnakes/ppa
+    sudo apt update
+    sudo apt install -y python3.12 python3.12-venv python3.12-pip
     git clone https://github.com/IGVF-DACC/checkfiles.git --branch {tag} --single-branch
     cd checkfiles
-    python3 -m venv venv
+    python3.12 -m venv venv
     source venv/bin/activate
     pip install -r src/checkfiles/requirements.txt
     python src/checkfiles/utils/download_ref_files.py

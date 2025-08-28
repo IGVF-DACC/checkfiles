@@ -15,10 +15,16 @@ ENV IGVF_SECRET_KEY=$IGVF_SECRET_KEY
 # Create non-root user
 RUN useradd -u 1444 -m checkfiles
 
-# Install base system packages
+# Install base system packages and Python 3.12
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
-    python3-pip \
-    python3-venv \
+    software-properties-common \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get update \
+    && apt-get install -y \
+    python3.12 \
+    python3.12-venv \
+    python3.12-dev \
     build-essential \
     libbz2-dev \
     liblzma-dev \
@@ -65,7 +71,7 @@ RUN curl -sS -L -o /usr/local/bin/validateFiles https://raw.githubusercontent.co
     && chmod +x /usr/local/bin/validateFiles
 
 # Set up Python virtual environment
-RUN python3 -m venv $VIRTUAL_ENV
+RUN python3.12 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 RUN chown -R  checkfiles:checkfiles $VIRTUAL_ENV
