@@ -336,3 +336,23 @@ def test_tabular_file_check_txt_filename():
     tabular_file_error = error['tabular_file_error']
     assert tabular_file_error['number_of_errors'] == 1
     assert 'incorrect-label' in tabular_file_error['error_types']
+
+
+def test_tabular_file_check_barcode_to_sample_mapping_valid():
+    file_path = 'src/tests/data/barcode_to_sample_mapping_valid.tsv'
+    is_gzipped = False
+    file_format = 'tsv'
+    error = tabular_file_check(
+        file_format, 'barcode to sample mapping', file_path, is_gzipped)
+    assert error == {}
+
+
+def test_tabular_file_check_barcode_to_sample_mapping_invalid():
+    file_path = 'src/tests/data/barcode_to_sample_mapping_invalid.tsv'
+    is_gzipped = False
+    file_format = 'tsv'
+    error = tabular_file_check(
+        file_format, 'barcode to sample mapping', file_path, is_gzipped)
+    assert error['tabular_file_error']['number_of_errors'] == 2
+    assert 'constraint-error' in error['tabular_file_error']['error_types']
+    assert 'row-constraint' in error['tabular_file_error']['error_types']
