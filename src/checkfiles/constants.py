@@ -94,6 +94,7 @@ ZIP_FILE_FORMAT = [
     'mtx',
     'obo',
     'owl',
+    'rds',
     'tagAlign',
     'tar',
     'tbi',
