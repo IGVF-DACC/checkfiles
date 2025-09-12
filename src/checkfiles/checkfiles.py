@@ -1,6 +1,7 @@
 import argparse
 import datetime
 import gzip
+import h5py
 from io import BytesIO
 import json
 import logging
@@ -141,6 +142,9 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     elif file_format == 'fasta':
         fasta_check_error = fasta_check(local_file_path, is_gzipped)
         validation_record.update_errors(fasta_check_error)
+    elif file_format == 'h5ad':
+        h5ad_check_error = check_valid_h5ad_file_format(local_file_path)
+        validation_record.update_errors(h5ad_check_error)
     elif file_format in TABULAR_FORMAT:
         tabular_file_check_error = tabular_file_check(
             file_format, content_type, local_file_path, is_gzipped)
@@ -178,6 +182,15 @@ def get_header_row(file_path, is_gzipped):
 
     return count + 1
 
+def check_valid_h5ad_file_format(file_path):
+    error = {}
+    try:
+        with h5py.File(file_path, 'r') as f:
+            if not all(group in f for group in ['X', 'obs', 'var']):
+                error = {'h5ad_error': 'Missing one or more required anndata groups X, obs and var. This appears to be a generic h5 file.'}
+    except Exception as e:
+        error = {'h5ad_error': f'Exception checking h5ad file format: {str(e)}'}
+    return error
 
 def check_valid_gzipped_file_format(is_gzipped, file_format, zip_file_format=ZIP_FILE_FORMAT):
     error = {}
