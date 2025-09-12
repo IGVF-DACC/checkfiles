@@ -226,19 +226,23 @@ def test_validate_files_fastq_check_pass():
     error = validate_files_fastq_check(file_path)
     assert error == {}
 
+
 def test_h5ad_validation():
     # Test valid h5ad
     result = check_valid_h5ad_file_format('src/tests/data/valid_minimal.h5ad')
     assert not result  # Should be empty (no errors)
-    
+
     # Test invalid generic h5
-    result = check_valid_h5ad_file_format('src/tests/data/invalid_generic_h5.h5ad')
+    result = check_valid_h5ad_file_format(
+        'src/tests/data/invalid_generic_h5.h5ad')
     assert 'h5ad_error' in result
     assert result['h5ad_error'] == 'Missing one or more required anndata groups X, obs and var. This appears to be a generic h5 file.'
-    
+
     # Test partial anndata
-    result = check_valid_h5ad_file_format('src/tests/data/partial_anndata_h5.h5ad')
+    result = check_valid_h5ad_file_format(
+        'src/tests/data/partial_anndata_h5.h5ad')
     assert 'h5ad_error' in result
+
 
 def test_main_empty_file(mocker):
     portal_url = 'url_to_portal'

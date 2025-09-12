@@ -182,15 +182,19 @@ def get_header_row(file_path, is_gzipped):
 
     return count + 1
 
+
 def check_valid_h5ad_file_format(file_path):
     error = {}
     try:
         with h5py.File(file_path, 'r') as f:
             if not all(group in f for group in ['X', 'obs', 'var']):
-                error = {'h5ad_error': 'Missing one or more required anndata groups X, obs and var. This appears to be a generic h5 file.'}
+                error = {
+                    'h5ad_error': 'Missing one or more required anndata groups X, obs and var. This appears to be a generic h5 file.'}
     except Exception as e:
-        error = {'h5ad_error': f'Exception checking h5ad file format: {str(e)}'}
+        error = {
+            'h5ad_error': f'Exception checking h5ad file format: {str(e)}'}
     return error
+
 
 def check_valid_gzipped_file_format(is_gzipped, file_format, zip_file_format=ZIP_FILE_FORMAT):
     error = {}
