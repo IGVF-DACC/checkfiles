@@ -5,7 +5,7 @@ from pprint import pprint
 import file
 import logformatter
 from checkfiles import vcf_sequence_check, seqspec_file_check, cram_pysam_check
-from checkfiles import check_valid_gzipped_file_format, check_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, fasta_check, tabular_file_check, validate_files_check, validate_files_fastq_check
+from checkfiles import check_valid_gzipped_file_format, check_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, fasta_check, tabular_file_check, validate_files_check, validate_files_fastq_check, check_valid_h5ad_file_format
 from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE, TABULAR_FORMAT
 from version import get_checkfiles_version
 
@@ -66,6 +66,9 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
     elif file_format == 'fasta':
         fasta_check_error = fasta_check(input_file_path, is_gzipped)
         validation_record.update_errors(fasta_check_error)
+    elif file_format == 'h5ad':
+        h5ad_check_error = check_valid_h5ad_file_format(input_file_path)
+        validation_record.update_errors(h5ad_check_error)
     elif file_format in TABULAR_FORMAT:
         if not content_type and not tabular_file_schema_path:
             logger.info(
@@ -127,7 +130,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--content_type', help='content type of the file to be checked.')
     parser.add_argument('--file_format', choices=['bam', 'bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe', 'cram',
-                        'csv', 'fasta', 'fastq', 'mtx', 'rds', 'tbi', 'tsv', 'txt', 'vcf', 'yaml'], required=True, help='file format of the file to be checked.')
+                        'csv', 'fasta', 'fastq', 'h5ad', 'mtx', 'rds', 'tbi', 'tsv', 'txt', 'vcf', 'yaml'], required=True, help='file format of the file to be checked.')
     # file_format_type is required for bed file and bigBed file
     parser.add_argument('--file_format_type',
                         help='file format type of the file to be checked.')
