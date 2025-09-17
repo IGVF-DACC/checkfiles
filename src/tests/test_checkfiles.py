@@ -1,5 +1,5 @@
 import datetime
-from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check, get_reference_file_path, vcf_sequence_check, seqspec_file_check, cram_pysam_check
+from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check, get_reference_file_path, vcf_sequence_check, seqspec_file_check, cram_pysam_check, check_valid_h5ad_file_format
 from checkfiles.checkfiles import make_content_md5sum_search_url, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, file_validation
 from checkfiles.checkfiles import get_validate_files_args, validate_files_check, validate_files_fastq_check
 from checkfiles.checkfiles import PortalAuth
@@ -225,6 +225,23 @@ def test_validate_files_fastq_check_pass():
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
     error = validate_files_fastq_check(file_path)
     assert error == {}
+
+
+def test_h5ad_validation():
+    # Test valid h5ad
+    result = check_valid_h5ad_file_format('src/tests/data/valid_minimal.h5ad')
+    assert not result  # Should be empty (no errors)
+
+    # Test invalid generic h5
+    result = check_valid_h5ad_file_format(
+        'src/tests/data/invalid_generic_h5.h5ad')
+    assert 'h5ad_error' in result
+    assert result['h5ad_error'] == 'Missing one or more required anndata groups X, obs and var. This appears to be a generic h5 file.'
+
+    # Test partial anndata
+    result = check_valid_h5ad_file_format(
+        'src/tests/data/partial_anndata_h5.h5ad')
+    assert 'h5ad_error' in result
 
 
 def test_main_empty_file(mocker):
