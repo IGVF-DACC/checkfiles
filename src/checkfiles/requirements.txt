@@ -7,5 +7,5 @@ pytest-cov==4.0.0
 pytest-mock==3.10.0
 py-fasta-validator==0.5
 requests==2.28.1
-# need to change to the version once the new version is released
-git+https://github.com/IGVF-DACC/seqspec.git@v25-08-25
+# use seqspec tag so we can keep track of seqspec update in checkfiles version
+git+https://github.com/IGVF-DACC/seqspec.git@v25-09-23
