@@ -33,7 +33,6 @@ from constants import GZIP_CHECK_IGNORED_FILE_FORMAT, NO_HEADER_CONTENT_TYPE, TA
 from constants import VALIDATE_FILES_ARGS, ASSEMBLY_TO_CHROMINFO_PATH_MAP, ASSEMBLY, ASSEMBLY_TO_SEQUENCE_FILE_MAP
 from constants import FASTA_VALIDATION_INFO, SEQSPEC_FILE_VERSION
 from guide_rna_sequences_check import GuideRnaSequencesCheck
-from barcode_to_sample_mapping_check import BarcodeToSampleMappingCheck
 from version import get_checkfiles_version
 
 
@@ -390,22 +389,38 @@ def tabular_file_check(file_format, content_type, file_path, is_gzipped, schemas
                           skip_errors=['type-error'], dialect=dialect, format=file_format)
     else:
         checks = []
-        if content_type in ['guide RNA sequences', 'prime editing guide RNA sequences']:
-            checks = [GuideRnaSequencesCheck()]
-        elif content_type == 'barcode to sample mapping':
-            checks = [BarcodeToSampleMappingCheck()]
-        if not allow_additional_fields:
+        # handle barcode to sample mapping separately
+        if content_type == 'barcode to sample mapping':
+            infer_schema = describe(
+                file_path, type='schema', dialect=dialect, format=file_format)
+            if len(infer_schema.fields) not in [6, 3]:
+                error = {
+                    'tabular_file_error': f'barcode to sample mapping file should have 6 or 3 columns, but found {len(infer_schema.fields)} columns'
+                }
+                return error
+            if len(infer_schema.fields) == 6:
+                schema_path = schema_path[0]
+            else:
+                schema_path = schema_path[1]
             report = validate(file_path, schema=schema_path,
                               limit_errors=max_error, checks=checks, dialect=dialect, format=file_format)
         else:
-            infer_schema = describe(
-                file_path, type='schema', dialect=dialect, format=file_format)
-            schema = Schema.from_descriptor(schema_path)
-            if len(infer_schema.fields) > len(schema.fields):
-                for i in range(len(schema.fields), len(infer_schema.fields)):
-                    schema.add_field(infer_schema.fields[i])
-            report = validate(file_path, schema=schema,
-                              limit_errors=max_error, checks=checks, dialect=dialect, format=file_format)
+
+            if content_type in ['guide RNA sequences', 'prime editing guide RNA sequences']:
+                checks = [GuideRnaSequencesCheck()]
+
+            if not allow_additional_fields:
+                report = validate(file_path, schema=schema_path,
+                                  limit_errors=max_error, checks=checks, dialect=dialect, format=file_format)
+            else:
+                infer_schema = describe(
+                    file_path, type='schema', dialect=dialect, format=file_format)
+                schema = Schema.from_descriptor(schema_path)
+                if len(infer_schema.fields) > len(schema.fields):
+                    for i in range(len(schema.fields), len(infer_schema.fields)):
+                        schema.add_field(infer_schema.fields[i])
+                report = validate(file_path, schema=schema,
+                                  limit_errors=max_error, checks=checks, dialect=dialect, format=file_format)
 
     if not report.valid:
         report = report.flatten(

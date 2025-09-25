@@ -1,0 +1,29 @@
+{
+    "fields": [
+        {
+            "name": "barcode",
+            "type": "string",
+            "description": "the actual barcode",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "sample accession",
+            "type": "string",
+            "description": "the IGVF accession. this can be a comma separated list",
+            "constraints": {
+                "required": true,
+                "pattern": "^IGVFSM[0-9][0-9][0-9][0-9][A-Z][A-Z][A-Z][A-Z](,IGVFSM[0-9][0-9][0-9][0-9][A-Z][A-Z][A-Z][A-Z])*$"
+            }
+        },
+        {
+            "name": "sample description",
+            "type": "string",
+            "description": "Lab alias or English definition of the sample. this can be a comma separated list",
+            "constraints": {
+                "required": true
+            }
+        }
+    ]
+}
