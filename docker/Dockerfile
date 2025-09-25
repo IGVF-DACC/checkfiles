@@ -32,8 +32,7 @@ RUN apt-get update && apt-get install -y \
     libboost-all-dev \
     libncurses-dev \
     libcurl4-openssl-dev \
-    rustc \
-    cargo \
+    rust-1.82-all \
     && rm -rf /var/lib/apt/lists/*
 
 # Install samtools
@@ -54,7 +53,7 @@ RUN wget https://github.com/EBIvariation/vcf-validator/releases/download/v0.10.0
 # Install fastq_stats
 RUN git clone https://github.com/IGVF-DACC/fastq_stats.git \
     && cd fastq_stats \
-    && cargo build --release \
+    && cargo-1.82 build --release \
     && cp target/release/fastq_stats /usr/bin \
     && chmod 755 /usr/bin/fastq_stats \
     && cd .. \
