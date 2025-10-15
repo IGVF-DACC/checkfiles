@@ -1,0 +1,90 @@
+{
+    "fields": [
+        {
+            "name": "ElementChr",
+            "type": "string",
+            "description": "Chromosome name in Gencode/UCSC notation.",
+            "constraints": {
+                "required": true,
+                "pattern": "^chr([1-9]|1[0-9]|2[0-2]|X|Y|M)$"
+            }
+        },
+        {
+            "name": "ElementStart",
+            "type": "integer",
+            "description": "Start coordinate of the regulatory element (0-based).",
+            "constraints": {
+                "required": true,
+                "minimum": 0
+            }
+        },
+        {
+            "name": "ElementEnd",
+            "type": "integer",
+            "description": "End coordinate of the regulatory element (0-based).",
+            "constraints": {
+                "required": true,
+                "minimum": 0
+            }
+        },
+        {
+            "name": "ElementName",
+            "type": "string",
+            "description": "Unique element identifier.",
+            "constraints": {
+                "required": true,
+                "unique": true
+            }
+        },
+        {
+            "name": "ElementClass",
+            "type": "string",
+            "description": "Class of the element, i.e. is it a promoter, located in a gene body or intergenic?",
+            "constraints": {
+                "required": true,
+                "enum": [
+                    "promoter",
+                    "genic",
+                    "intergenic"
+                ]
+            }
+        },
+        {
+            "name": "GeneSymbol",
+            "type": "string",
+            "description": "TargetGene Symbol according to Ensembl.",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "GeneEnsemblID",
+            "type": "string",
+            "description": "Ensembl Gene ID."
+        },
+        {
+            "name": "GeneTSS",
+            "type": "integer",
+            "description": "Transcription start site of the target gene (0-based)",
+            "constraints": {
+                "minimum": 0
+            }
+        },
+        {
+            "name": "BiosampleTermName",
+            "type": "string",
+            "description": "Biosample / cell type name; NA if BiosampleAgnostic is 'True'"
+        },
+        {
+            "name": "Score",
+            "type": "number",
+            "description": "Main predictor score for the element-gene pair, will be shown in catalog.",
+            "constraints": {
+                "required": true
+            }
+        }
+    ],
+    "missingValues": [
+        "NA"
+    ]
+}

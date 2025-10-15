@@ -1,0 +1,17 @@
+# Source: scE2G
+# Version: v1.2.0
+# GenomeBuild: IGVFFI7399RDTR
+# URL: https://github.com/EngreitzLab/scE2G/releases/tag/v1.2
+# Assays: 10x Multiome
+# SampleAgnostic: False
+# SampleTermName: ansuman-satpathy:jurkat_1,ansuman-satpathy:jurkat_2
+# SampleTermID: EFO:0002824
+# SampleSummaryShort: HCT116
+# Metadata: 
+# ScoreThreshold: 0.177
+# ScoreType: positive_score
+ElementChr	ElementStart	ElementEnd	ElementName	ElementClass	GeneSymbol	GeneEnsemblID	GeneTSS	BiosampleTermName	Score
+chr1	778166	778952	chr1:778166-778952	test	HCT116	ENSG00000225880	827522	test	0.501553310167141
+chr1	778166	778952	chr1:778166-778952	promoter	HCT116	ENSG00000228794	827590	test	0.461674850447113
+chr1	827272	827840	chr1:878166-878952	promoter	HCT116	ENSG00000225880	827522	test	0.969354888529756
+chr1	827272	827840	chr1:978166-978952	promoter	HCT116	ENSG00000228794	827590	test	0.955111498801296
