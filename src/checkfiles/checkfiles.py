@@ -30,7 +30,7 @@ import logformatter
 from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE
 from constants import MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE, ASSEMBLY_REPORT_FILE_PATH, ZIP_FILE_FORMAT
 from constants import GZIP_CHECK_IGNORED_FILE_FORMAT, NO_HEADER_CONTENT_TYPE, TABULAR_FORMAT, TABULAR_FILE_SCHEMAS
-from constants import VALIDATE_FILES_ARGS, ASSEMBLY_TO_CHROMINFO_PATH_MAP, ASSEMBLY, ASSEMBLY_TO_SEQUENCE_FILE_MAP
+from constants import VALIDATE_FILES_ARGS, ASSEMBLY_TO_CHROMINFO_PATH_MAP, ASSEMBLY_FOR_VCF, ASSEMBLY_TO_SEQUENCE_FILE_MAP
 from constants import FASTA_VALIDATION_INFO, SEQSPEC_FILE_VERSION
 from guide_rna_sequences_check import GuideRnaSequencesCheck
 from version import get_checkfiles_version
@@ -466,7 +466,7 @@ def tabular_file_check(file_format, content_type, file_path, is_gzipped, schemas
 
 def vcf_sequence_check(file_path, assembly):
     error = {}
-    if assembly not in ASSEMBLY:
+    if assembly not in ASSEMBLY_FOR_VCF:
         error['vcf_error'] = f'assembly {assembly} is not supported.'
         return error
     ref_file_path = ASSEMBLY_TO_SEQUENCE_FILE_MAP[assembly]

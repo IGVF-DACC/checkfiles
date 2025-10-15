@@ -96,9 +96,9 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
 
 
 def main(args):
-    if args.assembly is None and args.file_format in ['bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe']:
+    if args.assembly is None and args.file_format in ['bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe', 'vcf', 'gvcf']:
         raise ValueError(
-            'assembly is required for file formats: bed, bigWig, bigInteract, bigBed, bedpe')
+            'assembly is required for file formats: bed, bigWig, bigInteract, bigBed, bedpe, vcf, gvcf')
     if args.file_format in ['bed', 'bigBed'] and args.file_format_type is None:
         raise ValueError(
             'file_format_type is required for bed and bigBed file')
@@ -124,9 +124,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Checkfiles argumentparser')
     parser.add_argument('--input_file_path', required=True,
                         help='path of the local file to be checked.')
-    # assembly is required for some file formats: 'bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe'
+    # assembly is required for some file formats: 'bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe', 'vcf', 'gvcf'
     parser.add_argument(
-        '--assembly', choices=['GRCh38', 'GRCm39'], help='assembly of the file to be checked.')
+        '--assembly', choices=['GRCh38', 'GRCm39', 'CAST_EiJ_T2T_v1', 'C57BL_6J_T2T_v1 + GRCm39_X'], help='assembly of the file to be checked.')
     parser.add_argument(
         '--content_type', help='content type of the file to be checked.')
     parser.add_argument('--file_format', choices=['bam', 'bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe', 'cram',
