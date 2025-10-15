@@ -374,3 +374,23 @@ def test_tabular_file_check_barcode_to_sample_mapping_four_columns_invalid():
     error = tabular_file_check(
         file_format, 'barcode to sample mapping', file_path, is_gzipped)
     assert error['tabular_file_error'] == 'barcode to sample mapping file should have 6 or 3 columns, but found 4 columns'
+
+
+def test_tabular_file_check_element_to_gene_interactions_valid():
+    file_path = 'src/tests/data/element_to_gene_interactions_valid.tsv'
+    is_gzipped = False
+    file_format = 'tsv'
+    error = tabular_file_check(
+        file_format, 'element to gene interactions', file_path, is_gzipped)
+    assert error == {}
+
+
+def test_tabular_file_check_element_to_gene_interactions_invalid():
+    file_path = 'src/tests/data/element_to_gene_interactions_invalid.tsv'
+    is_gzipped = False
+    file_format = 'tsv'
+    error = tabular_file_check(
+        file_format, 'element to gene interactions', file_path, is_gzipped)
+    assert error['tabular_file_error']['number_of_errors'] == 2
+    assert 'constraint-error' in error['tabular_file_error']['error_types']
+    assert 'unique-error' in error['tabular_file_error']['error_types']
