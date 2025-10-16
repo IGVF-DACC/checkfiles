@@ -1,0 +1,17 @@
+program_id,gene,gene_symbol,score,program_annotation,program_annotation_term,program_annotation_id
+1,ENSG00000138829,FBN2,0.023057757,Cardiac Muscle Cell Development,Cardiac Muscle Cell Development,GO:0005575
+1,ENSG00000196569,LAMA2,0.021491501,Cardiac Muscle Cell Development,Cardiac Muscle Cell Development,GO:0005575     
+1,ENSG00000160808,MYL3,0.019720434,Cardiac Muscle Cell Development,Cardiac Muscle Cell Development,GO:0005575
+1,ENSG00000185760,KCNQ5,0.019238391,Cardiac Muscle Cell Development,Cardiac Muscle Cell Development,GO:0005575
+1,ENSG00000112769,LAMA4,0.017509004,Cardiac Muscle Cell Development,Cardiac Muscle Cell Development,GO:0005575
+1,ENSG00000129116,PALLD,0.016219643,Cardiac Muscle Cell Development,Cardiac Muscle Cell Development,GO:0005575
+1,ENSG00000170962,PDGFD,0.016192071,Cardiac Muscle Cell Development,Cardiac Muscle Cell Development,GO:0005575
+1,ENSG00000092054,MYH7,0.015675213,Cardiac Muscle Cell Development,Cardiac Muscle Cell Development,GO:0005575
+1,ENSG00000155657,TTN,0.015292409,Cardiac Muscle Cell Development,Cardiac Muscle Cell Development,GO:0005575
+1,ENSG00000145808,ADAMTS19,0.015092742,Cardiac Muscle Cell Development,Cardiac Muscle Cell Development,GO:0005575
+1,ENSG00000114854,TNNC1,0.014540435,Cardiac Muscle Cell Development,Cardiac Muscle Cell Development,GO:0005575
+1,ENSG00000145244,CORIN,0.014240085,Cardiac Muscle Cell Development,Cardiac Muscle Cell Development,GO:0005575
+1,ENSG00000038427,VCAN,0.013691879,Cardiac Muscle Cell Development,Cardiac Muscle Cell Development,GO:0005575
+1,ENSG00000198336,MYL4,0.013690238,Cardiac Muscle Cell Development,Cardiac Muscle Cell Development,GO:0005575
+1,ENSG00000154556,SORBS2,0.013657687,Cardiac Muscle Cell Development,Cardiac Muscle Cell Development,GO:0005575
+1,ENSG00000183023,SLC8A1,0.013424136,Cardiac Muscle Cell Development,Cardiac Muscle Cell Development,GO:0005575

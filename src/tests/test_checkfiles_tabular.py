@@ -394,3 +394,33 @@ def test_tabular_file_check_element_to_gene_interactions_invalid():
     assert error['tabular_file_error']['number_of_errors'] == 2
     assert 'constraint-error' in error['tabular_file_error']['error_types']
     assert 'unique-error' in error['tabular_file_error']['error_types']
+
+
+def test_tabular_file_check_gene_universe_valid():
+    file_path = 'src/tests/data/gene_universe_valid.csv'
+    is_gzipped = False
+    file_format = 'csv'
+    content_type = 'gene universe'
+    error = tabular_file_check(
+        file_format, content_type, file_path, is_gzipped)
+    assert error == {}
+
+
+def test_tabular_file_check_gene_programs_valid():
+    file_path = 'src/tests/data/gene_programs_valid.csv'
+    is_gzipped = False
+    file_format = 'csv'
+    content_type = 'gene programs'
+    error = tabular_file_check(
+        file_format, content_type, file_path, is_gzipped)
+    assert error == {}
+
+
+def test_tabular_file_check_gene_program_regulators_valid():
+    file_path = 'src/tests/data/gene_program_regulators_valid.csv'
+    is_gzipped = False
+    file_format = 'csv'
+    content_type = 'gene program regulators'
+    error = tabular_file_check(
+        file_format, content_type, file_path, is_gzipped)
+    assert error == {}

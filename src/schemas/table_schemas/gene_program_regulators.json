@@ -1,0 +1,78 @@
+{
+    "fields": [
+        {
+            "name": "program_id",
+            "type": "string",
+            "description": "Unique gene program identifier. GP_{number}",
+            "example": "GP_1",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "gene",
+            "type": "string",
+            "description": "Ensembl ID using official IGVF GENCODE version (V43)",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "gene_symbol",
+            "type": "string",
+            "description": "Gene symbol from official IGVF GENCODE version (V43)",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "promoter_coordinates",
+            "type": "string",
+            "description": "The hg38 coordinates used for the targeted promoter element. N/A"
+        },
+        {
+            "name": "log2FC",
+            "type": "number",
+            "description": "Log2 of the fold change of mean program scores for those cells with perturbation vs reference group. Positive values indicate the mean program score increases with the perturbation, a negative value indicates the mean program score decreases",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "reference_group",
+            "type": "string",
+            "description": "Flexible tag describing the role of the guides used as a reference group to calculate a log2FC",
+            "example": "non-targeting",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "test_statistic",
+            "type": "number",
+            "description": "Test statistic for difference in program scores between cells that were perturbed with cells that were not perturbed",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "p_nominal_nlog10",
+            "type": "number",
+            "description": "-log10 uncorrected nominal p-value for test statistic. If not available, NaN"
+        },
+        {
+            "name": "fdr_nlog10",
+            "type": "number",
+            "description": "-log10 p-value corrected for multiple hypothesis testing, as appropriate for this experiment. If not available, NaN"
+        },
+        {
+            "name": "fdr_method",
+            "type": "string",
+            "description": "Method used for multiple testing correction, e.g. 'Bonferroni', 'permutation', 'Benjamini-Hochberg', …"
+        }
+    ],
+    "missingValues": [
+        "N/A",
+        "NaN"
+    ]
+}

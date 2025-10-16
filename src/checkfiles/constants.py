@@ -42,6 +42,9 @@ NO_HEADER_CONTENT_TYPE = [
 TABULAR_FILE_SCHEMAS = {
     'barcode to sample mapping': ['src/schemas/table_schemas/barcode_to_sample_mapping.json', 'src/schemas/table_schemas/barcode_to_sample_mapping_three_columns.json'],
     'element to gene interactions': 'src/schemas/table_schemas/element_to_gene_interactions.json',
+    'gene programs': 'src/schemas/table_schemas/gene_programs.json',
+    'gene program regulators': 'src/schemas/table_schemas/gene_program_regulators.json',
+    'gene universe': 'src/schemas/table_schemas/gene_universe.json',
     'guide RNA sequences': 'src/schemas/table_schemas/guide_rna_sequences.json',
     'MPRA sequence designs': 'src/schemas/table_schemas/mpra_sequence_designs.json',
     'prime editing guide RNA sequences': 'src/schemas/table_schemas/prime_editing_guide_rna_sequences.json',
