@@ -6,7 +6,8 @@ import file
 import logformatter
 from checkfiles import vcf_sequence_check, seqspec_file_check, cram_pysam_check
 from checkfiles import check_valid_gzipped_file_format, check_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, fasta_check, tabular_file_check, validate_files_check, validate_files_fastq_check, check_valid_h5ad_file_format
-from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE, TABULAR_FORMAT, ASSEMBLY_FOR_CHROMINFO
+from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE, TABULAR_FORMAT, ASSEMBLY_TO_CHROMINFO_PATH_MAP
+
 from version import get_checkfiles_version
 
 logger = logging.getLogger(__name__)
@@ -126,7 +127,7 @@ if __name__ == '__main__':
                         help='path of the local file to be checked.')
     # assembly is required for some file formats: 'bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe', 'vcf', 'gvcf'
     parser.add_argument(
-        '--assembly', choices=ASSEMBLY_FOR_CHROMINFO, help='assembly of the file to be checked.')
+        '--assembly', choices=ASSEMBLY_TO_CHROMINFO_PATH_MAP.keys(), help='assembly of the file to be checked.')
     parser.add_argument(
         '--content_type', help='content type of the file to be checked.')
     parser.add_argument('--file_format', choices=['bam', 'bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe', 'cram',

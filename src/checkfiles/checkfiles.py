@@ -30,7 +30,7 @@ import logformatter
 from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE
 from constants import MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE, ASSEMBLY_REPORT_FILE_PATH, ZIP_FILE_FORMAT
 from constants import GZIP_CHECK_IGNORED_FILE_FORMAT, NO_HEADER_CONTENT_TYPE, TABULAR_FORMAT, TABULAR_FILE_SCHEMAS
-from constants import VALIDATE_FILES_ARGS, ASSEMBLY_TO_CHROMINFO_PATH_MAP, ASSEMBLY_FOR_VCF, ASSEMBLY_FOR_CHROMINFO, ASSEMBLY_TO_SEQUENCE_FILE_MAP
+from constants import VALIDATE_FILES_ARGS, ASSEMBLY_TO_CHROMINFO_PATH_MAP, ASSEMBLY_FOR_VCF, ASSEMBLY_TO_SEQUENCE_FILE_MAP
 from constants import FASTA_VALIDATION_INFO, SEQSPEC_FILE_VERSION
 from guide_rna_sequences_check import GuideRnaSequencesCheck
 from version import get_checkfiles_version
@@ -516,8 +516,8 @@ def get_validate_files_args(file_format, file_format_type, chrom_info_file, sche
 
 def validate_files_check(file_path, file_format, file_format_type, assembly, chrominfo_file_paths=ASSEMBLY_TO_CHROMINFO_PATH_MAP):
     error = {}
-    if assembly not in ASSEMBLY_FOR_CHROMINFO:
-        error['validate_files'] = f'assembly {assembly} is not supported. Valid assemblies: {ASSEMBLY_FOR_CHROMINFO}'
+    if assembly not in ASSEMBLY_TO_CHROMINFO_PATH_MAP.keys():
+        error['validate_files'] = f'assembly {assembly} is not supported. Valid assemblies: {ASSEMBLY_TO_CHROMINFO_PATH_MAP.keys()}'
         return error
     chrom_info_file_path = chrominfo_file_paths[assembly]
     try:
