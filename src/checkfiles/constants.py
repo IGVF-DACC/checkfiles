@@ -1,5 +1,7 @@
 
 ASSEMBLY_FOR_VCF = ['GRCh38', 'GRCm39']
+ASSEMBLY_FOR_CHROMINFO = ['GRCh38', 'GRCm39',
+                          'CAST_EiJ_T2T_v1', 'C57BL_6J_T2T_v1 + GRCm39_X']
 
 ASSEMBLY_REPORT_FILE_PATH = {
     # this file is downloaded here:https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_assembly_report.txt
