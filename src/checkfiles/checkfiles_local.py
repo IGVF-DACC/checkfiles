@@ -127,7 +127,7 @@ if __name__ == '__main__':
                         help='path of the local file to be checked.')
     # assembly is required for some file formats: 'bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe', 'vcf', 'gvcf'
     parser.add_argument(
-        '--assembly', choices=ASSEMBLY_TO_CHROMINFO_PATH_MAP.keys(), help='assembly of the file to be checked.')
+        '--assembly', choices=list(ASSEMBLY_TO_CHROMINFO_PATH_MAP.keys()), help='assembly of the file to be checked.')
     parser.add_argument(
         '--content_type', help='content type of the file to be checked.')
     parser.add_argument('--file_format', choices=['bam', 'bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe', 'cram',
