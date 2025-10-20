@@ -1,0 +1,20 @@
+{
+    "fields": [
+        {
+            "name": "gene",
+            "type": "string",
+            "description": "Ensembl ID using official IGVF GENCODE version (V43)",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "gene_symbol",
+            "type": "string",
+            "description": "Gene symbol from official IGVF GENCODE version (V43)",
+            "constraints": {
+                "required": true
+            }
+        }
+    ]
+}

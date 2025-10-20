@@ -1,0 +1,57 @@
+{
+    "fields": [
+        {
+            "name": "program_id",
+            "type": "string",
+            "description": "Unique gene program identifier. GP_{number}",
+            "example": "GP_1",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "gene",
+            "type": "string",
+            "description": "Ensembl ID using official IGVF GENCODE version (V43)",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "gene_symbol",
+            "type": "string",
+            "description": "Gene symbol from official IGVF GENCODE version (V43)",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "score",
+            "type": "number",
+            "description": "Program score or loading derived from the method. Positive values indicate a positive relationship between the program and the gene, while a negative value indicates an inverse relationship.",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "program_annotation",
+            "type": "string",
+            "description": "Free text description/annotation corresponding to program_id"
+        },
+        {
+            "name": "program_annotation_term",
+            "type": "string",
+            "description": "Ontology-controlled term for annotation, e.g. using GO (Gene ontology; https://www.ebi.ac.uk/ols4/ontologies/cl)"
+        },
+        {
+            "name": "program_annotation_id",
+            "type": "string",
+            "description": "ontology term ID matching #program_annotation_term, representing an ontology-controlled term ID",
+            "example": "GO:0005575"
+        }
+    ],
+    "missingValues": [
+        "N/A",
+        "NaN"
+    ]
+}
