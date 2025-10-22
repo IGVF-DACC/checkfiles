@@ -1,0 +1,56 @@
+name: Auto Tag Creation
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - 'src/checkfiles/version.py'
+
+jobs:
+  create-tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to push tags
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Needed to check if tag already exists
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Extract version from version.py
+        id: version
+        run: |
+          VERSION=$(python -c "import sys; sys.path.append('src'); from checkfiles.version import VERSION; print(VERSION)")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Check if tag already exists
+        id: tag-check
+        run: |
+          if git rev-parse "${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Tag ${{ steps.version.outputs.version }} already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Tag ${{ steps.version.outputs.version }} does not exist"
+          fi
+
+      - name: Create and push tag
+        if: steps.tag-check.outputs.exists == 'false'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag ${{ steps.version.outputs.version }}
+          git push origin ${{ steps.version.outputs.version }}
+          echo "Created and pushed tag: ${{ steps.version.outputs.version }}"
+
+      - name: Skip tag creation
+        if: steps.tag-check.outputs.exists == 'true'
+        run: |
+          echo "Skipping tag creation - tag ${{ steps.version.outputs.version }} already exists"
