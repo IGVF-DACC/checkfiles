@@ -52,8 +52,7 @@ class GuideRnaSequencesCheck(Check):
             'enhancer',
             'insulator',
             'silencer',
-            'distal element',
-            'splice site',
+            'distal element'
         }:
             value = row.get('putative_target_genes')
             if _is_missing(value) or value == []:
