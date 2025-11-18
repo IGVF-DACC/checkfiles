@@ -138,7 +138,7 @@
             "name": "putative_target_genes",
             "type": "array",
             "description": "List of ENSEMBL IDs associated with the targeted element.",
-            "comment": "Required for positive control guides AND if the target genomic_element ∈ {enhancer, insulator, silencer, distal element, splice site}. ENSEMBL IDs must correspond to GENCODE v43."
+            "comment": "Required for positive control guides AND if the target genomic_element ∈ {enhancer, insulator, silencer, distal element}. ENSEMBL IDs must correspond to GENCODE v43."
         },
         {
             "name": "reporter",
