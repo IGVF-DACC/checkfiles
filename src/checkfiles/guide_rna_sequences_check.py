@@ -196,7 +196,7 @@ class GuideRnaSequencesCheck(Check):
             if not SPDI_RE.match(intended_target_name):
                 note = (
                     'intended_target_name must be a normalized SPDI identifier when '
-                    'genomic_element == variant, e.g. '
+                    'genomic_element is variant, e.g. '
                     'NC_000007.14:117548628:TTTTTTT:TTTTTTTTT'
                 )
                 yield errors.ConstraintError.from_row(
@@ -213,9 +213,8 @@ class GuideRnaSequencesCheck(Check):
         }:
             if not ENSEMBL_GENE_RE.match(intended_target_name):
                 note = (
-                    'intended_target_name must be an ENSEMBL gene ID when '
-                    f'genomic_element == {
-                        genomic_element}, e.g. ENSG00000123456'
+                    f'intended_target_name must be an ENSEMBL gene ID when '
+                    f'genomic_element is promoter/gene/splice site, e.g. ENSG00000123456'
                 )
                 yield errors.ConstraintError.from_row(
                     row,
