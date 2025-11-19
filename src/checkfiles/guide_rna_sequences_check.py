@@ -46,10 +46,9 @@ class GuideRnaSequencesCheck(Check):
                 self._guide_id_to_spacer[guide_id] = spacer
             elif existing_spacer != spacer:
                 note = (
-                    f"guide_id '{
-                        guide_id}' is associated with multiple spacers "
-                    f"('{existing_spacer}' and '{
-                        spacer}'); there must be a 1-to-1 "
+                    f'guide_id {
+                        guide_id} is associated with multiple spacers: '
+                    f'{existing_spacer} and {spacer}; there must be a 1-to-1 '
                     'mapping between guide_id and spacer.'
                 )
                 yield errors.ConstraintError.from_row(
@@ -63,9 +62,9 @@ class GuideRnaSequencesCheck(Check):
                 self._spacer_to_guide_id[spacer] = guide_id
             elif existing_guide_id != guide_id:
                 note = (
-                    f"spacer '{spacer}' is associated with multiple guide_ids "
-                    f"('{existing_guide_id}' and '{
-                        guide_id}'); there must be a 1-to-1 "
+                    f'spacer {spacer} is associated with multiple guide_id: '
+                    f'{existing_guide_id} and {
+                        guide_id}; there must be a 1-to-1 '
                     'mapping between guide_id and spacer.'
                 )
                 yield errors.ConstraintError.from_row(
@@ -92,9 +91,7 @@ class GuideRnaSequencesCheck(Check):
 
             if guide_type in non_targeting_types and targeting is not False:
                 note = (
-                    f"targeting must be False when type is '{guide_type}'. "
-                    'For non-targeting, safe-targeting, and negative control guides, '
-                    'set targeting = False.'
+                    f'targeting must be False when type is {guide_type}.'
                 )
                 yield errors.ConstraintError.from_row(
                     row,
@@ -104,9 +101,7 @@ class GuideRnaSequencesCheck(Check):
 
             if guide_type in targeting_types and targeting is not True:
                 note = (
-                    f"targeting must be True when type is '{guide_type}'. "
-                    "Guides with type 'targeting', 'positive control', or 'variant' "
-                    'must target a genomic locus relevant to the experiment.'
+                    f'targeting must be True when type is {guide_type}.'
                 )
                 yield errors.ConstraintError.from_row(
                     row,
@@ -116,8 +111,6 @@ class GuideRnaSequencesCheck(Check):
 
         # ---------- 3) Conditionally required fields for targeting guides ----------
         if targeting is False:
-            # For non-targeting/safe-targeting/negative control guides, the
-            # positional/element fields are not required; we stop here.
             return
 
         required_when_not_false = [
@@ -136,7 +129,7 @@ class GuideRnaSequencesCheck(Check):
         for field_name in required_when_not_false:
             value = row.get(field_name)
             if _is_missing(value):
-                note = f"{field_name} is required when targeting is not False"
+                note = f'{field_name} is required when targeting is not False'
                 yield errors.ConstraintError.from_row(
                     row,
                     note=note,
@@ -155,8 +148,8 @@ class GuideRnaSequencesCheck(Check):
             value = row.get('putative_target_genes')
             if _is_missing(value) or value == []:
                 note = (
-                    "putative_target_genes is required when type is 'positive control' "
-                    f"and genomic_element is '{genomic_element}'"
+                    'putative_target_genes is required when type is positive control '
+                    f'and genomic_element is {genomic_element}'
                 )
                 yield errors.ConstraintError.from_row(
                     row,
@@ -173,7 +166,7 @@ class GuideRnaSequencesCheck(Check):
             if not SPDI_RE.match(intended_target_name):
                 note = (
                     'intended_target_name must be a normalized SPDI identifier '
-                    "when genomic_element == 'variant', e.g. "
+                    'when genomic_element == variant, e.g. '
                     'NC_000007.14:117548628:TTTTTTT:TTTTTTTTT'
                 )
                 yield errors.ConstraintError.from_row(
@@ -186,7 +179,7 @@ class GuideRnaSequencesCheck(Check):
             if not ENSEMBL_GENE_RE.match(intended_target_name):
                 note = (
                     'intended_target_name must be an ENSEMBL gene ID '
-                    f"when genomic_element == '{genomic_element}', "
+                    f'when genomic_element == {genomic_element}, '
                     'e.g. ENSG00000123456'
                 )
                 yield errors.ConstraintError.from_row(
