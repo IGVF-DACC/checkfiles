@@ -35,84 +35,110 @@ class GuideRnaSequencesCheck(Check):
         self._spacer_to_guide_id = {}
 
     def validate_row(self, row):
-
-        # ---------- 1) Enforce guide_id <-> spacer 1-to-1 ----------
-        guide_id = row.get('guide_id')
-        spacer = row.get('spacer')
-
-        if not _is_missing(guide_id) and not _is_missing(spacer):
-            existing_spacer = self._guide_id_to_spacer.get(guide_id)
-            if existing_spacer is None:
-                self._guide_id_to_spacer[guide_id] = spacer
-            elif existing_spacer != spacer:
-                note = (
-                    f'guide_id {
-                        guide_id} is associated with multiple spacers: '
-                    f'{existing_spacer} and {spacer}; there must be a 1-to-1 '
-                    'mapping between guide_id and spacer.'
-                )
-                yield errors.ConstraintError.from_row(
-                    row,
-                    note=note,
-                    field_name='guide_id',
-                )
-
-            existing_guide_id = self._spacer_to_guide_id.get(spacer)
-            if existing_guide_id is None:
-                self._spacer_to_guide_id[spacer] = guide_id
-            elif existing_guide_id != guide_id:
-                note = (
-                    f'spacer {spacer} is associated with multiple guide_id: '
-                    f'{existing_guide_id} and {
-                        guide_id}; there must be a 1-to-1 '
-                    'mapping between guide_id and spacer.'
-                )
-                yield errors.ConstraintError.from_row(
-                    row,
-                    note=note,
-                    field_name='spacer',
-                )
+        # 1) guide_id <-> spacer must be 1-to-1
+        for error in self._check_guide_spacer_mapping(row):
+            yield error
 
         targeting = row.get('targeting')
         guide_type = row.get('type')
+        genomic_element = row.get('genomic_element')
 
-        # ---------- 2) targeting/type relationship ----------
-        if not _is_missing(guide_type) and targeting is not None:
-            non_targeting_types = {
-                'non-targeting',
-                'safe-targeting',
-                'negative control',
-            }
-            targeting_types = {
-                'targeting',
-                'positive control',
-                'variant',
-            }
+        # 2) targeting/type relationship
+        for error in self._check_targeting_type_relationship(
+            row,
+            targeting=targeting,
+            guide_type=guide_type,
+        ):
+            yield error
 
-            if guide_type in non_targeting_types and targeting is not False:
-                note = (
-                    f'targeting must be False when type is {guide_type}.'
-                )
-                yield errors.ConstraintError.from_row(
-                    row,
-                    note=note,
-                    field_name='targeting',
-                )
+        # 3) required fields for targeting guides
+        for error in self._check_required_fields_for_targeting(row):
+            yield error
 
-            if guide_type in targeting_types and targeting is not True:
-                note = (
-                    f'targeting must be True when type is {guide_type}.'
-                )
-                yield errors.ConstraintError.from_row(
-                    row,
-                    note=note,
-                    field_name='targeting',
-                )
+        # 4) putative_target_genes requirement for positive controls
+        for error in self._check_putative_target_genes(
+            row,
+            guide_type=guide_type,
+            genomic_element=genomic_element,
+        ):
+            yield error
 
-        # ---------- 3) Conditionally required fields for targeting guides ----------
-        if targeting is False:
+        # 5) intended_target_name format rules
+        for error in self._check_intended_target_name_format(
+            row,
+            genomic_element=genomic_element,
+        ):
+            yield error
+
+    def _check_guide_spacer_mapping(self, row):
+        guide_id = row.get('guide_id')
+        spacer = row.get('spacer')
+
+        if _is_missing(guide_id) or _is_missing(spacer):
             return
 
+        existing_spacer = self._guide_id_to_spacer.get(guide_id)
+        if existing_spacer is None:
+            self._guide_id_to_spacer[guide_id] = spacer
+        elif existing_spacer != spacer:
+            note = (
+                f'guide_id {guide_id} is associated with multiple spacers: '
+                f'{existing_spacer} and {spacer}; '
+                'there must be a 1-to-1 mapping between guide_id and spacer.'
+            )
+            yield errors.ConstraintError.from_row(
+                row,
+                note=note,
+                field_name='guide_id',
+            )
+
+        existing_guide_id = self._spacer_to_guide_id.get(spacer)
+        if existing_guide_id is None:
+            self._spacer_to_guide_id[spacer] = guide_id
+        elif existing_guide_id != guide_id:
+            note = (
+                f'spacer {spacer} is associated with multiple guide_ids: '
+                f'{existing_guide_id} and {guide_id}; '
+                'there must be a 1-to-1 mapping between guide_id and spacer.'
+            )
+            yield errors.ConstraintError.from_row(
+                row,
+                note=note,
+                field_name='spacer',
+            )
+
+    def _check_targeting_type_relationship(self, row, targeting, guide_type):
+        if _is_missing(guide_type) or targeting is None:
+            return
+
+        non_targeting_types = {
+            'non-targeting',
+            'safe-targeting',
+            'negative control',
+        }
+        targeting_types = {
+            'targeting',
+            'positive control',
+            'variant',
+        }
+
+        if guide_type in non_targeting_types and targeting is not False:
+            note = f'targeting must be False when type is {guide_type}'
+            yield errors.ConstraintError.from_row(
+                row,
+                note=note,
+                field_name='targeting',
+            )
+
+        if guide_type in targeting_types and targeting is not True:
+            note = f'targeting must be True when type is {guide_type}'
+            yield errors.ConstraintError.from_row(
+                row,
+                note=note,
+                field_name='targeting',
+            )
+
+    def _check_required_fields_for_targeting(self, row):
         required_when_not_false = [
             'guide_chr',
             'guide_start',
@@ -136,37 +162,41 @@ class GuideRnaSequencesCheck(Check):
                     field_name=field_name,
                 )
 
-        # ---------- 4) putative_target_genes requirement for positive controls ----------
-        genomic_element = row.get('genomic_element')
+    def _check_putative_target_genes(self, row, guide_type, genomic_element):
+        if guide_type != 'positive control':
+            return
 
-        if guide_type == 'positive control' and genomic_element in {
+        if genomic_element not in {
             'enhancer',
             'insulator',
             'silencer',
-            'distal element'
+            'distal element',
         }:
-            value = row.get('putative_target_genes')
-            if _is_missing(value) or value == []:
-                note = (
-                    'putative_target_genes is required when type is positive control '
-                    f'and genomic_element is {genomic_element}'
-                )
-                yield errors.ConstraintError.from_row(
-                    row,
-                    note=note,
-                    field_name='putative_target_genes',
-                )
+            return
 
-        # ---------- 5) intended_target_name format by genomic_element ----------
+        putative_target_genes = row.get('putative_target_genes')
+        if _is_missing(putative_target_genes) or putative_target_genes == []:
+            note = (
+                'putative_target_genes is required when type is positive control '
+                f'and genomic_element is {genomic_element}'
+            )
+            yield errors.ConstraintError.from_row(
+                row,
+                note=note,
+                field_name='putative_target_genes',
+            )
+
+    def _check_intended_target_name_format(self, row, genomic_element):
         intended_target_name = row.get('intended_target_name')
+
         if _is_missing(genomic_element) or _is_missing(intended_target_name):
             return
 
         if genomic_element == 'variant':
             if not SPDI_RE.match(intended_target_name):
                 note = (
-                    'intended_target_name must be a normalized SPDI identifier '
-                    'when genomic_element == variant, e.g. '
+                    'intended_target_name must be a normalized SPDI identifier when '
+                    'genomic_element == variant, e.g. '
                     'NC_000007.14:117548628:TTTTTTT:TTTTTTTTT'
                 )
                 yield errors.ConstraintError.from_row(
@@ -174,21 +204,27 @@ class GuideRnaSequencesCheck(Check):
                     note=note,
                     field_name='intended_target_name',
                 )
+            return
 
-        elif genomic_element in {'promoter', 'gene', 'splice site'}:
+        if genomic_element in {
+            'promoter',
+            'gene',
+            'splice site'
+        }:
             if not ENSEMBL_GENE_RE.match(intended_target_name):
                 note = (
-                    'intended_target_name must be an ENSEMBL gene ID '
-                    f'when genomic_element == {genomic_element}, '
-                    'e.g. ENSG00000123456'
+                    'intended_target_name must be an ENSEMBL gene ID when '
+                    f'genomic_element == {
+                        genomic_element}, e.g. ENSG00000123456'
                 )
                 yield errors.ConstraintError.from_row(
                     row,
                     note=note,
                     field_name='intended_target_name',
                 )
+            return
 
-        elif genomic_element in {
+        if genomic_element in {
             'enhancer',
             'insulator',
             'silencer',
@@ -196,8 +232,8 @@ class GuideRnaSequencesCheck(Check):
         }:
             if not COORD_RE.match(intended_target_name):
                 note = (
-                    'intended_target_name must be genomic coordinates '
-                    'when genomic_element is an enhancer/insulator/silencer/'
+                    'intended_target_name must be genomic coordinates when '
+                    'genomic_element is an enhancer/insulator/silencer/'
                     'distal element, e.g. chr1:3691430-3691731'
                 )
                 yield errors.ConstraintError.from_row(
