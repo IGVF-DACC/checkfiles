@@ -1,5 +1,5 @@
 from frictionless import Check, errors
-
+import re
 
 def _is_missing(value):
     if value is None:
@@ -12,6 +12,16 @@ def _is_missing(value):
             return True
     return False
 
+# ENSEMBL gene ID: ENSG + 11 digits (GENCODE v43-style)
+ENSEMBL_GENE_RE = re.compile(r"^ENSG[0-9]{11}$")
+
+# Coordinates: chr1:3691430-3691731
+COORD_RE = re.compile(r"^chr[0-9A-Za-z._-]+:[0-9]+-[0-9]+$")
+
+# SPDI: e.g. NC_000007.14:117548628:TT:TTT
+SPDI_RE = re.compile(
+    r"^[A-Z]{2}_[0-9]+(?:\.[0-9]+)?:[0-9]+:[ACGTN\-]+:[ACGTN\-]+$"
+)
 
 class GuideRnaSequencesCheck(Check):
     Errors = [errors.ConstraintError]
@@ -58,10 +68,50 @@ class GuideRnaSequencesCheck(Check):
                     field_name="spacer",
                 )
 
-        # ---------- 2) Conditionally required fields for targeting guides ----------
         targeting = row.get("targeting")
+        guide_type = row.get("type")
 
+        # ---------- 2) targeting/type relationship ----------
+        if not _is_missing(guide_type) and targeting is not None:
+            non_targeting_types = {
+                "non-targeting",
+                "safe-targeting",
+                "negative control",
+            }
+            targeting_types = {
+                "targeting",
+                "positive control",
+                "variant",
+            }
+
+            if guide_type in non_targeting_types and targeting is not False:
+                note = (
+                    f"targeting must be False when type is '{guide_type}'. "
+                    "For non-targeting, safe-targeting, and negative control guides, "
+                    "set targeting = False."
+                )
+                yield errors.ConstraintError.from_row(
+                    row,
+                    note=note,
+                    field_name="targeting",
+                )
+
+            if guide_type in targeting_types and targeting is not True:
+                note = (
+                    f"targeting must be True when type is '{guide_type}'. "
+                    "Guides with type 'targeting', 'positive control', or 'variant' "
+                    "must target a genomic locus relevant to the experiment."
+                )
+                yield errors.ConstraintError.from_row(
+                    row,
+                    note=note,
+                    field_name="targeting",
+                )
+
+        # ---------- 3) Conditionally required fields for targeting guides ----------
         if targeting is False:
+            # For non-targeting/safe-targeting/negative control guides, the
+            # positional/element fields are not required; we stop here.
             return
 
         required_when_not_false = [
@@ -87,16 +137,14 @@ class GuideRnaSequencesCheck(Check):
                     field_name=field_name,
                 )
 
-        # ---------- 3) putative_target_genes requirement for positive controls ----------
+        # ---------- 4) putative_target_genes requirement for positive controls ----------
         genomic_element = row.get("genomic_element")
-        guide_type = row.get("type")
 
         if guide_type == "positive control" and genomic_element in {
             "enhancer",
             "insulator",
             "silencer",
-            "distal element",
-            "splice site",
+            "distal element"
         }:
             value = row.get("putative_target_genes")
             if _is_missing(value) or value == []:
@@ -108,4 +156,53 @@ class GuideRnaSequencesCheck(Check):
                     row,
                     note=note,
                     field_name="putative_target_genes",
+                )
+
+        # ---------- 5) intended_target_name format by genomic_element ----------
+        intended_target_name = row.get("intended_target_name")
+        if _is_missing(genomic_element) or _is_missing(intended_target_name):
+            return
+
+        if genomic_element == "variant":
+            if not SPDI_RE.match(intended_target_name):
+                note = (
+                    "intended_target_name must be a normalized SPDI identifier "
+                    "when genomic_element == 'variant', e.g. "
+                    "NC_000007.14:117548628:TTTTTTT:TTTTTTTTT"
+                )
+                yield errors.ConstraintError.from_row(
+                    row,
+                    note=note,
+                    field_name="intended_target_name",
+                )
+
+        elif genomic_element in {"promoter", "gene", "splice site"}:
+            if not ENSEMBL_GENE_RE.match(intended_target_name):
+                note = (
+                    "intended_target_name must be an ENSEMBL gene ID "
+                    f"when genomic_element == '{genomic_element}', "
+                    "e.g. ENSG00000123456"
+                )
+                yield errors.ConstraintError.from_row(
+                    row,
+                    note=note,
+                    field_name="intended_target_name",
+                )
+
+        elif genomic_element in {
+            "enhancer",
+            "insulator",
+            "silencer",
+            "distal element",
+        }:
+            if not COORD_RE.match(intended_target_name):
+                note = (
+                    "intended_target_name must be genomic coordinates "
+                    "when genomic_element is an enhancer/insulator/silencer/"
+                    "distal element, e.g. chr1:3691430-3691731"
+                )
+                yield errors.ConstraintError.from_row(
+                    row,
+                    note=note,
+                    field_name="intended_target_name",
                 )

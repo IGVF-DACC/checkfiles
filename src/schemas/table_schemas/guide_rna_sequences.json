@@ -48,13 +48,13 @@
             "name": "guide_chr",
             "type": "string",
             "description": "Chromosome of the guide.",
-            "comment": "Required for targeting guides. Examples: chrX, chr2."
+            "comment": "Required if targeting is TRUE. Examples: chrX, chr2."
         },
         {
             "name": "guide_start",
             "type": "integer",
             "description": "0-based start coordinate of the guide.",
-            "comment": "Required for targeting guides. Coordinates follow half-open convention [start, end). Should not include PAM sequence.",
+            "comment": "Required if targeting is TRUE. Coordinates follow half-open convention [start, end). Should not include PAM sequence.",
             "constraints": {
                 "minimum": 0
             }
@@ -63,7 +63,7 @@
             "name": "guide_end",
             "type": "integer",
             "description": "0-based end coordinate of the guide.",
-            "comment": "Required for targeting guides. Coordinates follow half-open convention [start, end). Should not include PAM sequence.",
+            "comment": "Required if targeting is TRUE. Coordinates follow half-open convention [start, end). Should not include PAM sequence.",
             "constraints": {
                 "minimum": 0
             }
@@ -72,7 +72,7 @@
             "name": "strand",
             "type": "string",
             "description": "Strand of the targeted genomic sequence.",
-            "comment": "Required for targeting guides. Strand must be + or −.",
+            "comment": "Required if targeting is TRUE. Strand must be + or −.",
             "constraints": {
                 "enum": [
                     "+",
@@ -84,13 +84,13 @@
             "name": "pam",
             "type": "string",
             "description": "Protospacer adjacent motif.",
-            "comment": "Required for targeting guides. Reported 5'→3' as it appears on the targeted strand immediately adjacent to the spacer."
+            "comment": "Required if targeting is TRUE. Reported 5'→3' as it appears on the targeted strand immediately adjacent to the spacer."
         },
         {
             "name": "genomic_element",
             "type": "string",
             "description": "Type of genomic element being targeted.",
-            "comment": "Required for targeting guides. gene = gene body; distal element = >2 kb from a TSS when category unknown.",
+            "comment": "Required if targeting is TRUE. gene = gene body; distal element = >2 kb from a TSS when category unknown.",
             "constraints": {
                 "enum": [
                     "variant",
@@ -108,19 +108,19 @@
             "name": "intended_target_name",
             "type": "string",
             "description": "Identifier of the targeted element.",
-            "comment": "Required for targeting guides. variant: SPDI ID (e.g., NC_00007.14:117548628:TT:TTT), promoter: ENSEMBL ID of regulated gene, enhancer/insulator/silencer/distal element: element coordinates (chr:start-end), splice site: ENSEMBL ID, gene: ENSEMBL ID."
+            "comment": "Required if targeting is TRUE. variant: SPDI ID (e.g., NC_00007.14:117548628:TT:TTT), promoter: ENSEMBL ID of regulated gene, enhancer/insulator/silencer/distal element: element coordinates (chr:start-end), splice site: ENSEMBL ID, gene: ENSEMBL ID."
         },
         {
             "name": "intended_target_chr",
             "type": "string",
             "description": "Chromosome of the targeted element.",
-            "comment": "Required for targeting guides. For promoters, use promoter coordinates, not the regulated gene."
+            "comment": "Required if targeting is TRUE. For promoters, use promoter coordinates, not the regulated gene."
         },
         {
             "name": "intended_target_start",
             "type": "integer",
             "description": "0-based start coordinate of the targeted element.",
-            "comment": "Required for targeting guides. For promoters: use promoter coordinates, not the regulated gene. CRISPRa/i/KO: coordinates of regulatory element. Base/prime editing: coordinates of edit.",
+            "comment": "Required if targeting is TRUE. For promoters: use promoter coordinates, not the regulated gene. CRISPRa/i/KO: coordinates of regulatory element. Base/prime editing: coordinates of edit.",
             "constraints": {
                 "minimum": 0
             }
@@ -129,7 +129,7 @@
             "name": "intended_target_end",
             "type": "integer",
             "description": "0-based end coordinate of the targeted element.",
-            "comment": "Required for targeting guides. For promoters: use promoter coordinates, not the regulated gene.",
+            "comment": "Required if targeting is TRUE. For promoters: use promoter coordinates, not the regulated gene.",
             "constraints": {
                 "minimum": 0
             }
@@ -138,7 +138,7 @@
             "name": "putative_target_genes",
             "type": "array",
             "description": "List of ENSEMBL IDs associated with the targeted element.",
-            "comment": "Required for positive control guides AND if the target genomic_element ∈ {enhancer, insulator, silencer, distal element}. ENSEMBL IDs must correspond to GENCODE v43."
+            "comment": "Required if type is positive control guides AND if genomic_element ∈ {enhancer, insulator, silencer, distal element}. ENSEMBL IDs must correspond to GENCODE v43."
         },
         {
             "name": "reporter",
