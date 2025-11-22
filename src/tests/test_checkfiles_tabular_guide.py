@@ -2,6 +2,37 @@ from checkfiles.checkfiles import tabular_file_check, file_validation
 from checkfiles.file import FileValidationRecord
 from checkfiles.file import get_file
 from checkfiles.version import get_checkfiles_version
+from frictionless import Resource
+from checkfiles.guide_rna_sequences_check import GuideRnaSequencesCheck  # <-- adjust path
+
+
+def _constraint_notes_for_row(tabular_file_error, row_number):
+    """Helper to pull all constraint-error notes for a given row."""
+    constraint = tabular_file_error['constraint-error']
+    return [
+        detail['note']
+        for detail in constraint['details']
+        if detail.get('row_number') == row_number
+    ]
+
+
+def run_guide_check_on_rows(path, row_numbers):
+    """
+    Run GuideRnaSequencesCheck across the entire file but only collect
+    ConstraintErrors for the specified 1-based row_numbers.
+    Header is row 1, first data row is 2.
+    Returns a list of (row_number, error) tuples.
+    """
+    resource = Resource(path, format='tsv')
+    check = GuideRnaSequencesCheck()
+    collected = []
+
+    for row in resource.read_rows():
+        row_errors = list(check.validate_row(row))
+        if row.row_number in row_numbers:
+            collected.extend((row.row_number, e) for e in row_errors)
+
+    return collected
 
 
 def test_main_tabular_tsv(mocker):
@@ -228,3 +259,141 @@ def test_tabular_file_check_txt_filename():
     tabular_file_error = error['tabular_file_error']
     assert tabular_file_error['number_of_errors'] == 1
     assert 'incorrect-label' in tabular_file_error['error_types']
+
+
+def test_guide_id_spacer_one_to_one():
+    """
+    New check:
+      - guide_id <-> spacer must be one-to-one across the file.
+
+    Row 3 reuses guide_id 'BASE_VALID' with a different spacer.
+    Row 4 reuses spacer 'AAAAAAAAAAAAAAAAAAAA' with a different guide_id.
+    Both should produce constraint errors with the 1-to-1 mapping message.
+    """
+    file_path = 'src/tests/data/guide_rna_sequences_new_checks.tsv'
+
+    errors = run_guide_check_on_rows(file_path, row_numbers={3, 4})
+
+    notes_row3 = [e.note for rn, e in errors if rn == 3]
+    assert any(
+        'guide_id BASE_VALID is associated with multiple spacers' in note
+        and 'there must be a 1-to-1 mapping between guide_id and spacer' in note
+        for note in notes_row3
+    )
+
+    notes_row4 = [e.note for rn, e in errors if rn == 4]
+    assert any(
+        'spacer AAAAAAAAAAAAAAAAAAAA is associated with multiple guide_ids' in note
+        and 'there must be a 1-to-1 mapping between guide_id and spacer' in note
+        for note in notes_row4
+    )
+
+
+def test_targeting_type_relationship():
+    """
+    New check:
+      - non-targeting/safe-targeting/negative control -> targeting must be False
+      - targeting/positive control/variant -> targeting must be True
+    """
+    file_path = 'src/tests/data/guide_rna_sequences_new_checks.tsv'
+
+    errors = run_guide_check_on_rows(file_path, row_numbers={5, 6})
+
+    # Row 5: type = non-targeting, targeting = TRUE
+    notes_row5 = [e.note for rn, e in errors if rn == 5]
+    assert any(
+        'targeting must be False when type is non-targeting' in note
+        for note in notes_row5
+    )
+
+    # Row 6: type = targeting, targeting = FALSE
+    notes_row6 = [e.note for rn, e in errors if rn == 6]
+    assert any(
+        'targeting must be True when type is targeting' in note
+        for note in notes_row6
+    )
+
+
+def test_positive_control_putative_target_genes():
+    """
+    New check:
+      - For positive control guides with enhancer/insulator/silencer/distal element,
+        putative_target_genes is required and must be ENSEMBL gene IDs.
+    """
+    file_path = 'src/tests/data/guide_rna_sequences_new_checks.tsv'
+
+    errors = run_guide_check_on_rows(file_path, row_numbers={7, 8})
+
+    # Row 7: positive control + enhancer with missing putative_target_genes
+    notes_row7 = [e.note for rn, e in errors if rn == 7]
+    assert any(
+        'putative_target_genes is required when type is positive control '
+        'and genomic_element is enhancer' in note
+        for note in notes_row7
+    )
+
+    # Row 8: positive control + enhancer with invalid gene ID
+    notes_row8 = [e.note for rn, e in errors if rn == 8]
+    assert any(
+        'putative_target_genes entries must be ENSEMBL gene IDs' in note
+        and 'NOT_A_GENE_ID' in note
+        for note in notes_row8
+    )
+
+
+def test_intended_target_name_formats():
+    """
+    intended_target_name format rules:
+      - variant -> SPDI
+      - promoter/gene/splice site -> ENSEMBL gene ID
+      - enhancer/insulator/silencer/distal element -> genomic coordinates
+    """
+    file_path = 'src/tests/data/guide_rna_sequences_new_checks.tsv'
+
+    variant_row = 9
+    gene_row = 10
+    enhancer_row = 11
+
+    errors = run_guide_check_on_rows(
+        file_path,
+        row_numbers={variant_row, gene_row, enhancer_row},
+    )
+
+    notes = [e.note for _, e in errors]
+
+    # Variant: SPDI requirement
+    assert any(
+        'intended_target_name must be a normalized SPDI identifier when '
+        'genomic_element is variant' in note
+        for note in notes
+    )
+
+    # Gene: ENSEMBL requirement
+    assert any(
+        'intended_target_name must be an ENSEMBL gene ID when '
+        'genomic_element is promoter/gene/splice site' in note
+        for note in notes
+    )
+
+    # Enhancer: coordinate requirement
+    assert any(
+        'intended_target_name must be genomic coordinates when '
+        'genomic_element is an enhancer/insulator/silencer/'
+        'distal element' in note
+        for note in notes
+    )
+
+
+def test_mouse_genes_valid_against_regex():
+    """
+    ENSEMBL regex:
+      - ENSG########### (human) and ENSMUSG########### (mouse) are allowed.
+    Row 13 has genomic_element = gene and intended_target_name = ENSMUSG...,
+    which should pass the ENSEMBL_GENE_RE and not raise format errors.
+    """
+    file_path = 'src/tests/data/guide_rna_sequences_new_checks.tsv'
+
+    errors = run_guide_check_on_rows(file_path, row_numbers={13})
+
+    # Row 13 should not produce any ConstraintErrors at all
+    assert errors == []
