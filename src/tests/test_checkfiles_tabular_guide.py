@@ -228,4 +228,3 @@ def test_tabular_file_check_txt_filename():
     tabular_file_error = error['tabular_file_error']
     assert tabular_file_error['number_of_errors'] == 1
     assert 'incorrect-label' in tabular_file_error['error_types']
-
