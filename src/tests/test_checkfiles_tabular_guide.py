@@ -1,19 +1,9 @@
+from frictionless import Resource
 from checkfiles.checkfiles import tabular_file_check, file_validation
 from checkfiles.file import FileValidationRecord
 from checkfiles.file import get_file
 from checkfiles.version import get_checkfiles_version
-from frictionless import Resource
-from checkfiles.guide_rna_sequences_check import GuideRnaSequencesCheck  # <-- adjust path
-
-
-def _constraint_notes_for_row(tabular_file_error, row_number):
-    """Helper to pull all constraint-error notes for a given row."""
-    constraint = tabular_file_error['constraint-error']
-    return [
-        detail['note']
-        for detail in constraint['details']
-        if detail.get('row_number') == row_number
-    ]
+from checkfiles.guide_rna_sequences_check import GuideRnaSequencesCheck
 
 
 def run_guide_check_on_rows(path, row_numbers):
@@ -270,7 +260,7 @@ def test_guide_id_spacer_one_to_one():
     Row 4 reuses spacer 'AAAAAAAAAAAAAAAAAAAA' with a different guide_id.
     Both should produce constraint errors with the 1-to-1 mapping message.
     """
-    file_path = 'src/tests/data/guide_rna_sequences_new_checks.tsv'
+    file_path = 'src/tests/data/guide_rna_sequences_targets_invalid.tsv'
 
     errors = run_guide_check_on_rows(file_path, row_numbers={3, 4})
 
@@ -295,7 +285,7 @@ def test_targeting_type_relationship():
       - non-targeting/safe-targeting/negative control -> targeting must be False
       - targeting/positive control/variant -> targeting must be True
     """
-    file_path = 'src/tests/data/guide_rna_sequences_new_checks.tsv'
+    file_path = 'src/tests/data/guide_rna_sequences_targets_invalid.tsv'
 
     errors = run_guide_check_on_rows(file_path, row_numbers={5, 6})
 
@@ -320,7 +310,7 @@ def test_positive_control_putative_target_genes():
       - For positive control guides with enhancer/insulator/silencer/distal element,
         putative_target_genes is required and must be ENSEMBL gene IDs.
     """
-    file_path = 'src/tests/data/guide_rna_sequences_new_checks.tsv'
+    file_path = 'src/tests/data/guide_rna_sequences_targets_invalid.tsv'
 
     errors = run_guide_check_on_rows(file_path, row_numbers={7, 8})
 
@@ -348,7 +338,7 @@ def test_intended_target_name_formats():
       - promoter/gene/splice site -> ENSEMBL gene ID
       - enhancer/insulator/silencer/distal element -> genomic coordinates
     """
-    file_path = 'src/tests/data/guide_rna_sequences_new_checks.tsv'
+    file_path = 'src/tests/data/guide_rna_sequences_targets_invalid.tsv'
 
     variant_row = 9
     gene_row = 10
@@ -391,7 +381,7 @@ def test_mouse_genes_valid_against_regex():
     Row 13 has genomic_element = gene and intended_target_name = ENSMUSG...,
     which should pass the ENSEMBL_GENE_RE and not raise format errors.
     """
-    file_path = 'src/tests/data/guide_rna_sequences_new_checks.tsv'
+    file_path = 'src/tests/data/guide_rna_sequences_targets_invalid.tsv'
 
     errors = run_guide_check_on_rows(file_path, row_numbers={13})
 
