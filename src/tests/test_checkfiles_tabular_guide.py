@@ -6,7 +6,7 @@ from checkfiles.version import get_checkfiles_version
 
 def test_main_tabular_tsv(mocker):
     portal_url = 'url_to_portal'
-    file_path = 'src/tests/data/guide_rna_sequences_invalid.test.tsv.gz'
+    file_path = 'src/tests/data/guide_rna_sequences_invalid.tsv.gz'
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
     md5sum = '01018bd73d949934bbc015977d3cc40c'
     file_format = 'tsv'
@@ -142,7 +142,7 @@ def test_tabular_file_check_guide_rna_sequences_custom_check():
                                                                    'is required '
                                                                    'when '
                                                                    'targeting '
-                                                                   'is True',
+                                                                   'is not False',
                                                                    'row_number': 33}]}
     assert 'constraint-error' in tabular_file_error['error_types']
 
