@@ -14,8 +14,8 @@ def _is_missing(value):
     return False
 
 
-# ENSEMBL gene ID: ENSG + 11 digits (GENCODE v43-style)
-ENSEMBL_GENE_RE = re.compile(r'^ENSG[0-9]{11}$')
+# ENSEMBL gene ID: ENSG + 11 digits (GENCODE 43 and GENCODE M36)
+ENSEMBL_GENE_RE = re.compile(r'^(ENSG[0-9]{11}|ENSMUSG[0-9]{11})(\.[0-9]+)?$')
 
 # Coordinates: chr1:3691430-3691731
 COORD_RE = re.compile(r'^chr[0-9A-Za-z._-]+:[0-9]+-[0-9]+$')
@@ -51,8 +51,11 @@ class GuideRnaSequencesCheck(Check):
         ):
             yield error
 
-        # 3) required fields for targeting guides
-        for error in self._check_required_fields_for_targeting(row):
+        # 3) required fields for targeting guides (skip if targeting is False)
+        for error in self._check_required_fields_for_targeting(
+            row,
+            targeting=targeting,
+        ):
             yield error
 
         # 4) putative_target_genes requirement for positive controls
@@ -138,7 +141,10 @@ class GuideRnaSequencesCheck(Check):
                 field_name='targeting',
             )
 
-    def _check_required_fields_for_targeting(self, row):
+    def _check_required_fields_for_targeting(self, row, targeting):
+        if targeting is False:
+            return
+
         required_when_not_false = [
             'guide_chr',
             'guide_start',
@@ -185,6 +191,27 @@ class GuideRnaSequencesCheck(Check):
                 note=note,
                 field_name='putative_target_genes',
             )
+            return
+
+        # Enforce ENSEMBL gene ID format on each entry
+        if isinstance(putative_target_genes, list):
+            genes = putative_target_genes
+        else:
+            genes = [putative_target_genes]
+
+        for gene in genes:
+            if _is_missing(gene):
+                continue
+            if not ENSEMBL_GENE_RE.match(gene):
+                note = (
+                    'putative_target_genes entries must be ENSEMBL gene IDs '
+                    f'(e.g. ENSG00000123456), but got {gene}'
+                )
+                yield errors.ConstraintError.from_row(
+                    row,
+                    note=note,
+                    field_name='putative_target_genes',
+                )
 
     def _check_intended_target_name_format(self, row, genomic_element):
         intended_target_name = row.get('intended_target_name')
