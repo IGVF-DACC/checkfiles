@@ -3,7 +3,8 @@
         {
             "name": "guide_id",
             "type": "string",
-            "description": "name of the guide",
+            "description": "Unique name of the guide.",
+            "comment": "There must be a 1-to-1 mapping from guide_id to spacer.",
             "constraints": {
                 "required": true
             }
@@ -11,7 +12,8 @@
         {
             "name": "spacer",
             "type": "string",
-            "description": "the 5' to 3' targeting sequence of the gRNA (in DNA basepairs)",
+            "description": "The 5' to 3' targeting sequence of the gRNA.",
+            "comment": "All sequences must use ACTG notation.",
             "constraints": {
                 "required": true
             }
@@ -19,7 +21,8 @@
         {
             "name": "targeting",
             "type": "boolean",
-            "description": "'TRUE' or 'FALSE', depending on whether or not the guide is targeting a locus of the genome relevant to the experiment. If guide is safe-targeting or non-targeting, targeting = False. 'safe-targeting' refers to guides designed to target genomic sites with no annotated function, used as negative controls, if targeting == False, guide_chr, guide_start, guide_end, strand, and pam can be set to NaN",
+            "description": "Whether the guide targets a genomic locus relevant to the experiment.",
+            "comment": "If type ∈ {non-targeting, safe-targeting, negative control}, targeting must be FALSE. If targeting is FALSE, guide_chr, guide_start, guide_end, strand, pam, genomic_element, intended_target_name, intended_target_chr, intended_target_start, and intended_target_end may be NaN or empty.",
             "constraints": {
                 "required": true
             }
@@ -27,13 +30,14 @@
         {
             "name": "type",
             "type": "string",
-            "description": "flexible tag describing the role of the guide in the experiment",
+            "description": "Role of the guide in the experiment.",
+            "comment": "targeting = locus-directed guide; safe-targeting = targets inert genomic sites; non-targeting = does not bind any genomic target; positive control = expected measurable effect; negative control = should not modulate assay readout; variant = base/prime-editing installation or correction.",
             "constraints": {
                 "required": true,
                 "enum": [
+                    "targeting",
                     "safe-targeting",
                     "non-targeting",
-                    "targeting",
                     "positive control",
                     "negative control",
                     "variant"
@@ -43,12 +47,14 @@
         {
             "name": "guide_chr",
             "type": "string",
-            "description": "Chromosome of guide, ex. chrX, chr2, chr10. It is required if targeting is TRUE."
+            "description": "Chromosome of the guide.",
+            "comment": "Required if targeting is TRUE. Examples: chrX, chr2."
         },
         {
             "name": "guide_start",
             "type": "integer",
-            "description": "Base start position of guide. It is required if targeting is TRUE.",
+            "description": "0-based start coordinate of the guide.",
+            "comment": "Required if targeting is TRUE. Coordinates follow half-open convention [start, end). Should not include PAM sequence.",
             "constraints": {
                 "minimum": 0
             }
@@ -56,7 +62,8 @@
         {
             "name": "guide_end",
             "type": "integer",
-            "description": "Base end position of guide. It is required if targeting is TRUE.",
+            "description": "0-based end coordinate of the guide.",
+            "comment": "Required if targeting is TRUE. Coordinates follow half-open convention [start, end). Should not include PAM sequence.",
             "constraints": {
                 "minimum": 0
             }
@@ -64,7 +71,8 @@
         {
             "name": "strand",
             "type": "string",
-            "description": "Strand of guide, + or -. If strandedness is unclear or unnecessary, use 'NaN' for the strand. It is required if targeting is TRUE.",
+            "description": "Strand of the targeted genomic sequence.",
+            "comment": "Required if targeting is TRUE. Strand must be + or −.",
             "constraints": {
                 "enum": [
                     "+",
@@ -75,27 +83,44 @@
         {
             "name": "pam",
             "type": "string",
-            "description": "Protospacer adjacent motif. It is required if targeting is TRUE."
+            "description": "Protospacer adjacent motif.",
+            "comment": "Required if targeting is TRUE. Reported 5'→3' as it appears on the targeted strand immediately adjacent to the spacer."
         },
         {
             "name": "genomic_element",
             "type": "string",
-            "description": "type of the genomic element being targeted, ex. gene, enhancer, promoter, insulator"
+            "description": "Type of genomic element being targeted.",
+            "comment": "Required if targeting is TRUE. gene = gene body; distal element = >2 kb from a TSS when category unknown.",
+            "constraints": {
+                "enum": [
+                    "variant",
+                    "promoter",
+                    "enhancer",
+                    "insulator",
+                    "silencer",
+                    "distal element",
+                    "splice site",
+                    "gene"
+                ]
+            }
         },
         {
             "name": "intended_target_name",
             "type": "string",
-            "description": "name of target element, should use existing conventions whenever possible: SPDI_id, ensembl_id, HGNC_id. If intended_target_name == NaN, then the target element will be referenced using its coordinates"
+            "description": "Identifier of the targeted element.",
+            "comment": "Required if targeting is TRUE. variant: SPDI ID (e.g., NC_00007.14:117548628:TT:TTT), promoter: ENSEMBL ID of regulated gene, enhancer/insulator/silencer/distal element: element coordinates (chr:start-end), splice site: ENSEMBL ID, gene: ENSEMBL ID."
         },
         {
             "name": "intended_target_chr",
             "type": "string",
-            "description": "chromosome of target"
+            "description": "Chromosome of the targeted element.",
+            "comment": "Required if targeting is TRUE. For promoters: use promoter coordinates, not the regulated gene. For genes, specify the coordinates corresponding to the specific gene-body feature being targeted. CRISPRa/i/KO: coordinates of regulatory element. Base/prime editing: coordinates of edit."
         },
         {
             "name": "intended_target_start",
             "type": "integer",
-            "description": "base start position of target. For CRISPRa, CRISPRi and CRISPR KO screens, coordinates should reference the targeted element. For base editing and prime editing screens, coordinates should reference the targeted edit",
+            "description": "0-based start coordinate of the targeted element.",
+            "comment": "Required if targeting is TRUE. For promoters: use promoter coordinates, not the regulated gene. For genes, specify the coordinates corresponding to the specific gene-body feature being targeted. CRISPRa/i/KO: coordinates of regulatory element. Base/prime editing: coordinates of edit.",
             "constraints": {
                 "minimum": 0
             }
@@ -103,7 +128,8 @@
         {
             "name": "intended_target_end",
             "type": "integer",
-            "description": "base end position of target",
+            "description": "0-based end coordinate of the targeted element.",
+            "comment": "Required if targeting is TRUE. For promoters: use promoter coordinates, not the regulated gene. For genes, specify the coordinates corresponding to the specific gene-body feature being targeted. CRISPRa/i/KO: coordinates of regulatory element. Base/prime editing: coordinates of edit.",
             "constraints": {
                 "minimum": 0
             }
@@ -111,17 +137,20 @@
         {
             "name": "putative_target_genes",
             "type": "array",
-            "description": "list of relevant genes associated with target element"
+            "description": "List of ENSEMBL IDs associated with the targeted element.",
+            "comment": "Required if type is positive control guides AND if genomic_element ∈ {enhancer, insulator, silencer, distal element}. ENSEMBL IDs must correspond to GENCODE v43."
         },
         {
             "name": "reporter",
             "type": "string",
-            "description": "sequence of reporter element"
+            "description": "Reporter element sequence.",
+            "comment": "See reporter construct from https://www.nature.com/articles/s41587-021-01172-3."
         },
         {
             "name": "imperfect",
             "type": "string",
-            "description": "sequence of corresponding perfect guide RNA (pgRNA)"
+            "description": "Sequence of the corresponding perfect guide RNA.",
+            "comment": "If this field is present, the guide is an imperfect guide. See https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9023296/."
         }
     ],
     "missingValues": [

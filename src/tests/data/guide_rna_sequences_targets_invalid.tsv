@@ -1,0 +1,14 @@
+guide_id	spacer	targeting	type	guide_chr	guide_start	guide_end	strand	pam	genomic_element	intended_target_name	intended_target_chr	intended_target_start	intended_target_end	putative_target_genes	reporter	imperfect
+BASE_VALID	AAAAAAAAAAAAAAAAAAAA	TRUE	targeting	chr1	100	120	+	NGG	promoter	ENSG00000123456	chr1	90	91		reporter_valid	
+BASE_VALID	CCCCCCCCCCCCCCCCCCCC	TRUE	targeting	chr1	200	220	+	NGG	promoter	ENSG00000123456	chr1	90	91		reporter_valid2	
+SPACER_CONFLICT	AAAAAAAAAAAAAAAAAAAA	TRUE	targeting	chr1	300	320	+	NGG	promoter	ENSG00000123456	chr1	90	91		reporter_valid3	
+NON_TARGETING_TRUE	GGGGGGGGGGGGGGGGGGGG	TRUE	non-targeting	chr2	400	420	+	NGG	gene	ENSG00000123457	chr2	380	381		reporter_nt_true	
+TARGETING_FALSE	TTTTTTTTTTTTTTTTTTTT	FALSE	targeting	chr2	500	520	+	NGG	gene	ENSG00000123458	chr2	480	481		reporter_t_false	
+POS_CTRL_MISSING_PTG	ACACACACACACACACACAC	TRUE	positive control	chr3	600	620	+	NGG	enhancer	chr3:1000-1100	chr3	1000	1100		reporter_pc_missing	
+POS_CTRL_BAD_GENE	CACACACACACACACACACA	TRUE	positive control	chr3	700	720	+	NGG	enhancer	chr3:1200-1300	chr3	1200	1300	NOT_A_GENE_ID	reporter_pc_bad_gene	
+VARIANT_BAD_SPDI	AGAGAGAGAGAGAGAGAGAG	TRUE	variant	chr4	800	820	+	NGG	variant	NOT_SPDI_FORMAT	chr4	800	801		reporter_variant_bad	
+GENE_BAD_ENSEMBL	CTCTCTCTCTCTCTCTCTCT	TRUE	targeting	chr5	900	920	+	NGG	gene	NOT_ENSEMBL_ID	chr5	880	881		reporter_gene_bad	
+ENHANCER_BAD_COORDS	ATATATATATATATATATAT	TRUE	targeting	chrX	1000	1020	+	NGG	enhancer	chrX_badcoords	chrX	990	991		reporter_enh_bad	
+NAN_MISSING_GUIDE_CHR	GATCGATCGATCGATCGATC	TRUE	targeting	NaN	1100	1120	+	NGG	gene	ENSG00000123459	chr6	1080	1081		reporter_nan	
+MOUSE_GENE_VALID	TTTCAGGTTTGGAGATGGTT	TRUE	targeting	chr7	1200	1220	-	NGG	gene	ENSMUSG00000015243	chr7	1180	1181		reporter_mouse_valid	
+
