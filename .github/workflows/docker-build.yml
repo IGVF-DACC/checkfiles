@@ -4,13 +4,56 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_run:
+    workflows: ["Auto Tag Creation"]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag/version to build (e.g., v37). Leave empty to use version from version.py'
+        required: false
+        type: string
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    # Only run if triggered by tag push, manual dispatch, or if auto-tag workflow succeeded
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Needed to get tags
+
+      - name: Extract tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" == "push" ]; then
+            # Triggered by direct tag push
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            # Triggered manually - use input if provided, otherwise get from version.py
+            if [ -n "${{ github.event.inputs.tag }}" ]; then
+              echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+              echo "Using provided tag: ${{ github.event.inputs.tag }}"
+            else
+              TAG=$(python -c "import sys; sys.path.append('src'); from checkfiles.version import VERSION; print(VERSION)")
+              echo "tag=$TAG" >> $GITHUB_OUTPUT
+              echo "Extracted tag from version.py: $TAG"
+            fi
+          else
+            # Triggered by workflow_run - get version from version.py
+            TAG=$(python -c "import sys; sys.path.append('src'); from checkfiles.version import VERSION; print(VERSION)")
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+            echo "Extracted tag from version.py: $TAG"
+          fi
+
+      - name: Set up Python (for workflow_run and workflow_dispatch triggers)
+        if: github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -20,10 +63,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Extract tag
-        id: tag
-        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
