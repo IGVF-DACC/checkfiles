@@ -22,7 +22,7 @@
             "name": "targeting",
             "type": "boolean",
             "description": "Whether the guide targets a genomic locus relevant to the experiment.",
-            "comment": "If type ∈ {non-targeting, safe-targeting, negative control}, targeting must be FALSE. If targeting is FALSE, guide_chr, guide_start, guide_end, strand, pam, genomic_element, intended_target_name, intended_target_chr, intended_target_start, and intended_target_end may be NaN or empty.",
+            "comment": "If type ∈ {non-targeting, safe-targeting}, targeting must be FALSE. type ∈ {'targeting', 'positive control', 'variant',}, targeting must be TRUE. Negative controls may be defined as either. If targeting is FALSE, guide_chr, guide_start, guide_end, strand, pam, genomic_element, intended_target_name, intended_target_chr, intended_target_start, and intended_target_end may be NaN or empty.",
             "constraints": {
                 "required": true
             }
