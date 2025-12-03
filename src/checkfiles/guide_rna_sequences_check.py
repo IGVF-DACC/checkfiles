@@ -117,7 +117,6 @@ class GuideRnaSequencesCheck(Check):
         non_targeting_types = {
             'non-targeting',
             'safe-targeting',
-            'negative control',
         }
         targeting_types = {
             'targeting',

@@ -12,7 +12,7 @@
         {
             "name": "spacer",
             "type": "string",
-            "description": "The 5' to 3' targeting sequence of the gRNA.",
+            "description": "The targeting sequence of the gRNA read 5' to 3' (in DNA basepairs).",
             "comment": "All sequences must use ACTG notation.",
             "constraints": {
                 "required": true
@@ -22,7 +22,7 @@
             "name": "targeting",
             "type": "boolean",
             "description": "Whether the guide targets a genomic locus relevant to the experiment.",
-            "comment": "If type ∈ {non-targeting, safe-targeting, negative control}, targeting must be FALSE. If targeting is FALSE, guide_chr, guide_start, guide_end, strand, pam, genomic_element, intended_target_name, intended_target_chr, intended_target_start, and intended_target_end may be NaN or empty.",
+            "comment": "If type ∈ {non-targeting, safe-targeting}, targeting must be FALSE. type ∈ {'targeting', 'positive control', 'variant',}, targeting must be TRUE. Negative controls may be defined as either. If targeting is FALSE, guide_chr, guide_start, guide_end, strand, pam, genomic_element, intended_target_name, intended_target_chr, intended_target_start, and intended_target_end may be NaN or empty.",
             "constraints": {
                 "required": true
             }
@@ -31,7 +31,7 @@
             "name": "type",
             "type": "string",
             "description": "Role of the guide in the experiment.",
-            "comment": "targeting = locus-directed guide; safe-targeting = targets inert genomic sites; non-targeting = does not bind any genomic target; positive control = expected measurable effect; negative control = should not modulate assay readout; variant = base/prime-editing installation or correction.",
+            "comment": "targeting = locus-directed guide; safe-targeting = targets inert genomic sites; non-targeting = does not bind any genomic target; positive control = expected measurable effect; negative control = should not modulate the (experimentally-relevant) biological readout; variant = base/prime-editing installation or correction.",
             "constraints": {
                 "required": true,
                 "enum": [
