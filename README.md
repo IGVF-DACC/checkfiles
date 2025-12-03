@@ -98,9 +98,9 @@ $ source venv/bin/activate
 $ pip install -r src/checkfiles/requirements.txt
 ```
 
-2. Run (for example for uuid=`my_file_uuid` on sandbox):
+2. Run (for example for uuid=`my_file_uuid` on staging):
 ```
-venv/bin/python src/checkfiles/checkfiles.py --server https://api.sandbox.igvf.org --portal-key-id portal_key_id --portal-secret-key my_secret_key --uuid my_file_uuid
+venv/bin/python src/checkfiles/checkfiles.py --server https://api.staging.igvf.org --portal-key-id portal_key_id --portal-secret-key my_secret_key --uuid my_file_uuid
 ```
 
 ## Testing
