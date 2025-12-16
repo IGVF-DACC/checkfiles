@@ -27,6 +27,7 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
         if true_file_size_bytes == 0:
             validation_record.update_errors(
                 {'file_size': 'file has zero size'})
+            validation_record.validation_success = False
             return validation_record
     except FileNotFoundError:
         logger.warning(f'File not found at path {input_file_path}')
@@ -36,7 +37,10 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
     is_gzipped = validation_record.file.is_zipped
     gzipped_format_error = check_valid_gzipped_file_format(
         is_gzipped, file_format)
-    validation_record.update_errors(gzipped_format_error)
+    if gzipped_format_error:
+        validation_record.update_errors(gzipped_format_error)
+        validation_record.validation_success = False
+        return validation_record
     md5_sum_error = check_md5sum(
         submitted_md5sum, validation_record.file.md5sum)
     validation_record.update_errors(md5_sum_error)
@@ -47,12 +51,18 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
         else:
             validation_record.update_info(bam_check_result)
     elif file_format == 'cram':
-        cram_check_result = cram_pysam_check(
-            input_file_path, reference_file_path)
-        if 'cram_error' in cram_check_result:
-            validation_record.update_errors(cram_check_result)
+        if not reference_file_path:
+            logger.warning(
+                f'{input_file_path} the cram file is missing reference files.')
+            validation_record.update_errors(
+                {'cram_error': 'the cram file is missing reference files.'})
         else:
-            validation_record.update_info(cram_check_result)
+            cram_check_result = cram_pysam_check(
+                input_file_path, reference_file_path)
+            if 'cram_error' in cram_check_result:
+                validation_record.update_errors(cram_check_result)
+            else:
+                validation_record.update_info(cram_check_result)
     elif file_format == 'fastq':
         validate_files_fastq_check_error = validate_files_fastq_check(
             input_file_path)
@@ -73,7 +83,7 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
     elif file_format in TABULAR_FORMAT:
         if not content_type and not tabular_file_schema_path:
             logger.info(
-                'file content type and tabular file schema are not provided for the tabular file, will only perform tabular file based checks')
+                'file content type and tabular file schema are not provided for the tabular file, will only perform tabular file baseline check')
         tabular_file_check_error = tabular_file_check(
             file_format, content_type, input_file_path, is_gzipped, schema_path=tabular_file_schema_path, max_error=max_tabular_file_errors, allow_additional_fields=True)
         validation_record.update_errors(tabular_file_check_error)
