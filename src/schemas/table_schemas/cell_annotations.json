@@ -3,7 +3,7 @@
         {
             "name": "barcode_sample",
             "type": "string",
-            "description": "Sequence barcode and IGFVSM id.",
+            "description": "Sequence barcode and IGVFSM id.",
             "constraints": {
                 "required": true
             }
