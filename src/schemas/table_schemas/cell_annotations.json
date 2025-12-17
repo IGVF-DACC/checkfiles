@@ -1,0 +1,53 @@
+{
+    "fields": [
+        {
+            "name": "barcode_sample",
+            "type": "string",
+            "description": "Sequence barcode and IGFVSM id.",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "cell_name",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "cell_description",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "CL_id",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "CL_term_name",
+            "type": "string"
+        },
+        {
+            "name": "subsample",
+            "type": "string"
+        },
+        {
+            "name": "analysis_set_accession",
+            "type": "string",
+            "description": "accession of the intermediate analysis set where the original cell x gene matrix is.",
+            "constraints": {
+                "required": true
+            }
+        }
+    ],
+    "missingValues": [
+        "NA",
+        ""
+    ]
+}
