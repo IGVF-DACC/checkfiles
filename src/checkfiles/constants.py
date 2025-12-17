@@ -43,6 +43,7 @@ NO_HEADER_CONTENT_TYPE = [
 
 TABULAR_FILE_SCHEMAS = {
     'barcode to sample mapping': ['src/schemas/table_schemas/barcode_to_sample_mapping.json', 'src/schemas/table_schemas/barcode_to_sample_mapping_three_columns.json'],
+    'cell annotations': 'src/schemas/table_schemas/cell_annotations.json',
     'element to gene interactions': 'src/schemas/table_schemas/element_to_gene_interactions.json',
     'gene programs': 'src/schemas/table_schemas/gene_programs.json',
     'gene program regulators': 'src/schemas/table_schemas/gene_program_regulators.json',
