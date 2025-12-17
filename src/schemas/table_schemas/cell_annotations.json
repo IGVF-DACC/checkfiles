@@ -31,7 +31,10 @@
         },
         {
             "name": "CL_term_name",
-            "type": "string"
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
         },
         {
             "name": "subsample",
