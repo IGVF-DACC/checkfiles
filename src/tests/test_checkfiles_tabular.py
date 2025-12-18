@@ -187,3 +187,13 @@ def test_tabular_file_check_gene_program_regulators_valid():
     error = tabular_file_check(
         file_format, content_type, file_path, is_gzipped)
     assert error == {}
+
+
+def test_tabular_file_check_cell_annotations_valid():
+    file_path = 'src/tests/data/cell_annotations_valid.csv'
+    is_gzipped = False
+    file_format = 'csv'
+    content_type = 'cell annotations'
+    error = tabular_file_check(
+        file_format, content_type, file_path, is_gzipped)
+    assert error == {}
