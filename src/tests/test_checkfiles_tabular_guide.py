@@ -96,6 +96,7 @@ def test_main_tabular_csv(mocker):
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
+        'checkfiles_timestamp': '2026-02-11T12:34:56+00:00',
         'file_size': 1537,
         'content_md5sum': '519b8b076b19efa149045bd8abd4c8f3'
     }
