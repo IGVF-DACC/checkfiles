@@ -275,7 +275,7 @@ def test_main_empty_file(mocker):
     assert result.errors == {'file_size': 'file has zero size'}
 
 
-def test_main_fastq(mocker):
+def test_main_fastq(mocker, freeze_checkfiles_time):
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
     key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF594AYI.fastq.gz'
@@ -308,7 +308,7 @@ def test_main_fastq(mocker):
     assert result.original_etag == 'foobar'
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
-        'checkfiles_timestamp': '2026-02-11T12:34:56+00:00',
+        'checkfiles_timestamp': freeze_checkfiles_time.isoformat(),
         'content_md5sum': '1fa9f74aa895c4c938e1712bedf044ec',
         'file_size': 1371,
         'read_count': 25,
@@ -321,7 +321,7 @@ def test_main_fastq(mocker):
     }
 
 
-def test_main_bam(mocker):
+def test_main_bam(mocker, freeze_checkfiles_time):
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/ENCFF206HGF.bam'
     key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF206HGF.bam'
@@ -350,14 +350,14 @@ def test_main_bam(mocker):
     assert result.validation_success == True
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
-        'checkfiles_timestamp': '2026-02-11T12:34:56+00:00',
+        'checkfiles_timestamp': freeze_checkfiles_time.isoformat(),
         'content_md5sum': '9095bad36672afefd7bf9165d89b4eb5',
         'file_size': 118126,
         'read_count': 1709
     }
 
 
-def test_main_crai_uncompressed():
+def test_main_crai_uncompressed(freeze_checkfiles_time):
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/uncompressed.crai'
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
@@ -377,12 +377,12 @@ def test_main_crai_uncompressed():
     assert result.validation_success == True
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
-        'checkfiles_timestamp': '2026-02-11T12:34:56+00:00',
+        'checkfiles_timestamp': freeze_checkfiles_time.isoformat(),
         'file_size': 282843,
     }
 
 
-def test_main_crai_gzipped(mocker):
+def test_main_crai_gzipped(mocker, freeze_checkfiles_time):
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/gzipped.crai'
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
@@ -410,7 +410,7 @@ def test_main_crai_gzipped(mocker):
     assert result.validation_success == True
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
-        'checkfiles_timestamp': '2026-02-11T12:34:56+00:00',
+        'checkfiles_timestamp': freeze_checkfiles_time.isoformat(),
         'file_size': 129671,
         'content_md5sum': '154e39d90e082c5a9d0946ce581fb2f3'
     }
@@ -444,7 +444,7 @@ def test_main_vcf_sequence_check_invalid(mocker):
     }
 
 
-def test_main_bed(mocker):
+def test_main_bed(mocker, freeze_checkfiles_time):
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/ENCFF597JNC.bed.gz'
     key = '2022/10/31/8b19341b-b1b2-4e10-ad7f-aa910ccd4d2c/ENCFF597JNC.bed.gz'
@@ -477,7 +477,7 @@ def test_main_bed(mocker):
     assert result.uuid == 'a3c64b51-5838-4ad2-a6c3-dc289786f626'
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
-        'checkfiles_timestamp': '2026-02-11T12:34:56+00:00',
+        'checkfiles_timestamp': freeze_checkfiles_time.isoformat(),
         'content_md5sum': '16a792c57f2de7877b1a09e5bef7cb5c',
         'file_size': 5751
     }
