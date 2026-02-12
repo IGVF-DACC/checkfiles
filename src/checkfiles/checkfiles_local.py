@@ -5,7 +5,7 @@ from pprint import pprint
 import file
 import logformatter
 from checkfiles import vcf_sequence_check, seqspec_file_check, cram_pysam_check
-from checkfiles import check_valid_gzipped_file_format, check_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, fasta_check, tabular_file_check, validate_files_check, validate_files_fastq_check, check_valid_h5ad_file_format
+from checkfiles import check_valid_gzipped_file_format, check_md5sum, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, fasta_check, tabular_file_check, validate_files_check, validate_files_fastq_check, check_valid_h5ad_file_format, get_current_utc_time
 from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE, TABULAR_FORMAT, ASSEMBLY_TO_CHROMINFO_PATH_MAP
 
 from version import get_checkfiles_version
@@ -20,7 +20,11 @@ logger.setLevel(logging.INFO)
 def file_validation(input_file_path, validation_record: file.FileValidationRecord, submitted_md5sum, content_type, file_format_type, assembly, tabular_file_schema_path, max_tabular_file_errors, reference_file_path, onlist_skip):
     logger.info(f'Checking file: {input_file_path}')
     validation_record.update_info(
-        {'checkfiles_version': get_checkfiles_version()})
+        {
+            'checkfiles_version': get_checkfiles_version(),
+            'checkfiles_timestamp': get_current_utc_time().isoformat()
+        }
+    )
     try:
         true_file_size_bytes = validation_record.file.size
         validation_record.update_info({'file_size': true_file_size_bytes})
