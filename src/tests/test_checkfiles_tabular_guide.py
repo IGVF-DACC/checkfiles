@@ -4,7 +4,6 @@ from checkfiles.file import FileValidationRecord
 from checkfiles.file import get_file
 from checkfiles.version import get_checkfiles_version
 from checkfiles.guide_rna_sequences_check import GuideRnaSequencesCheck
-import datetime
 
 
 def run_guide_check_on_rows(path, row_numbers):
