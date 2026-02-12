@@ -6,6 +6,7 @@ from checkfiles.version import get_checkfiles_version
 from checkfiles.guide_rna_sequences_check import GuideRnaSequencesCheck
 import datetime
 
+
 def run_guide_check_on_rows(path, row_numbers):
     """
     Run GuideRnaSequencesCheck across the entire file but only collect
@@ -48,8 +49,10 @@ def test_main_tabular_tsv(mocker):
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_get_local_file_path)
 
-    fixed_date_time = datetime.datetime(2026, 2, 11, 12, 34, 56, tzinfo=datetime.timezone.utc)
-    mocker.patch('checkfiles.checkfiles.get_current_utc_time', return_value=fixed_date_time)
+    fixed_date_time = datetime.datetime(
+        2026, 2, 11, 12, 34, 56, tzinfo=datetime.timezone.utc)
+    mocker.patch('checkfiles.checkfiles.get_current_utc_time',
+                 return_value=fixed_date_time)
 
     result = file_validation(portal_url, portal_auth, validation_record,
                              md5sum, output_type, file_format_type, assembly, reference_files)
