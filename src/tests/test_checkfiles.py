@@ -308,6 +308,7 @@ def test_main_fastq(mocker):
     assert result.original_etag == 'foobar'
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
+        'checkfiles_timestamp': '2026-02-11T12:34:56+00:00',
         'content_md5sum': '1fa9f74aa895c4c938e1712bedf044ec',
         'file_size': 1371,
         'read_count': 25,
@@ -349,6 +350,7 @@ def test_main_bam(mocker):
     assert result.validation_success == True
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
+        'checkfiles_timestamp': '2026-02-11T12:34:56+00:00',
         'content_md5sum': '9095bad36672afefd7bf9165d89b4eb5',
         'file_size': 118126,
         'read_count': 1709
@@ -375,6 +377,7 @@ def test_main_crai_uncompressed():
     assert result.validation_success == True
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
+        'checkfiles_timestamp': '2026-02-11T12:34:56+00:00',
         'file_size': 282843,
     }
 
@@ -407,6 +410,7 @@ def test_main_crai_gzipped(mocker):
     assert result.validation_success == True
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
+        'checkfiles_timestamp': '2026-02-11T12:34:56+00:00',
         'file_size': 129671,
         'content_md5sum': '154e39d90e082c5a9d0946ce581fb2f3'
     }
@@ -473,6 +477,7 @@ def test_main_bed(mocker):
     assert result.uuid == 'a3c64b51-5838-4ad2-a6c3-dc289786f626'
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
+        'checkfiles_timestamp': '2026-02-11T12:34:56+00:00',
         'content_md5sum': '16a792c57f2de7877b1a09e5bef7cb5c',
         'file_size': 5751
     }

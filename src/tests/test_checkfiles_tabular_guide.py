@@ -49,18 +49,13 @@ def test_main_tabular_tsv(mocker):
     mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response_get_local_file_path)
 
-    fixed_date_time = datetime.datetime(
-        2026, 2, 11, 12, 34, 56, tzinfo=datetime.timezone.utc)
-    mocker.patch('checkfiles.checkfiles.get_current_utc_time',
-                 return_value=fixed_date_time)
-
     result = file_validation(portal_url, portal_auth, validation_record,
                              md5sum, output_type, file_format_type, assembly, reference_files)
     assert result.validation_success == False
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
-        'checkfiles_timestamp': fixed_date_time.isoformat(),
+        'checkfiles_timestamp': '2026-02-11T12:34:56+00:00',
         'file_size': 472,
         'content_md5sum': '01018bd73d949934bbc015977d3cc40c'
     }
