@@ -51,7 +51,11 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     logger.info(f'Checking file uuid {uuid}')
     local_file_path = validation_record.file.path
     validation_record.update_info(
-        {'checkfiles_version': get_checkfiles_version()})
+        {
+            'checkfiles_version': get_checkfiles_version(),
+            'checkfiles_timestamp': get_current_utc_time().isoformat()
+        }
+    )
     try:
         true_file_size_bytes = validation_record.file.size
         validation_record.update_info({'file_size': true_file_size_bytes})

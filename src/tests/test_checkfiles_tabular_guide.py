@@ -25,7 +25,7 @@ def run_guide_check_on_rows(path, row_numbers):
     return collected
 
 
-def test_main_tabular_tsv(mocker):
+def test_main_tabular_tsv(mocker, freeze_checkfiles_time):
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/guide_rna_sequences_invalid.tsv.gz'
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
@@ -54,6 +54,7 @@ def test_main_tabular_tsv(mocker):
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
+        'checkfiles_timestamp': freeze_checkfiles_time.isoformat(),
         'file_size': 472,
         'content_md5sum': '01018bd73d949934bbc015977d3cc40c'
     }
@@ -65,7 +66,7 @@ def test_main_tabular_tsv(mocker):
     assert 'constraint-error' in errors['error_types']
 
 
-def test_main_tabular_csv(mocker):
+def test_main_tabular_csv(mocker, freeze_checkfiles_time):
     portal_url = 'url_to_portal'
     file_path = 'src/tests/data/guide_rna_sequences_invalid.csv.gz'
     uuid = '5b887ab3-65d3-4965-97bd-42bea7358431'
@@ -94,6 +95,7 @@ def test_main_tabular_csv(mocker):
     assert result.uuid == '5b887ab3-65d3-4965-97bd-42bea7358431'
     assert result.info == {
         'checkfiles_version': get_checkfiles_version(),
+        'checkfiles_timestamp': freeze_checkfiles_time.isoformat(),
         'file_size': 1537,
         'content_md5sum': '519b8b076b19efa149045bd8abd4c8f3'
     }
