@@ -3,6 +3,7 @@ import hashlib
 import json
 import logging
 import os
+import zlib
 
 from typing import Optional
 
