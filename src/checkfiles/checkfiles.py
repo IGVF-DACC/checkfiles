@@ -110,7 +110,8 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
                 {'file_content_error': f'{str(e)}'}
             )
             validation_record.validation_success = False
-            logger.info(f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.upload_status}')
+            logger.info(
+                f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.upload_status}')
             return validation_record
     if file_format == 'bam':
         bam_check_result = bam_pysam_check(local_file_path)
