@@ -14,6 +14,8 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import zlib
+
 from collections import namedtuple
 from math import floor
 from typing import Optional
@@ -99,12 +101,13 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
             logger.info(
                 f'{uuid} content_md5sum is {validation_record.content_md5sum}')
             validation_record.update_errors(content_md5_error)
-        except EOFError as e:
-            logger.warning(
-                f'{uuid} the gzipped file is corrupted.'
+        except (EOFError, zlib.error) as e:
+            logger.error(
+                f'{uuid} the gzipped file is corrupted: {str(e)}',
+                exc_info=True
             )
             validation_record.update_errors(
-                {'file_content_error': 'EOFError: Compressed file ended before the end-of-stream marker was reached'}
+                {'file_content_error': f'{str(e)}'}
             )
             validation_record.validation_success = False
             logger.info(
