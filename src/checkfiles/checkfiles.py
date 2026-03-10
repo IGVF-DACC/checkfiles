@@ -380,20 +380,20 @@ def fasta_check(file_path, is_gzipped, info=FASTA_VALIDATION_INFO):
     return error
 
 
-def tabular_file_check(file_format, content_type, file_path, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE, allow_additional_fields=True, schema_path=None):
+def tabular_file_check(file_format, content_type, file_path, is_gzipped=True, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE, allow_additional_fields=True, schema_path=None):
     system.trusted = True
     error = {}
     if content_type not in NO_HEADER_CONTENT_TYPE:
-        header_row = get_header_row(file_path)
+        header_row = get_header_row(file_path, is_gzipped)
         dialect = Dialect(comment_char='#', header_rows=[header_row])
     else:
         dialect = Dialect(header=False, comment_char='#')
 
     # When file is gzipped but filename lacks .gz, frictionless won't auto-detect compression.
-    # Pass compression='gz' so Resource knows to decompress if the file is gzipped.
-    # Checkfiles check if the tabular file is gzipped before calling this function. So we can safely assume the file is gzipped.
-    frictionless_options = {'dialect': dialect,
-                            'format': file_format, 'compression': 'gz'}
+    # Pass compression='gz' when the file is gzipped.
+    frictionless_options = {'dialect': dialect, 'format': file_format}
+    if is_gzipped:
+        frictionless_options['compression'] = 'gz'
     if not schema_path:
         schema_path = schemas.get(content_type)
     if not schema_path:
