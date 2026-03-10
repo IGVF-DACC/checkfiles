@@ -175,10 +175,9 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     return validation_record
 
 
-def get_header_row(file_path, is_gzipped=True):
+def get_header_row(file_path, is_gzipped):
     # right now we assume there is only one header row and header row should not be started with '#
     count = 0
-    # right now we only get the header row from tabular files. The tabular files should be always gzipped.
     open_func = gzip.open if is_gzipped else open
     with open_func(file_path, 'rt', encoding='utf-8') as f:
         for line in f:
