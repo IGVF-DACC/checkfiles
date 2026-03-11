@@ -22,7 +22,7 @@ from typing import Optional
 
 import pysam
 from FastaValidator import fasta_validator
-from frictionless import system, validate, describe, Schema, Dialect
+from frictionless import system, validate, describe, Schema, Dialect, Resource
 from seqspec.utils import load_spec as seqspec_load_spec
 from seqspec.seqspec_version import seqspec_version
 from seqspec.seqspec_check import seqspec_check
@@ -173,20 +173,6 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     logger.info(
         f'Completed file validation for file uuid {uuid}. Upload status: {validation_record.upload_status}')
     return validation_record
-
-
-def get_header_row(file_path, is_gzipped):
-    # right now we assume there is only one header row and header row should not be started with '#
-    count = 0
-    open_func = gzip.open if is_gzipped else open
-    with open_func(file_path, 'rt', encoding='utf-8') as f:
-        for line in f:
-            if line.startswith('#'):
-                count += 1
-            else:
-                break
-
-    return count + 1
 
 
 def check_valid_h5ad_file_format(file_path):
@@ -382,8 +368,25 @@ def fasta_check(file_path, is_gzipped, info=FASTA_VALIDATION_INFO):
 def tabular_file_check(file_format, content_type, file_path, is_gzipped=True, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE, allow_additional_fields=True, schema_path=None):
     system.trusted = True
     error = {}
+    # Use frictionless only to detect encoding (e.g. mac-roman, utf-8). Build a minimal dialect
+    # with just comment_char and header_rows; we compute header row ourselves so it's correct
+    # when there are leading # comment lines.
     if content_type not in NO_HEADER_CONTENT_TYPE:
-        header_row = get_header_row(file_path, is_gzipped)
+        open_options = {'format': file_format}
+        if is_gzipped:
+            open_options['compression'] = 'gz'
+        resource = Resource(file_path, **open_options)
+        resource.infer()
+        encoding = resource.encoding
+        # Count leading # lines to get 1-based header row.
+        open_func = gzip.open if is_gzipped else open
+        with open_func(file_path, 'rt', encoding=encoding) as f:
+            header_row = 1
+            for line in f:
+                if line.lstrip().startswith('#'):
+                    header_row += 1
+                else:
+                    break
         dialect = Dialect(comment_char='#', header_rows=[header_row])
     else:
         dialect = Dialect(header=False, comment_char='#')
