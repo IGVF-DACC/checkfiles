@@ -199,13 +199,12 @@ def test_tabular_file_check_cell_annotations_valid():
     assert error == {}
 
 
-def test_tabular_file_check_encoding_valid():
-    """tabular_file_check supports non-UTF-8 encodings (e.g. mac-roman, latin-1) via frictionless encoding detection."""
+def test_tabular_file_check_encoding_invalid():
+    """tabular_file_check rejects non-UTF-8 encodings and returns tabular_file_error."""
     file_path = 'src/tests/data/tabular_file_encoding.tsv'
     is_gzipped = False
     file_format = 'tsv'
     error = tabular_file_check(
         file_format, 'guide RNA sequences', file_path, is_gzipped)
     assert 'tabular_file_error' in error
-    assert error['tabular_file_error']['number_of_errors'] == 1
-    assert error['tabular_file_error']['error_types'] == ['incorrect-label']
+    assert error['tabular_file_error'] == 'Tabular file must be UTF-8 encoded. Detected encoding: mac-roman.'
