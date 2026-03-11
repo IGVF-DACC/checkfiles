@@ -400,9 +400,8 @@ def tabular_file_check(file_format, content_type, file_path, is_gzipped=True, sc
         dialect = Dialect(header=False, comment_char='#')
 
     # When file is gzipped but filename lacks .gz, frictionless won't auto-detect compression.
-    # Pass compression='gz' when the file is gzipped. Use UTF-8 encoding (already validated above).
-    frictionless_options = {'dialect': dialect,
-                            'format': file_format, 'encoding': resource.encoding}
+    # Pass compression='gz' when the file is gzipped.
+    frictionless_options = {'dialect': dialect, 'format': file_format}
     if is_gzipped:
         frictionless_options['compression'] = 'gz'
     if not schema_path:
