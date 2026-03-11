@@ -175,6 +175,19 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     return validation_record
 
 
+def get_header_row(file_path, is_gzipped, encoding=SUPPORTED_ENCODING):
+    """Count leading # comment lines and return 1-based header row number. Right now we assume there is only one header row and header row should not be started with '#'"""
+    count = 0
+    open_func = gzip.open if is_gzipped else open
+    with open_func(file_path, 'rt', encoding=encoding) as f:
+        for line in f:
+            if line.lstrip().startswith('#'):
+                count += 1
+            else:
+                break
+    return count + 1
+
+
 def check_valid_h5ad_file_format(file_path):
     error = {}
     try:
@@ -197,19 +210,6 @@ def check_valid_gzipped_file_format(is_gzipped, file_format, zip_file_format=ZIP
     elif file_format not in zip_file_format and is_gzipped:
         error = {'gzip': f'{file_format} file should not be gzipped'}
     return error
-
-
-def get_header_row(file_path, is_gzipped, encoding=SUPPORTED_ENCODING):
-    """Count leading # comment lines and return 1-based header row number."""
-    count = 0
-    open_func = gzip.open if is_gzipped else open
-    with open_func(file_path, 'rt', encoding=encoding) as f:
-        for line in f:
-            if line.lstrip().startswith('#'):
-                count += 1
-            else:
-                break
-    return count + 1
 
 
 def check_md5sum(expected_md5sum, calculated_md5sum):
