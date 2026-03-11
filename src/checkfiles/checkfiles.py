@@ -394,7 +394,7 @@ def tabular_file_check(file_format, content_type, file_path, is_gzipped=True, sc
     # Build minimal dialect with comment_char and header_rows.
     if content_type not in NO_HEADER_CONTENT_TYPE:
         header_row = get_header_row(
-            file_path, is_gzipped, encoding=resource.encoding)
+            file_path, is_gzipped)
         dialect = Dialect(comment_char='#', header_rows=[header_row])
     else:
         dialect = Dialect(header=False, comment_char='#')
