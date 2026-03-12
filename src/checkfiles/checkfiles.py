@@ -22,14 +22,14 @@ from typing import Optional
 
 import pysam
 from FastaValidator import fasta_validator
-from frictionless import system, validate, describe, Schema, Dialect
+from frictionless import system, validate, describe, Schema, Dialect, Resource
 from seqspec.utils import load_spec as seqspec_load_spec
 from seqspec.seqspec_version import seqspec_version
 from seqspec.seqspec_check import seqspec_check
 
 import file
 import logformatter
-from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE
+from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE, SUPPORTED_ENCODING
 from constants import MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE, ASSEMBLY_REPORT_FILE_PATH, ZIP_FILE_FORMAT
 from constants import GZIP_CHECK_IGNORED_FILE_FORMAT, NO_HEADER_CONTENT_TYPE, TABULAR_FORMAT, TABULAR_FILE_SCHEMAS
 from constants import VALIDATE_FILES_ARGS, ASSEMBLY_TO_CHROMINFO_PATH_MAP, ASSEMBLY_FOR_VCF, ASSEMBLY_TO_SEQUENCE_FILE_MAP
@@ -153,7 +153,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         validation_record.update_errors(h5ad_check_error)
     elif file_format in TABULAR_FORMAT:
         tabular_file_check_error = tabular_file_check(
-            file_format, content_type, local_file_path, is_gzipped)
+            file_format, content_type, local_file_path)
         validation_record.update_errors(tabular_file_check_error)
     elif file_format in ['vcf', 'gvcf']:
         vcf_check_error = vcf_sequence_check(local_file_path, assembly)
@@ -175,17 +175,16 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     return validation_record
 
 
-def get_header_row(file_path, is_gzipped):
-    # right now we assume there is only one header row and header row should not be started with '#
+def get_header_row(file_path, is_gzipped, encoding=SUPPORTED_ENCODING):
+    """Count leading # comment lines and return 1-based header row number. Right now we assume there is only one header row and header row should not be started with '#'"""
     count = 0
     open_func = gzip.open if is_gzipped else open
-    with open_func(file_path, 'rt', encoding='utf-8') as f:
+    with open_func(file_path, 'rt', encoding=encoding) as f:
         for line in f:
-            if line.startswith('#'):
+            if line.lstrip().startswith('#'):
                 count += 1
             else:
                 break
-
     return count + 1
 
 
@@ -379,27 +378,44 @@ def fasta_check(file_path, is_gzipped, info=FASTA_VALIDATION_INFO):
     return error
 
 
-def tabular_file_check(file_format, content_type, file_path, is_gzipped, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE, allow_additional_fields=True, schema_path=None):
+def tabular_file_check(file_format, content_type, file_path, is_gzipped=True, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE, allow_additional_fields=True, schema_path=None):
     system.trusted = True
     error = {}
+    # Use frictionless to detect encoding; only UTF-8 is supported.
+    resource_options = {'format': file_format}
+    if is_gzipped:
+        resource_options['compression'] = 'gz'
+    resource = Resource(file_path, **resource_options)
+    resource.infer()
+    if resource.encoding != SUPPORTED_ENCODING:
+        return {
+            'tabular_file_error': f'Tabular file must be UTF-8 encoded. Detected encoding: {resource.encoding}.'
+        }
+    # Build minimal dialect with comment_char and header_rows.
     if content_type not in NO_HEADER_CONTENT_TYPE:
-        header_row = get_header_row(file_path, is_gzipped)
+        header_row = get_header_row(
+            file_path, is_gzipped)
         dialect = Dialect(comment_char='#', header_rows=[header_row])
     else:
         dialect = Dialect(header=False, comment_char='#')
 
+    # When file is gzipped but filename lacks .gz, frictionless won't auto-detect compression.
+    # Pass compression='gz' when the file is gzipped.
+    frictionless_options = {'dialect': dialect, 'format': file_format}
+    if is_gzipped:
+        frictionless_options['compression'] = 'gz'
     if not schema_path:
         schema_path = schemas.get(content_type)
     if not schema_path:
         # if no schema, we can ignore type-error
         report = validate(file_path, limit_errors=max_error,
-                          skip_errors=['type-error'], dialect=dialect, format=file_format)
+                          skip_errors=['type-error'], **frictionless_options)
     else:
         checks = []
         # handle barcode to sample mapping separately
         if content_type == 'barcode to sample mapping':
             infer_schema = describe(
-                file_path, type='schema', dialect=dialect, format=file_format)
+                file_path, type='schema', **frictionless_options)
             if len(infer_schema.fields) not in [6, 3]:
                 error = {
                     'tabular_file_error': f'barcode to sample mapping file should have 6 or 3 columns, but found {len(infer_schema.fields)} columns'
@@ -410,7 +426,7 @@ def tabular_file_check(file_format, content_type, file_path, is_gzipped, schemas
             else:
                 schema_path = schema_path[1]
             report = validate(file_path, schema=schema_path,
-                              limit_errors=max_error, checks=checks, dialect=dialect, format=file_format)
+                              limit_errors=max_error, checks=checks, **frictionless_options)
         else:
 
             if content_type in ['guide RNA sequences', 'prime editing guide RNA sequences']:
@@ -418,16 +434,16 @@ def tabular_file_check(file_format, content_type, file_path, is_gzipped, schemas
 
             if not allow_additional_fields:
                 report = validate(file_path, schema=schema_path,
-                                  limit_errors=max_error, checks=checks, dialect=dialect, format=file_format)
+                                  limit_errors=max_error, checks=checks, **frictionless_options)
             else:
                 infer_schema = describe(
-                    file_path, type='schema', dialect=dialect, format=file_format)
+                    file_path, type='schema', **frictionless_options)
                 schema = Schema.from_descriptor(schema_path)
                 if len(infer_schema.fields) > len(schema.fields):
                     for i in range(len(schema.fields), len(infer_schema.fields)):
                         schema.add_field(infer_schema.fields[i])
                 report = validate(file_path, schema=schema,
-                                  limit_errors=max_error, checks=checks, dialect=dialect, format=file_format)
+                                  limit_errors=max_error, checks=checks, **frictionless_options)
 
     if not report.valid:
         report = report.flatten(

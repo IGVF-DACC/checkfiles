@@ -113,3 +113,5 @@ ZIP_FILE_FORMAT = [
     'xml',
     'yaml',
 ]
+
+SUPPORTED_ENCODING = 'utf-8'
