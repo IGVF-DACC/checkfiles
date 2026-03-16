@@ -54,7 +54,7 @@ jobs:
   pytest-cdk:
     docker:
       - image: circleci/python:3.10
-    working_directory: ~/checkfiles/cdk
+    working_directory: ~/cdk
     steps:
       - checkout
       - setup_remote_docker
