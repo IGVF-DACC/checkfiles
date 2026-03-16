@@ -7,6 +7,9 @@ workflows:
       - build-and-test:
           requires:
             - lint
+      - pytest-cdk:
+          requires:
+            - lint
 
 jobs:
   lint:
@@ -48,3 +51,18 @@ jobs:
           name: Upload coverage report
           command:
             coveralls
+  pytest-cdk:
+    docker:
+      - image: circleci/python:3.10
+    working_directory: ~/checkfiles/cdk
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install dependencies
+          command: |
+            pip install -r requirements.txt
+            pip install -r requirements-dev.txt
+      - run:
+          name: Tests
+          command: pytest
