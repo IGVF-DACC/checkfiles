@@ -23,6 +23,7 @@ from typing import Optional
 import pysam
 from FastaValidator import fasta_validator
 from frictionless import system, validate, describe, Schema, Dialect, Resource
+from frictionless.exception import FrictionlessException
 from seqspec.utils import load_spec as seqspec_load_spec
 from seqspec.seqspec_version import seqspec_version
 from seqspec.seqspec_check import seqspec_check
@@ -379,72 +380,78 @@ def fasta_check(file_path, is_gzipped, info=FASTA_VALIDATION_INFO):
 
 
 def tabular_file_check(file_format, content_type, file_path, is_gzipped=True, schemas=TABULAR_FILE_SCHEMAS, max_error=MAX_NUM_ERROR_FOR_TABULAR_FILE, allow_additional_fields=True, schema_path=None):
-    system.trusted = True
-    error = {}
-    # Use frictionless to detect encoding; only UTF-8 is supported.
-    resource_options = {'format': file_format}
-    if is_gzipped:
-        resource_options['compression'] = 'gz'
-    resource = Resource(file_path, **resource_options)
-    resource.infer()
-    if resource.encoding != SUPPORTED_ENCODING:
-        return {
-            'tabular_file_error': f'Tabular file must be UTF-8 encoded. Detected encoding: {resource.encoding}.'
-        }
-    # Build minimal dialect with comment_char and header_rows.
-    if content_type not in NO_HEADER_CONTENT_TYPE:
-        header_row = get_header_row(
-            file_path, is_gzipped)
-        dialect = Dialect(comment_char='#', header_rows=[header_row])
-    else:
-        dialect = Dialect(header=False, comment_char='#')
-
-    # When file is gzipped but filename lacks .gz, frictionless won't auto-detect compression.
-    # Pass compression='gz' when the file is gzipped.
-    frictionless_options = {'dialect': dialect, 'format': file_format}
-    if is_gzipped:
-        frictionless_options['compression'] = 'gz'
-    if not schema_path:
-        schema_path = schemas.get(content_type)
-    if not schema_path:
-        # if no schema, we can ignore type-error
-        report = validate(file_path, limit_errors=max_error,
-                          skip_errors=['type-error'], **frictionless_options)
-    else:
-        checks = []
-        # handle barcode to sample mapping separately
-        if content_type == 'barcode to sample mapping':
-            infer_schema = describe(
-                file_path, type='schema', **frictionless_options)
-            if len(infer_schema.fields) not in [6, 3]:
-                error = {
-                    'tabular_file_error': f'barcode to sample mapping file should have 6 or 3 columns, but found {len(infer_schema.fields)} columns'
-                }
-                return error
-            if len(infer_schema.fields) == 6:
-                schema_path = schema_path[0]
-            else:
-                schema_path = schema_path[1]
-            report = validate(file_path, schema=schema_path,
-                              limit_errors=max_error, checks=checks, **frictionless_options)
+    try:
+        system.trusted = True
+        error = {}
+        # Use frictionless to detect encoding; only UTF-8 is supported.
+        resource_options = {'format': file_format}
+        if is_gzipped:
+            resource_options['compression'] = 'gz'
+        resource = Resource(file_path, **resource_options)
+        resource.infer()
+        if resource.encoding != SUPPORTED_ENCODING:
+            return {
+                'tabular_file_error': f'Tabular file must be UTF-8 encoded. Detected encoding: {resource.encoding}.'
+            }
+        # Build minimal dialect with comment_char and header_rows.
+        if content_type not in NO_HEADER_CONTENT_TYPE:
+            header_row = get_header_row(
+                file_path, is_gzipped)
+            dialect = Dialect(comment_char='#', header_rows=[header_row])
         else:
+            dialect = Dialect(header=False, comment_char='#')
 
-            if content_type in ['guide RNA sequences', 'prime editing guide RNA sequences']:
-                checks = [GuideRnaSequencesCheck()]
-
-            if not allow_additional_fields:
+        # When file is gzipped but filename lacks .gz, frictionless won't auto-detect compression.
+        # Pass compression='gz' when the file is gzipped.
+        frictionless_options = {'dialect': dialect, 'format': file_format}
+        if is_gzipped:
+            frictionless_options['compression'] = 'gz'
+        if not schema_path:
+            schema_path = schemas.get(content_type)
+        if not schema_path:
+            # if no schema, we can ignore type-error
+            report = validate(file_path, limit_errors=max_error,
+                              skip_errors=['type-error'], **frictionless_options)
+        else:
+            checks = []
+            # handle barcode to sample mapping separately
+            if content_type == 'barcode to sample mapping':
+                infer_schema = describe(
+                    file_path, type='schema', **frictionless_options)
+                if len(infer_schema.fields) not in [6, 3]:
+                    error = {
+                        'tabular_file_error': f'barcode to sample mapping file should have 6 or 3 columns, but found {len(infer_schema.fields)} columns'
+                    }
+                    return error
+                if len(infer_schema.fields) == 6:
+                    schema_path = schema_path[0]
+                else:
+                    schema_path = schema_path[1]
                 report = validate(file_path, schema=schema_path,
                                   limit_errors=max_error, checks=checks, **frictionless_options)
             else:
-                infer_schema = describe(
-                    file_path, type='schema', **frictionless_options)
-                schema = Schema.from_descriptor(schema_path)
-                if len(infer_schema.fields) > len(schema.fields):
-                    for i in range(len(schema.fields), len(infer_schema.fields)):
-                        schema.add_field(infer_schema.fields[i])
-                report = validate(file_path, schema=schema,
-                                  limit_errors=max_error, checks=checks, **frictionless_options)
 
+                if content_type in ['guide RNA sequences', 'prime editing guide RNA sequences']:
+                    checks = [GuideRnaSequencesCheck()]
+
+                if not allow_additional_fields:
+                    report = validate(file_path, schema=schema_path,
+                                      limit_errors=max_error, checks=checks, **frictionless_options)
+                else:
+                    infer_schema = describe(
+                        file_path, type='schema', **frictionless_options)
+                    schema = Schema.from_descriptor(schema_path)
+                    if len(infer_schema.fields) > len(schema.fields):
+                        for i in range(len(schema.fields), len(infer_schema.fields)):
+                            schema.add_field(infer_schema.fields[i])
+                    report = validate(file_path, schema=schema,
+                                      limit_errors=max_error, checks=checks, **frictionless_options)
+    except FrictionlessException as e:
+        logger.error(
+            f'exception occurred when checking tabular file: {str(e)}')
+        return {
+            'tabular_file_error': f'exception occurred when checking tabular file: {str(e)}'
+        }
     if not report.valid:
         report = report.flatten(
             ['rowNumber', 'fieldNumber', 'type', 'note', 'description'])
