@@ -14,6 +14,6 @@ config = {
     'instance_security_group_production': 'sg-0136bee948bf49fe7',
     'backend_uri_sandbox': 'https://api.staging.igvf.org',
     'backend_uri_production': 'https://api.data.igvf.org',
-    'checkfiles_tag_sandbox': 'v42',
+    'checkfiles_tag_sandbox': 'v43',
     'checkfiles_tag_production': 'v41',
 }
