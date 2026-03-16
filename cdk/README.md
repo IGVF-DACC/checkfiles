@@ -5,10 +5,10 @@ If you are not sure this is what you should be running, you should not be runnin
 
 ## Installation
 
-Install cdk 2.88.0:
+Install cdk 2.1031.2:
 
 ```bash
-$ npm install aws-cdk@2.88.0
+$ npm install -g aws-cdk@2.1031.2
 ```
 
 Create python 3.11 virtual environment, and install packages:

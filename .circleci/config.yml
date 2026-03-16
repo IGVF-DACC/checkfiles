@@ -7,7 +7,6 @@ workflows:
       - build-and-test:
           requires:
             - lint
-
 jobs:
   lint:
     docker:

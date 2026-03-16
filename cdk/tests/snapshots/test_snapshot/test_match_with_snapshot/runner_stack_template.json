@@ -15,7 +15,7 @@
             "Properties": {
                 "Code": {
                     "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
-                    "S3Key": "a8d18dabfd9488fc8852a29d04040a125dcd4cca1bd9950da271dccfcfad53f2.zip"
+                    "S3Key": "bc10468b9cc5f88cb33a4b651e1a276157cac0fb4ae58c5225e36e238c4ce02d.zip"
                 },
                 "Environment": {
                     "Variables": {
@@ -98,7 +98,7 @@
             "Properties": {
                 "Code": {
                     "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
-                    "S3Key": "a9cb7562fdbba9dfc8d29f5199da57d700d20c7dde8e992d739738c7139d406c.zip"
+                    "S3Key": "f3b220604b07ddf41cb79688c08fe9b2bf53d351f63b352dbbb30b7b64a63ca4.zip"
                 },
                 "Environment": {
                     "Variables": {
@@ -195,7 +195,7 @@
             "Properties": {
                 "Code": {
                     "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
-                    "S3Key": "e2e7b0ab4a8b4697c5392f7a5cc3dd818ad44e27ca56c4ca783372c7d5350410.zip"
+                    "S3Key": "e7dabdc827bbec0a27cfe1709d7d92b7f03b2b4a7309e26153d95a42ec7b1f9c.zip"
                 },
                 "Handler": "main.get_checkfiles_command_status",
                 "Role": {
@@ -268,7 +268,7 @@
             "Properties": {
                 "Code": {
                     "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
-                    "S3Key": "8b089f2666fcd9c705c85240aebf9b13d7a1a2a06c616de4d46ea0a765157a0a.zip"
+                    "S3Key": "259bb1f03fc2c4db2a78dab1e4118ed6f4345734afab5a4122e76454e6aa100c.zip"
                 },
                 "Handler": "increment.increment_counter",
                 "Role": {
@@ -321,7 +321,7 @@
             "Properties": {
                 "Code": {
                     "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
-                    "S3Key": "5127b6ba39f27e659fe1beb74f23742b794a324a0041f3496672f6fecfb3435c.zip"
+                    "S3Key": "184bac5e6f2a9e4d6f66dd3dee0e36933e1e1fc8693db14823d60bb980179b81.zip"
                 },
                 "Environment": {
                     "Variables": {
@@ -446,7 +446,7 @@
                     "Fn::Join": [
                         "",
                         [
-                            "{\"StartAt\":\"CheckPendingFiles\",\"States\":{\"CheckPendingFiles\":{\"Next\":\"MakePendingFilesCheckedMessage\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"files_pending.$\":\"$.files_pending\",\"number_of_files_pending.$\":\"$.number_of_files_pending\"},\"Resource\":\"",
+                            "{\"StartAt\":\"CheckPendingFiles\",\"States\":{\"CheckPendingFiles\":{\"Next\":\"MakePendingFilesCheckedMessage\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ClientExecutionTimeoutException\",\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"files_pending.$\":\"$.files_pending\",\"number_of_files_pending.$\":\"$.number_of_files_pending\"},\"Resource\":\"",
                             {
                                 "Fn::GetAtt": [
                                     "CheckPendingFilesLambda618BF2DB",
@@ -457,28 +457,28 @@
                             {
                                 "Ref": "AWS::Partition"
                             },
-                            ":states:::events:putEvents\",\"Parameters\":{\"Entries\":[{\"Detail.$\":\"$.detail\",\"DetailType.$\":\"$.detailType\",\"Source.$\":\"$.source\"}]}},\"Pending files?\":{\"Type\":\"Choice\",\"Choices\":[{\"Variable\":\"$.files_pending\",\"BooleanEquals\":false,\"Next\":\"No files to process.\"}],\"Default\":\"InitializeCounter\"},\"InitializeCounter\":{\"Type\":\"Pass\",\"Parameters\":{\"iterator\":{\"index\":0,\"step\":1,\"count\":23},\"number_of_files_pending.$\":\"$.number_of_files_pending\"},\"Next\":\"CreateCheckfilesInstance\"},\"CreateCheckfilesInstance\":{\"Next\":\"WaitForSSMReg\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"instance_id.$\":\"$.instance_id\",\"instance_type.$\":\"$.instance_type\",\"iterator.$\":\"$.iterator\"},\"Resource\":\"",
+                            ":states:::events:putEvents\",\"Parameters\":{\"Entries\":[{\"Detail.$\":\"$.detail\",\"DetailType.$\":\"$.detailType\",\"Source.$\":\"$.source\"}]}},\"Pending files?\":{\"Type\":\"Choice\",\"Choices\":[{\"Variable\":\"$.files_pending\",\"BooleanEquals\":false,\"Next\":\"No files to process.\"}],\"Default\":\"InitializeCounter\"},\"InitializeCounter\":{\"Type\":\"Pass\",\"Parameters\":{\"iterator\":{\"index\":0,\"step\":1,\"count\":23},\"number_of_files_pending.$\":\"$.number_of_files_pending\"},\"Next\":\"CreateCheckfilesInstance\"},\"CreateCheckfilesInstance\":{\"Next\":\"WaitForSSMReg\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ClientExecutionTimeoutException\",\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"instance_id.$\":\"$.instance_id\",\"instance_type.$\":\"$.instance_type\",\"iterator.$\":\"$.iterator\"},\"Resource\":\"",
                             {
                                 "Fn::GetAtt": [
                                     "CreateCheckfilesInstanceLambda9EE361EE",
                                     "Arn"
                                 ]
                             },
-                            "\"},\"WaitForSSMReg\":{\"Type\":\"Wait\",\"Seconds\":120,\"Next\":\"RunCheckFilesCommand\"},\"RunCheckFilesCommand\":{\"Next\":\"IncrementCounter\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"instance_id.$\":\"$.instance_id\",\"command_id.$\":\"$.command_id\",\"iterator.$\":\"$.iterator\"},\"Resource\":\"",
+                            "\"},\"WaitForSSMReg\":{\"Type\":\"Wait\",\"Seconds\":120,\"Next\":\"RunCheckFilesCommand\"},\"RunCheckFilesCommand\":{\"Next\":\"IncrementCounter\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ClientExecutionTimeoutException\",\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"instance_id.$\":\"$.instance_id\",\"command_id.$\":\"$.command_id\",\"iterator.$\":\"$.iterator\"},\"Resource\":\"",
                             {
                                 "Fn::GetAtt": [
                                     "RunCheckfilesCommandLambda7EB09D55",
                                     "Arn"
                                 ]
                             },
-                            "\"},\"IncrementCounter\":{\"Next\":\"WaitSixtyMinutes\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultPath\":\"$.iterator\",\"Resource\":\"",
+                            "\"},\"IncrementCounter\":{\"Next\":\"WaitSixtyMinutes\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ClientExecutionTimeoutException\",\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultPath\":\"$.iterator\",\"Resource\":\"",
                             {
                                 "Fn::GetAtt": [
                                     "IncrementCounterLambda27A5F523",
                                     "Arn"
                                 ]
                             },
-                            "\"},\"Should continue?\":{\"Type\":\"Choice\",\"Choices\":[{\"And\":[{\"Variable\":\"$.in_progress\",\"BooleanEquals\":true},{\"Variable\":\"$.iterator.continue\",\"BooleanEquals\":true}],\"Next\":\"IncrementCounter\"}],\"Default\":\"MakeCheckfilesFinishedMessage\"},\"GetCheckfilesCommandStatus\":{\"Next\":\"Should continue?\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"checkfiles_command_status.$\":\"$.checkfiles_command_status\",\"instance_id.$\":\"$.instance_id\",\"command_id.$\":\"$.command_id\",\"instance_id_list.$\":\"$.instance_id_list\",\"in_progress.$\":\"$.in_progress\",\"iterator.$\":\"$.iterator\"},\"Resource\":\"",
+                            "\"},\"Should continue?\":{\"Type\":\"Choice\",\"Choices\":[{\"And\":[{\"Variable\":\"$.in_progress\",\"BooleanEquals\":true},{\"Variable\":\"$.iterator.continue\",\"BooleanEquals\":true}],\"Next\":\"IncrementCounter\"}],\"Default\":\"MakeCheckfilesFinishedMessage\"},\"GetCheckfilesCommandStatus\":{\"Next\":\"Should continue?\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ClientExecutionTimeoutException\",\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"checkfiles_command_status.$\":\"$.checkfiles_command_status\",\"instance_id.$\":\"$.instance_id\",\"command_id.$\":\"$.command_id\",\"instance_id_list.$\":\"$.instance_id_list\",\"in_progress.$\":\"$.in_progress\",\"iterator.$\":\"$.iterator\"},\"Resource\":\"",
                             {
                                 "Fn::GetAtt": [
                                     "GetCheckfilesCommandStatusLambda1E37EF7D",
@@ -555,7 +555,7 @@
                             "Action": "sts:AssumeRole",
                             "Effect": "Allow",
                             "Principal": {
-                                "Service": "states.testing.amazonaws.com"
+                                "Service": "states.amazonaws.com"
                             }
                         }
                     ],
