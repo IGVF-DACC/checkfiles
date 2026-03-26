@@ -22,7 +22,7 @@ from typing import Optional
 
 import pysam
 from FastaValidator import fasta_validator
-from frictionless import system, validate, describe, Schema, Dialect, Resource
+from frictionless import system, validate, describe, Schema, Dialect
 from frictionless.exception import FrictionlessException
 from seqspec.utils import load_spec as seqspec_load_spec
 from seqspec.seqspec_version import seqspec_version
@@ -30,7 +30,7 @@ from seqspec.seqspec_check import seqspec_check
 
 import file
 import logformatter
-from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE, SUPPORTED_ENCODING
+from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE, UTF_8_ENCODING
 from constants import MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE, ASSEMBLY_REPORT_FILE_PATH, ZIP_FILE_FORMAT
 from constants import GZIP_CHECK_IGNORED_FILE_FORMAT, NO_HEADER_CONTENT_TYPE, TABULAR_FORMAT, TABULAR_FILE_SCHEMAS
 from constants import VALIDATE_FILES_ARGS, ASSEMBLY_TO_CHROMINFO_PATH_MAP, ASSEMBLY_FOR_VCF, ASSEMBLY_TO_SEQUENCE_FILE_MAP
@@ -176,7 +176,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
     return validation_record
 
 
-def get_header_row(file_path, is_gzipped, encoding=SUPPORTED_ENCODING):
+def get_header_row(file_path, is_gzipped, encoding=UTF_8_ENCODING):
     """Count leading # comment lines and return 1-based header row number. Right now we assume there is only one header row and header row should not be started with '#'"""
     count = 0
     open_func = gzip.open if is_gzipped else open
@@ -383,16 +383,6 @@ def tabular_file_check(file_format, content_type, file_path, is_gzipped=True, sc
     try:
         system.trusted = True
         error = {}
-        # Use frictionless to detect encoding; only UTF-8 is supported.
-        resource_options = {'format': file_format}
-        if is_gzipped:
-            resource_options['compression'] = 'gz'
-        resource = Resource(file_path, **resource_options)
-        resource.infer()
-        if resource.encoding != SUPPORTED_ENCODING:
-            return {
-                'tabular_file_error': f'Tabular file must be UTF-8 encoded. Detected encoding: {resource.encoding}.'
-            }
         # Build minimal dialect with comment_char and header_rows.
         if content_type not in NO_HEADER_CONTENT_TYPE:
             header_row = get_header_row(
@@ -402,8 +392,12 @@ def tabular_file_check(file_format, content_type, file_path, is_gzipped=True, sc
             dialect = Dialect(header=False, comment_char='#')
 
         # When file is gzipped but filename lacks .gz, frictionless won't auto-detect compression.
-        # Pass compression='gz' when the file is gzipped.
-        frictionless_options = {'dialect': dialect, 'format': file_format}
+        # Pass compression='gz' when the file is gzipped and force UTF-8.
+        frictionless_options = {
+            'dialect': dialect,
+            'format': file_format,
+            'encoding': UTF_8_ENCODING
+        }
         if is_gzipped:
             frictionless_options['compression'] = 'gz'
         if not schema_path:
@@ -446,7 +440,7 @@ def tabular_file_check(file_format, content_type, file_path, is_gzipped=True, sc
                             schema.add_field(infer_schema.fields[i])
                     report = validate(file_path, schema=schema,
                                       limit_errors=max_error, checks=checks, **frictionless_options)
-    except FrictionlessException as e:
+    except (UnicodeDecodeError, FrictionlessException) as e:
         logger.error(
             f'exception occurred when checking tabular file: {str(e)}')
         return {

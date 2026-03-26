@@ -114,4 +114,4 @@ ZIP_FILE_FORMAT = [
     'yaml',
 ]
 
-SUPPORTED_ENCODING = 'utf-8'
+UTF_8_ENCODING = 'utf-8'

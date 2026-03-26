@@ -207,4 +207,4 @@ def test_tabular_file_check_encoding_invalid():
     error = tabular_file_check(
         file_format, 'guide RNA sequences', file_path, is_gzipped)
     assert 'tabular_file_error' in error
-    assert error['tabular_file_error'] == "exception occurred when checking tabular file: [encoding-error] The data source could not be successfully decoded: 'utf-8' codec can't decode byte 0xca in position 196: invalid continuation byte "
+    assert error['tabular_file_error'] == "exception occurred when checking tabular file: 'utf-8' codec can't decode byte 0xca in position 196: invalid continuation byte"
