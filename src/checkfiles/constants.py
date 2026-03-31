@@ -38,7 +38,8 @@ MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE = 2
 MAX_NUM_ERROR_FOR_TABULAR_FILE = 1000
 
 NO_HEADER_CONTENT_TYPE = [
-    'fragments'
+    'fragments',
+    'methylation counts'
 ]
 
 TABULAR_FILE_SCHEMAS = {
