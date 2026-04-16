@@ -117,6 +117,6 @@ ZIP_FILE_FORMAT = [
 
 UTF_8_ENCODING = 'utf-8'
 
-NO_SQ_HEADER_BAM_CONTENT_TYPE = [
+NO_SQ_HEADER_BAM_CONTENT_TYPES = [
     'PacBio consensus reads',
 ]

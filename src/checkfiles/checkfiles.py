@@ -34,7 +34,7 @@ from constants import MAX_NUM_ERROR_FOR_TABULAR_FILE, UTF_8_ENCODING
 from constants import MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE, ASSEMBLY_REPORT_FILE_PATH, ZIP_FILE_FORMAT
 from constants import GZIP_CHECK_IGNORED_FILE_FORMAT, NO_HEADER_CONTENT_TYPE, TABULAR_FORMAT, TABULAR_FILE_SCHEMAS
 from constants import VALIDATE_FILES_ARGS, ASSEMBLY_TO_CHROMINFO_PATH_MAP, ASSEMBLY_FOR_VCF, ASSEMBLY_TO_SEQUENCE_FILE_MAP
-from constants import FASTA_VALIDATION_INFO, SEQSPEC_FILE_VERSION, NO_SQ_HEADER_BAM_CONTENT_TYPE
+from constants import FASTA_VALIDATION_INFO, SEQSPEC_FILE_VERSION, NO_SQ_HEADER_BAM_CONTENT_TYPES
 from guide_rna_sequences_check import GuideRnaSequencesCheck
 from version import get_checkfiles_version
 
@@ -244,9 +244,9 @@ def check_content_md5sum(content_md5sum, uuid, portal_auth: Optional[PortalAuth]
     return error
 
 
-def bam_pysam_check(file_path, content_type):
+def bam_pysam_check(file_path, content_type, no_sq_header_bam_content_types=NO_SQ_HEADER_BAM_CONTENT_TYPES):
     try:
-        if content_type not in NO_SQ_HEADER_BAM_CONTENT_TYPE:
+        if content_type not in no_sq_header_bam_content_types:
             pysam.quickcheck(file_path)
         result = pysam.stats(file_path)
         if 'SN\tis sorted:\t0' in result:
