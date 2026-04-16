@@ -26,7 +26,7 @@ def test_check_valid_gzipped_file_format_error_unzip():
 
 def test_bam_pysam_check_invalid_bam_file():
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
-    error = bam_pysam_check(file_path, 'alignments')
+    error = bam_pysam_check(file_path, 'reads')
     assert error == {'bam_error': "file is not valid bam file by SamtoolsError: 'samtools returned with error 8: stdout=, stderr=src/tests/data/ENCFF594AYI.fastq.gz had no targets in header.\\n'"}
 
 
@@ -83,7 +83,7 @@ def test_cram_pysam_check_cram_valid(mocker):
 
 def test_bam_pysam_check_number_of_read():
     file_path = 'src/tests/data/ENCFF206HGF.bam'
-    result = bam_pysam_check(file_path, 'alignments')
+    result = bam_pysam_check(file_path, 'reads')
     assert result == {'read_count': 1709}
 
 
