@@ -26,7 +26,7 @@ def test_check_valid_gzipped_file_format_error_unzip():
 
 def test_bam_pysam_check_invalid_bam_file():
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
-    error = bam_pysam_check(file_path)
+    error = bam_pysam_check(file_path, 'alignments')
     assert error == {'bam_error': "file is not valid bam file by SamtoolsError: 'samtools returned with error 8: stdout=, stderr=src/tests/data/ENCFF594AYI.fastq.gz had no targets in header.\\n'"}
 
 
@@ -83,8 +83,34 @@ def test_cram_pysam_check_cram_valid(mocker):
 
 def test_bam_pysam_check_number_of_read():
     file_path = 'src/tests/data/ENCFF206HGF.bam'
-    result = bam_pysam_check(file_path)
+    result = bam_pysam_check(file_path, 'alignments')
     assert result == {'read_count': 1709}
+
+
+def test_bam_pysam_check_no_sq_header(mocker):
+    file_path = '/tmp/IGVFFI4664MXIN.bam'
+    content_type = 'PacBio consensus reads'
+    mock_quickcheck = mocker.patch('checkfiles.checkfiles.pysam.quickcheck')
+    mock_stats = mocker.patch(
+        'checkfiles.checkfiles.pysam.stats',
+        return_value='SN\tis sorted:\t1\n',
+    )
+    mock_sam = mocker.MagicMock()
+    mock_sam.header = mocker.MagicMock()
+    mock_sam.count.return_value = 42
+    mock_af = mocker.MagicMock()
+    mock_af.__enter__.return_value = mock_sam
+    mock_af.__exit__.return_value = None
+    mock_alignment_file = mocker.patch(
+        'checkfiles.checkfiles.pysam.AlignmentFile', return_value=mock_af)
+
+    result = bam_pysam_check(file_path, content_type)
+
+    assert result == {'read_count': 42}
+    mock_quickcheck.assert_not_called()
+    mock_stats.assert_called_once_with(file_path)
+    mock_alignment_file.assert_called_once_with(
+        file_path, 'rb', check_sq=False)
 
 
 def test_fastq_get_average_read_length_and_number_of_reads():
