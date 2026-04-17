@@ -49,7 +49,7 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
         submitted_md5sum, validation_record.file.md5sum)
     validation_record.update_errors(md5_sum_error)
     if file_format == 'bam':
-        bam_check_result = bam_pysam_check(input_file_path)
+        bam_check_result = bam_pysam_check(input_file_path, content_type)
         if 'bam_error' in bam_check_result:
             validation_record.update_errors(bam_check_result)
         else:

@@ -14,7 +14,7 @@ To run the local validation you need to have a docker agent running in your syst
 Validating bam file:
 
 ```bash
-./scripts/checkfiles_local.sh --input_file_path [Absolute path to]src/tests/data/ENCFF206HGF.bam --file_format bam --md5sum 2d3b7df013d257c7052c084d93ff9026
+./scripts/checkfiles_local.sh --input_file_path [Absolute path to]src/tests/data/ENCFF206HGF.bam --file_format bam --content_type reads --md5sum 2d3b7df013d257c7052c084d93ff9026
 ```
 
 Validating cram file:
