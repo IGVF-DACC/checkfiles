@@ -102,7 +102,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
             logger.info(
                 f'{uuid} content_md5sum is {validation_record.content_md5sum}')
             validation_record.update_errors(content_md5_error)
-        except (EOFError, zlib.error) as e:
+        except (EOFError, zlib.error, gzip.BadGzipFile) as e:
             logger.error(
                 f'{uuid} the gzipped file is corrupted: {str(e)}',
                 exc_info=True
