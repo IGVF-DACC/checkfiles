@@ -3,7 +3,7 @@
         {
             "name": "gene_1",
             "type": "string",
-            "description": "Ensembl gene ID for the first perturbed regulator in the pair.",
+            "description": "Ensembl gene ID for the first perturbed regulator in the pair, using official IGVF GENCODE version (V43)",
             "constraints": {
                 "required": true
             }
@@ -11,7 +11,7 @@
         {
             "name": "gene_1_symbol",
             "type": "string",
-            "description": "Gene symbol for the first perturbed regulator in the pair.",
+            "description": "Gene symbol for the first perturbed regulator in the pair, from official IGVF GENCODE version (V43)",
             "constraints": {
                 "required": true
             }
@@ -19,7 +19,7 @@
         {
             "name": "gene_2",
             "type": "string",
-            "description": "Ensembl gene ID for the second perturbed regulator in the pair.",
+            "description": "Ensembl gene ID for the second perturbed regulator in the pair, using official IGVF GENCODE version (V43)",
             "constraints": {
                 "required": true
             }
@@ -27,7 +27,7 @@
         {
             "name": "gene_2_symbol",
             "type": "string",
-            "description": "Gene symbol for the second perturbed regulator in the pair.",
+            "description": "Gene symbol for the second perturbed regulator in the pair, from official IGVF GENCODE version (V43)",
             "constraints": {
                 "required": true
             }
