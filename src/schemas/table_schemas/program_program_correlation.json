@@ -1,0 +1,35 @@
+{
+    "fields": [
+        {
+            "name": "program_1_id",
+            "type": "string",
+            "description": "Unique identifier for the first gene program. Must match `program_id` values defined in the associated `gene programs` file.",
+            "example": "GP_1",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "program_2_id",
+            "type": "string",
+            "description": "Unique identifier for the second gene program. Must match `program_id` values defined in the associated `gene programs` file.",
+            "example": "GP_1",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "pearson_correlation",
+            "type": "number",
+            "description": "Pearson correlation between the two programs' log2FC values across gene perturbations.",
+            "constraints": {
+                "required": true
+            }
+        }
+    ],
+    "missingValues": [
+        "N/A",
+        "NaN",
+        ""
+    ]
+}

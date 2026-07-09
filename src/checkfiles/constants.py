@@ -48,6 +48,8 @@ TABULAR_FILE_SCHEMAS = {
     'element to gene interactions': 'src/schemas/table_schemas/element_to_gene_interactions.json',
     'gene programs': 'src/schemas/table_schemas/gene_programs.json',
     'gene program regulators': 'src/schemas/table_schemas/gene_program_regulators.json',
+    'program-program correlation': 'src/schemas/table_schemas/program_program_correlation.json',
+    'regulator-regulator correlation': 'src/schemas/table_schemas/regulator_regulator_correlation.json',
     'gene universe': 'src/schemas/table_schemas/gene_universe.json',
     'guide RNA sequences': 'src/schemas/table_schemas/guide_rna_sequences.json',
     'MPRA sequence designs': 'src/schemas/table_schemas/mpra_sequence_designs.json',
