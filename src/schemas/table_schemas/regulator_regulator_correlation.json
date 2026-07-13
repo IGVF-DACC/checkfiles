@@ -1,0 +1,49 @@
+{
+    "fields": [
+        {
+            "name": "gene_1",
+            "type": "string",
+            "description": "Ensembl gene ID for the first perturbed regulator in the pair, using official IGVF GENCODE version (V43)",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "gene_1_symbol",
+            "type": "string",
+            "description": "Gene symbol for the first perturbed regulator in the pair, from official IGVF GENCODE version (V43)",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "gene_2",
+            "type": "string",
+            "description": "Ensembl gene ID for the second perturbed regulator in the pair, using official IGVF GENCODE version (V43)",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "gene_2_symbol",
+            "type": "string",
+            "description": "Gene symbol for the second perturbed regulator in the pair, from official IGVF GENCODE version (V43)",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "pearson_correlation",
+            "type": "number",
+            "description": "Pearson correlation between the two regulators' log2FC values across gene programs.",
+            "constraints": {
+                "required": true
+            }
+        }
+    ],
+    "missingValues": [
+        "N/A",
+        "NaN",
+        ""
+    ]
+}
