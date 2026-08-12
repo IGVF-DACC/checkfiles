@@ -52,6 +52,8 @@ TABULAR_FILE_SCHEMAS = {
     'regulator-regulator correlation': 'src/schemas/table_schemas/regulator_regulator_correlation.json',
     'gene universe': 'src/schemas/table_schemas/gene_universe.json',
     'guide RNA sequences': 'src/schemas/table_schemas/guide_rna_sequences.json',
+    'marker gene activity': 'src/schemas/table_schemas/marker_genes.json',
+    'marker genes': 'src/schemas/table_schemas/marker_genes.json',
     'MPRA sequence designs': 'src/schemas/table_schemas/mpra_sequence_designs.json',
     'prime editing guide RNA sequences': 'src/schemas/table_schemas/prime_editing_guide_rna_sequences.json',
     'reporter elements': 'src/schemas/table_schemas/reporter_elements.json',

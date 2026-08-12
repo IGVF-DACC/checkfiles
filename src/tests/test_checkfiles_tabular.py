@@ -199,6 +199,16 @@ def test_tabular_file_check_cell_annotations_valid():
     assert error == {}
 
 
+def test_tabular_file_check_marker_genes_valid():
+    file_path = 'src/tests/data/marker_genes_valid.tsv'
+    is_gzipped = False
+    file_format = 'tsv'
+    content_type = 'marker genes'
+    error = tabular_file_check(
+        file_format, content_type, file_path, is_gzipped)
+    assert error == {}
+
+
 def test_tabular_file_check_encoding_invalid():
     """tabular_file_check rejects non-UTF-8 encodings and returns tabular_file_error."""
     file_path = 'src/tests/data/tabular_file_encoding.tsv'
