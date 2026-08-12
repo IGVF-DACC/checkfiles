@@ -1,0 +1,21 @@
+region	cluster_name	cluster_clid	cluster_clid_name	cell_qualifier	cluster_marker_genes
+blood	B_Memory	CL_0000787	memory B cell		TNFRSF13B,BANK1,BLK,SPIB,MS4A1
+blood	B_Naive	CL_0000788	naive B cell		FCER2,TCL1A,IGHD,IGHM,FCRL1
+blood	B_atypical	CL_4033094	age-associated B cell		FCRL5,SOX5,CD19,DAPP1,LRMP
+blood	CD4T_Memory	CL_0000897	CD4-positive, alpha-beta memory T cell		CCR4,GATA3,IL7R,TNFRSF4,CD28
+blood	CD4T_Naive	CL_0000895	naive thymus-derived CD4-positive, alpha-beta T cell		CCR7,LEF1,TCF7,SELL,SATB1
+blood	CD8T_Memory	CL_0000909	CD8-positive, alpha-beta memory T cell		CD8A,CD8B,GZMK,KLRK1,ZNF683
+blood	CD8T_Naive	CL_0000900	naive thymus-derived CD8-positive, alpha-beta T cell		CD8B,CCR7,LEF1,TCF7,NELL2
+blood	MAIT	CL_0020002	mucosal-associated invariant T cell, human		SLC4A10,KLRB1,IL23R,RORC,ZBTB16
+blood	NK_bright	CL_0000938	CD16-negative, CD56-bright natural killer cell, human		NCAM1,XCL1,IL2RB,KLRC1,KIT
+blood	NK_dim	CL_0000939	CD16-positive, CD56-dim natural killer cell, human		FCGR3A,GNLY,PRF1,GZMB,NCR1
+blood	Plasma	CL_0000786	plasma cell		MZB1,JCHAIN,TNFRSF17,XBP1,CD38
+blood	Progen	CL_0000837	hematopoietic multipotent progenitor cell		CD34,PROM1,KIT,GATA2,MEIS1
+blood	Prolif	CL_4033069	cycling T cell		MKI67,TOP2A,RRM2,PCLAF,CENPF
+blood	Treg	CL_0001047	CD4-positive, CD25-positive, CCR4-positive, alpha-beta regulatory T cell		FOXP3,IL2RA,CTLA4,TIGIT,IKZF2
+blood	cDC1	CL_0002394	CD141-positive myeloid dendritic cell		CLEC9A,XCR1,IRF8,FLT3,CADM1
+blood	cDC2	CL_0002399	CD1c-positive myeloid dendritic cell		CD1C,FCER1A,CLEC10A,HLA-DRA,CIITA
+blood	cM	CL_0000860	classical monocyte		CD14,LYZ,S100A8,S100A9,FCN1
+blood	gdT	CL_0000798	gamma-delta T cell		TRDC,TRGC1,TRDV2,TRGV9,KLRG1
+blood	ncM	CL_0000875	non-classical monocyte		FCGR3A,MS4A7,CDKN1C,SIGLEC10,LST1
+blood	pDC	CL_0001058	plasmacytoid dendritic cell, human		CLEC4C,LILRA4,TCF4,IRF8,IL3RA

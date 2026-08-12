@@ -1,0 +1,56 @@
+{
+    "fields": [
+        {
+            "name": "region",
+            "type": "string",
+            "description": "Region (can be parent sample)",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "cluster_name",
+            "type": "string",
+            "description": "Name of the cell cluster",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "cluster_clid",
+            "type": "string",
+            "description": "Cell Ontology ID for the cluster",
+            "example": "CL_0000057",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "cluster_clid_name",
+            "type": "string",
+            "description": "Cell Ontology term name for the cluster",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "cell_qualifier",
+            "type": "string",
+            "description": "Qualifier for the cell state or subtype",
+            "example": "exhausted"
+        },
+        {
+            "name": "cluster_marker_genes",
+            "type": "string",
+            "description": "Comma-separated list of marker gene symbols for the cluster",
+            "example": "NEGR1,ABCA6,ABCA8,DCN,C7",
+            "constraints": {
+                "required": true
+            }
+        }
+    ],
+    "missingValues": [
+        "NA",
+        ""
+    ]
+}
