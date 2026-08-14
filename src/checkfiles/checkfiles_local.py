@@ -76,7 +76,7 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
         validation_record.update_info(fastq_read_info)
     elif file_format in ['bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe']:
         validate_files_check_error = validate_files_check(
-            input_file_path, file_format, file_format_type, assembly)
+            input_file_path, file_format, file_format_type, assembly, content_type)
         validation_record.update_errors(validate_files_check_error)
     elif file_format == 'fasta':
         fasta_check_error = fasta_check(input_file_path, is_gzipped)

@@ -144,7 +144,7 @@ def file_validation(portal_url, portal_auth: PortalAuth, validation_record: file
         validation_record.update_info(fastq_read_info)
     elif file_format in ['bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe']:
         validate_files_check_error = validate_files_check(
-            local_file_path, file_format, file_format_type, assembly)
+            local_file_path, file_format, file_format_type, assembly, content_type)
         validation_record.update_errors(validate_files_check_error)
     elif file_format == 'fasta':
         fasta_check_error = fasta_check(local_file_path, is_gzipped)
@@ -534,14 +534,18 @@ def seqspec_file_check(file_path, validate_onlist_files=True):
     return error
 
 
-def get_validate_files_args(file_format, file_format_type, chrom_info_file, schema=VALIDATE_FILES_ARGS):
-    args = schema[(file_format, file_format_type)]
+def get_validate_files_args(file_format, file_format_type, chrom_info_file, content_type=None, schema=VALIDATE_FILES_ARGS):
+    # bedpe files do not have file_format_type; select schema by content_type.
+    if file_format == 'bedpe' and content_type == 'element to gene interactions':
+        args = list(schema[(file_format, content_type)])
+    else:
+        args = list(schema[(file_format, file_format_type)])
     chrom_info_arg = 'chromInfo=' + chrom_info_file
     args.append(chrom_info_arg)
     return args
 
 
-def validate_files_check(file_path, file_format, file_format_type, assembly, chrominfo_file_paths=ASSEMBLY_TO_CHROMINFO_PATH_MAP):
+def validate_files_check(file_path, file_format, file_format_type, assembly, content_type=None, chrominfo_file_paths=ASSEMBLY_TO_CHROMINFO_PATH_MAP):
     error = {}
     if assembly not in ASSEMBLY_TO_CHROMINFO_PATH_MAP.keys():
         error['validate_files'] = f'assembly {assembly} is not supported. Valid assemblies: {ASSEMBLY_TO_CHROMINFO_PATH_MAP.keys()}'
@@ -549,7 +553,7 @@ def validate_files_check(file_path, file_format, file_format_type, assembly, chr
     chrom_info_file_path = chrominfo_file_paths[assembly]
     try:
         validate_args = get_validate_files_args(
-            file_format, file_format_type, chrom_info_file_path)
+            file_format, file_format_type, chrom_info_file_path, content_type)
     except KeyError:
         error_message = f'file_format: {file_format} file_format_type: {file_format_type} combination not allowed.'
         error['validate_files'] = error_message

@@ -10,7 +10,7 @@
 # Metadata: 
 # ScoreThreshold: 0.177
 # ScoreType: positive_score
-ElementChr	ElementStart	ElementEnd	ElementName	ElementClass	GeneSymbol	GeneEnsemblID	GeneTSS	BiosampleTermName	Score
+ElementChr	ElementStart	ElementEnd	ElementName	ElementClass	GeneSymbol	GeneEnsemblID	GeneTSS	CellAnnotation	Score
 chr1	778166	778952	chr1:778166-778952	test	HCT116	ENSG00000225880	827522	test	0.501553310167141
 chr1	778166	778952	chr1:778166-778952	promoter	HCT116	ENSG00000228794	827590	test	0.461674850447113
 chr1	827272	827840	chr1:878166-878952	promoter	HCT116	ENSG00000225880	827522	test	0.969354888529756

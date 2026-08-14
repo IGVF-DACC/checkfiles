@@ -140,6 +140,27 @@ def test_get_validate_files_args():
     ]
 
 
+def test_get_validate_files_args_bedpe():
+    args = get_validate_files_args(
+        'bedpe', None, 'src/schemas/genome_builds/chrom_sizes/GRCh38.chrom.sizes')
+    assert args == [
+        '-type=bed3+',
+        'chromInfo=src/schemas/genome_builds/chrom_sizes/GRCh38.chrom.sizes',
+    ]
+
+
+def test_get_validate_files_args_element_to_gene_interactions_bedpe():
+    args = get_validate_files_args(
+        'bedpe', None, 'src/schemas/genome_builds/chrom_sizes/GRCh38.chrom.sizes',
+        content_type='element to gene interactions')
+    assert args == [
+        '-tab',
+        '-type=bed3+7',
+        '-as=src/schemas/as/element_to_gene_interactions.as',
+        'chromInfo=src/schemas/genome_builds/chrom_sizes/GRCh38.chrom.sizes',
+    ]
+
+
 def test_validate_files_check_pass():
     file_path = 'src/tests/data/ENCFF597JNC.bed.gz'
     file_format = 'bed'
@@ -200,6 +221,29 @@ def test_validate_files_check_mpra_variant_valid():
     error = validate_files_check(
         file_path, file_format, file_format_type, assembly)
     assert error == {}
+
+
+def test_validate_files_check_element_to_gene_interactions_valid():
+    file_path = 'src/tests/data/element_to_gene_interactions_valid.bedpe'
+    file_format = 'bedpe'
+    file_format_type = None
+    assembly = 'GRCh38'
+    content_type = 'element to gene interactions'
+    error = validate_files_check(
+        file_path, file_format, file_format_type, assembly, content_type)
+    assert error == {}
+
+
+def test_validate_files_check_element_to_gene_interactions_invalid():
+    file_path = 'src/tests/data/element_to_gene_interactions_invalid.bedpe'
+    file_format = 'bedpe'
+    file_format_type = None
+    assembly = 'GRCh38'
+    content_type = 'element to gene interactions'
+    error = validate_files_check(
+        file_path, file_format, file_format_type, assembly, content_type)
+    assert error == {
+        'validate_files': 'Error [file=src/tests/data/element_to_gene_interactions_invalid.bedpe, line=1]: found 9 columns, expected 10 [chr1\t778501\t779365\tchr1\t827521\t827522\tchr1:778501-779365_LINC00115\t0.911882749549029\t.]\nAborting ... found error.'}
 
 
 def test_fasta_check_pass():
