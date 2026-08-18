@@ -32,8 +32,7 @@
             "type": "string",
             "description": "Unique element identifier.",
             "constraints": {
-                "required": true,
-                "unique": true
+                "required": true
             }
         },
         {
@@ -71,7 +70,7 @@
             }
         },
         {
-            "name": "BiosampleTermName",
+            "name": "CellAnnotation",
             "type": "string",
             "description": "Biosample / cell type name; NA if BiosampleAgnostic is 'True'"
         },

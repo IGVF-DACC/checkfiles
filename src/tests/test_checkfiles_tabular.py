@@ -154,9 +154,8 @@ def test_tabular_file_check_element_to_gene_interactions_invalid():
     file_format = 'tsv'
     error = tabular_file_check(
         file_format, 'element to gene interactions', file_path, is_gzipped)
-    assert error['tabular_file_error']['number_of_errors'] == 2
+    assert error['tabular_file_error']['number_of_errors'] == 1
     assert 'constraint-error' in error['tabular_file_error']['error_types']
-    assert 'unique-error' in error['tabular_file_error']['error_types']
 
 
 def test_tabular_file_check_gene_universe_valid():

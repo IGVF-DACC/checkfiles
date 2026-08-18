@@ -80,6 +80,13 @@ VALIDATE_FILES_ARGS = {
     ('bed', 'mpra_element'): ['-type=bed6+5', '-as=src/schemas/as/reporter_genomic_element_effects.as'],
     ('bed', 'mpra_variant'): ['-type=bed6+13', '-as=src/schemas/as/reporter_genomic_variant_effects.as'],
     ('bedpe', None): ['-type=bed3+'],
+    # bedpe files do not have file_format_type; this key is content_type
+    # and is selected in get_validate_files_args.
+    ('bedpe', 'element to gene interactions'): [
+        '-tab',
+        '-type=bed3+7',
+        '-as=src/schemas/as/element_to_gene_interactions.as',
+    ],
     ('bigBed', 'bed3'): ['-type=bigBed3'],
     ('bigBed', 'bed3+'): ['-tab', '-type=bigBed3+'],
     ('bigWig', None): ['-type=bigWig'],
