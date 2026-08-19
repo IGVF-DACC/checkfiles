@@ -1,0 +1,297 @@
+{
+    "fields": [
+        {
+            "name": "variant",
+            "type": "string",
+            "description": "Follow the variant naming scheme by SPDI.",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "chr",
+            "type": "string",
+            "description": "Chromosome, include 'chr' (e.g., chr12)."
+        },
+        {
+            "name": "pos",
+            "type": "integer",
+            "description": "Position in GRCh38.",
+            "constraints": {
+                "minimum": 0
+            }
+        },
+        {
+            "name": "ref",
+            "type": "string",
+            "description": "Reference allele (based on GRCh38 genome)."
+        },
+        {
+            "name": "alt",
+            "type": "string",
+            "description": "Alternative allele (based on GRCh38 genome)."
+        },
+        {
+            "name": "effect_allele",
+            "type": "string",
+            "description": "The effect allele used for defining effect_size and allele frequency.",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "other_allele",
+            "type": "string",
+            "description": "The other allele.",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "dosage",
+            "type": "boolean",
+            "description": "T/F whether imputed dosages were used in the regression.",
+            "trueValues": [
+                "T",
+                "true",
+                "True",
+                "TRUE"
+            ],
+            "falseValues": [
+                "F",
+                "false",
+                "False",
+                "FALSE"
+            ]
+        },
+        {
+            "name": "af",
+            "type": "number",
+            "description": "Allele frequency of the effect allele within the dataset.",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "maf",
+            "type": "number",
+            "description": "Minor allele frequency of the variant within the dataset."
+        },
+        {
+            "name": "mac",
+            "type": "integer",
+            "description": "Minor allele count of the variant within the dataset.",
+            "constraints": {
+                "minimum": 0
+            }
+        },
+        {
+            "name": "ma_sample",
+            "type": "integer",
+            "description": "Number of samples carrying the minor allele of the variant within the dataset.",
+            "constraints": {
+                "minimum": 0
+            }
+        },
+        {
+            "name": "chromatin_phenotype",
+            "type": "string",
+            "description": "Chromatin phenotype in the format chr{chromosome}:{start_pos_in_b38}-{end_pos_in_b38}.",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "chromatin_method",
+            "type": "string",
+            "description": "Method used to define the chromatin phenotype (e.g., ATAC-Seq Peak).",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "chromatin_as",
+            "type": "boolean",
+            "description": "T if the analyses use allele-specific accessibility.",
+            "trueValues": [
+                "T",
+                "true",
+                "True",
+                "TRUE"
+            ],
+            "falseValues": [
+                "F",
+                "false",
+                "False",
+                "FALSE"
+            ],
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "sd_phenotype",
+            "type": "number",
+            "description": "Standard deviation of phenotype (e.g., 1 if the phenotype is normalized as such).",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "n_sample",
+            "type": "integer",
+            "description": "Number of samples used in the regression.",
+            "constraints": {
+                "required": true,
+                "minimum": 0
+            }
+        },
+        {
+            "name": "n_cell",
+            "type": "integer",
+            "description": "Number of cells included in the analyses for single-cell data.",
+            "constraints": {
+                "minimum": 0
+            }
+        },
+        {
+            "name": "conditional",
+            "type": "integer",
+            "description": "The round of conditional analyses if the statistics are from the conditional analyses (e.g., 2 if it is secondary analyses). If empty, it should be considered as the primary analyses.",
+            "constraints": {
+                "minimum": 1
+            }
+        },
+        {
+            "name": "conditional_method",
+            "type": "string",
+            "description": "Method used for the conditional analyses. Required if it is a conditional analysis."
+        },
+        {
+            "name": "effect_size",
+            "type": "number",
+            "description": "Beta coefficient from the regression.",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "se_effect_size",
+            "type": "number",
+            "description": "Standard error of beta coefficient from the regression.",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "pval_nominal",
+            "type": "number",
+            "description": "Nominal p value from the regression.",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "log10p_nominal",
+            "type": "number",
+            "description": "Log10(p value) from the regression. Sometimes useful when p values are really small.",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "pval_perm",
+            "type": "number",
+            "description": "Permutation p value."
+        },
+        {
+            "name": "FDR",
+            "type": "number",
+            "description": "False discovery rate after multiple testing correction."
+        },
+        {
+            "name": "FDR_method",
+            "type": "string",
+            "description": "Method used for multiple testing correction."
+        },
+        {
+            "name": "significance",
+            "type": "boolean",
+            "description": "T/F whether the association was determined as significant.",
+            "trueValues": [
+                "T",
+                "true",
+                "True",
+                "TRUE"
+            ],
+            "falseValues": [
+                "F",
+                "false",
+                "False",
+                "FALSE"
+            ],
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "PIP",
+            "type": "number",
+            "description": "PIP from fine-mapping across cis-SNPs.",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "PIP_method",
+            "type": "string",
+            "description": "Method used for fine-mapping.",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "CS",
+            "type": "boolean",
+            "description": "T if the variant is included in a 95% credible set.",
+            "trueValues": [
+                "T",
+                "true",
+                "True",
+                "TRUE"
+            ],
+            "falseValues": [
+                "F",
+                "false",
+                "False",
+                "FALSE"
+            ]
+        },
+        {
+            "name": "interaction",
+            "type": "boolean",
+            "description": "T if the statistics are from interaction analyses of any sort. F if the statistics represent the main effect of the variant.",
+            "trueValues": [
+                "T",
+                "true",
+                "True",
+                "TRUE"
+            ],
+            "falseValues": [
+                "F",
+                "false",
+                "False",
+                "FALSE"
+            ]
+        },
+        {
+            "name": "interaction_context",
+            "type": "string",
+            "description": "Description on what context or interaction variables were used for testing the interaction effect."
+        }
+    ],
+    "missingValues": [
+        "NA",
+        ""
+    ]
+}
