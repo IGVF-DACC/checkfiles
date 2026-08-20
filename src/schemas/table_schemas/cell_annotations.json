@@ -45,7 +45,8 @@
             "type": "string",
             "description": "accession of the intermediate analysis set where the original cell x gene matrix is.",
             "constraints": {
-                "required": true
+                "required": true,
+                "pattern": "^IGVFDS[0-9]{4}[A-Z]{4}$"
             }
         }
     ],
