@@ -352,7 +352,8 @@ def test_intended_target_name_formats():
 
     errors = run_guide_check_on_rows(
         file_path,
-        row_numbers={variant_row, gene_row, enhancer_row, exon_row, intron_row},
+        row_numbers={variant_row, gene_row,
+                     enhancer_row, exon_row, intron_row},
     )
 
     notes = [e.note for _, e in errors]
