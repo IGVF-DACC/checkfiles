@@ -339,16 +339,21 @@ def test_intended_target_name_formats():
       - variant -> SPDI
       - promoter/gene/splice site -> ENSEMBL gene ID
       - enhancer/insulator/silencer/distal element -> genomic coordinates
+      - exon -> ENSEMBL exon ID
+      - intron -> genomic coordinates
     """
     file_path = 'src/tests/data/guide_rna_sequences_targets_invalid.tsv'
 
     variant_row = 9
     gene_row = 10
     enhancer_row = 11
+    exon_row = 14
+    intron_row = 15
 
     errors = run_guide_check_on_rows(
         file_path,
-        row_numbers={variant_row, gene_row, enhancer_row},
+        row_numbers={variant_row, gene_row,
+                     enhancer_row, exon_row, intron_row},
     )
 
     notes = [e.note for _, e in errors]
@@ -375,6 +380,20 @@ def test_intended_target_name_formats():
         for note in notes
     )
 
+    notes_exon = [e.note for rn, e in errors if rn == exon_row]
+    assert any(
+        'intended_target_name must be an ENSEMBL exon ID when '
+        'genomic_element is exon' in note
+        for note in notes_exon
+    )
+
+    notes_intron = [e.note for rn, e in errors if rn == intron_row]
+    assert any(
+        'intended_target_name must be genomic coordinates when '
+        'genomic_element is intron' in note
+        for note in notes_intron
+    )
+
 
 def test_mouse_genes_valid_against_regex():
     """
@@ -389,3 +408,54 @@ def test_mouse_genes_valid_against_regex():
 
     # Row 13 should not produce any ConstraintErrors at all
     assert errors == []
+
+
+def test_exon_and_intron_intended_target_names_valid():
+    """
+    Valid exon and intron identifiers should not raise format errors:
+      - human ENSE and mouse ENSMUSE exon IDs
+      - intron coordinates
+    """
+    file_path = 'src/tests/data/guide_rna_sequences_targets_invalid.tsv'
+
+    errors = run_guide_check_on_rows(file_path, row_numbers={16, 17, 18})
+
+    assert errors == []
+
+
+def test_prime_editing_spacer_reuse_across_designs():
+    """
+    Prime editing guide designs are defined by spacer + PBS + RT template.
+    The same spacer may be reused when PBS and/or RT template differ.
+    """
+    file_path = 'src/tests/data/prime_editing_guide_rna_sequences_designs_invalid.tsv'
+
+    errors = run_guide_check_on_rows(file_path, row_numbers={2, 3})
+
+    assert errors == []
+
+
+def test_prime_editing_guide_design_uniqueness():
+    """
+    Prime editing uniqueness:
+      - the same (spacer, PBS, RT) design may not map to multiple guide_ids
+      - the same guide_id may not map to multiple designs
+    """
+    file_path = 'src/tests/data/prime_editing_guide_rna_sequences_designs_invalid.tsv'
+
+    errors = run_guide_check_on_rows(file_path, row_numbers={4, 5})
+
+    notes_row4 = [e.note for rn, e in errors if rn == 4]
+    assert any(
+        'guide design' in note
+        and 'is associated with multiple guide_ids' in note
+        and 'the same spacer may only be reused when' in note
+        for note in notes_row4
+    )
+
+    notes_row5 = [e.note for rn, e in errors if rn == 5]
+    assert any(
+        'guide_id PE_BASE is associated with multiple guide designs' in note
+        and 'each guide_id must be associated with a single guide design' in note
+        for note in notes_row5
+    )

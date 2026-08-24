@@ -17,6 +17,9 @@ def _is_missing(value):
 # ENSEMBL gene ID: ENSG + 11 digits (GENCODE 43 and GENCODE M36)
 ENSEMBL_GENE_RE = re.compile(r'^(ENSG[0-9]{11}|ENSMUSG[0-9]{11})(\.[0-9]+)?$')
 
+# ENSEMBL exon ID: ENSE + 11 digits (human) or ENSMUSE + 11 digits (mouse)
+ENSEMBL_EXON_RE = re.compile(r'^(ENSE[0-9]{11}|ENSMUSE[0-9]{11})(\.[0-9]+)?$')
+
 # Coordinates: chr1:3691430-3691731
 COORD_RE = re.compile(r'^chr[0-9A-Za-z._-]+:[0-9]+-[0-9]+$')
 
@@ -25,18 +28,49 @@ SPDI_RE = re.compile(
     r'^[A-Z]{2}_[0-9]+(?:\.[0-9]+)?:[0-9]+:[ACGTN\-]+:[ACGTN\-]+$'
 )
 
+COORDINATE_GENOMIC_ELEMENTS = {
+    'enhancer',
+    'insulator',
+    'silencer',
+    'distal element',
+    'intron',
+}
+
+
+def _row_field_names(row):
+    field_names = getattr(row, 'field_names', None)
+    if field_names:
+        return list(field_names)
+    if hasattr(row, 'keys'):
+        return list(row.keys())
+    return []
+
+
+def _has_prime_editing_fields(row):
+    field_names = _row_field_names(row)
+    return (
+        'primer_binding_sequence' in field_names
+        or 'rt_template_sequence' in field_names
+    )
+
+
+def _normalized_optional(value):
+    if _is_missing(value):
+        return None
+    return value
+
 
 class GuideRnaSequencesCheck(Check):
     Errors = [errors.ConstraintError]
 
     def __init__(self, **options):
         super().__init__(**options)
-        self._guide_id_to_spacer = {}
-        self._spacer_to_guide_id = {}
+        self._guide_id_to_design = {}
+        self._design_to_guide_id = {}
 
     def validate_row(self, row):
-        # 1) guide_id <-> spacer must be 1-to-1
-        for error in self._check_guide_spacer_mapping(row):
+        # 1) guide_id must map to a single guide design
+        for error in self._check_guide_design_mapping(row):
             yield error
 
         targeting = row.get('targeting')
@@ -73,37 +107,67 @@ class GuideRnaSequencesCheck(Check):
         ):
             yield error
 
-    def _check_guide_spacer_mapping(self, row):
+    def _design_key(self, row, spacer):
+        if _has_prime_editing_fields(row):
+            return (
+                spacer,
+                _normalized_optional(row.get('primer_binding_sequence')),
+                _normalized_optional(row.get('rt_template_sequence')),
+            )
+        return (spacer,)
+
+    def _check_guide_design_mapping(self, row):
         guide_id = row.get('guide_id')
         spacer = row.get('spacer')
 
         if _is_missing(guide_id) or _is_missing(spacer):
             return
 
-        existing_spacer = self._guide_id_to_spacer.get(guide_id)
-        if existing_spacer is None:
-            self._guide_id_to_spacer[guide_id] = spacer
-        elif existing_spacer != spacer:
-            note = (
-                f'guide_id {guide_id} is associated with multiple spacers: '
-                f'{existing_spacer} and {spacer}; '
-                'there must be a 1-to-1 mapping between guide_id and spacer.'
-            )
+        prime_editing = _has_prime_editing_fields(row)
+        design = self._design_key(row, spacer)
+
+        existing_design = self._guide_id_to_design.get(guide_id)
+        if existing_design is None:
+            self._guide_id_to_design[guide_id] = design
+        elif existing_design != design:
+            if prime_editing:
+                note = (
+                    f'guide_id {guide_id} is associated with multiple guide designs: '
+                    f'{existing_design} and {design}; '
+                    'each guide_id must be associated with a single guide design '
+                    'defined by spacer, primer_binding_sequence, and '
+                    'rt_template_sequence.'
+                )
+            else:
+                existing_spacer = existing_design[0]
+                note = (
+                    f'guide_id {guide_id} is associated with multiple spacers: '
+                    f'{existing_spacer} and {spacer}; '
+                    'there must be a 1-to-1 mapping between guide_id and spacer.'
+                )
             yield errors.ConstraintError.from_row(
                 row,
                 note=note,
                 field_name='guide_id',
             )
 
-        existing_guide_id = self._spacer_to_guide_id.get(spacer)
+        existing_guide_id = self._design_to_guide_id.get(design)
         if existing_guide_id is None:
-            self._spacer_to_guide_id[spacer] = guide_id
+            self._design_to_guide_id[design] = guide_id
         elif existing_guide_id != guide_id:
-            note = (
-                f'spacer {spacer} is associated with multiple guide_ids: '
-                f'{existing_guide_id} and {guide_id}; '
-                'there must be a 1-to-1 mapping between guide_id and spacer.'
-            )
+            if prime_editing:
+                note = (
+                    f'guide design {design} is associated with multiple guide_ids: '
+                    f'{existing_guide_id} and {guide_id}; '
+                    'the same spacer may only be reused when '
+                    'primer_binding_sequence and/or rt_template_sequence differ.'
+                )
+            else:
+                note = (
+                    f'spacer {spacer} is associated with multiple guide_ids: '
+                    f'{existing_guide_id} and {guide_id}; '
+                    'there must be a 1-to-1 mapping between guide_id and spacer.'
+                )
             yield errors.ConstraintError.from_row(
                 row,
                 note=note,
@@ -249,18 +313,32 @@ class GuideRnaSequencesCheck(Check):
                 )
             return
 
-        if genomic_element in {
-            'enhancer',
-            'insulator',
-            'silencer',
-            'distal element',
-        }:
-            if not COORD_RE.match(intended_target_name):
+        if genomic_element == 'exon':
+            if not ENSEMBL_EXON_RE.match(intended_target_name):
                 note = (
-                    'intended_target_name must be genomic coordinates when '
-                    'genomic_element is an enhancer/insulator/silencer/'
-                    'distal element, e.g. chr1:3691430-3691731'
+                    'intended_target_name must be an ENSEMBL exon ID when '
+                    'genomic_element is exon, e.g. ENSE00001623794'
                 )
+                yield errors.ConstraintError.from_row(
+                    row,
+                    note=note,
+                    field_name='intended_target_name',
+                )
+            return
+
+        if genomic_element in COORDINATE_GENOMIC_ELEMENTS:
+            if not COORD_RE.match(intended_target_name):
+                if genomic_element == 'intron':
+                    note = (
+                        'intended_target_name must be genomic coordinates when '
+                        'genomic_element is intron, e.g. chr1:3691430-3691731'
+                    )
+                else:
+                    note = (
+                        'intended_target_name must be genomic coordinates when '
+                        'genomic_element is an enhancer/insulator/silencer/'
+                        'distal element, e.g. chr1:3691430-3691731'
+                    )
                 yield errors.ConstraintError.from_row(
                     row,
                     note=note,

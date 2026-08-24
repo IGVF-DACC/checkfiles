@@ -4,7 +4,7 @@
             "name": "guide_id",
             "type": "string",
             "description": "Unique name of the guide.",
-            "comment": "There must be a 1-to-1 mapping from guide_id to spacer.",
+            "comment": "Each guide_id must be associated with a single spacer. There must be a 1-to-1 mapping from guide_id to spacer.",
             "constraints": {
                 "required": true
             }
@@ -90,7 +90,7 @@
             "name": "genomic_element",
             "type": "string",
             "description": "Type of genomic element being targeted.",
-            "comment": "Required if targeting is TRUE. gene = gene body; distal element = >2 kb from a TSS when category unknown.",
+            "comment": "Required if targeting is TRUE. gene = gene body; distal element = >2 kb from a TSS when category unknown; exon = targeted exon; intron = targeted intron.",
             "constraints": {
                 "enum": [
                     "variant",
@@ -100,7 +100,9 @@
                     "silencer",
                     "distal element",
                     "splice site",
-                    "gene"
+                    "gene",
+                    "exon",
+                    "intron"
                 ]
             }
         },
@@ -108,19 +110,19 @@
             "name": "intended_target_name",
             "type": "string",
             "description": "Identifier of the targeted element.",
-            "comment": "Required if targeting is TRUE. variant: SPDI ID (e.g., NC_00007.14:117548628:TT:TTT), promoter: ENSEMBL ID of regulated gene, enhancer/insulator/silencer/distal element: element coordinates (chr:start-end), splice site: ENSEMBL ID, gene: ENSEMBL ID."
+            "comment": "Required if targeting is TRUE. variant: SPDI ID (e.g., NC_00007.14:117548628:TT:TTT), promoter: ENSEMBL ID of regulated gene, enhancer/insulator/silencer/distal element: element coordinates (chr:start-end), splice site: ENSEMBL gene ID, gene: ENSEMBL gene ID, exon: ENSEMBL exon ID, intron: intron coordinates (chr:start-end)."
         },
         {
             "name": "intended_target_chr",
             "type": "string",
             "description": "Chromosome of the targeted element.",
-            "comment": "Required if targeting is TRUE. For promoters: use promoter coordinates, not the regulated gene. For genes, specify the coordinates corresponding to the specific gene-body feature being targeted. CRISPRa/i/KO: coordinates of regulatory element. Base/prime editing: coordinates of edit."
+            "comment": "Required if targeting is TRUE. For promoters: use promoter coordinates, not the regulated gene. For genes, specify the coordinates of the gene-body region targeted when the perturbation is not more appropriately classified as a specific exon, intron, splice site, or regulatory element. CRISPRa/i/KO: coordinates of targeted element. Base/prime editing: coordinates of edit."
         },
         {
             "name": "intended_target_start",
             "type": "integer",
             "description": "0-based start coordinate of the targeted element.",
-            "comment": "Required if targeting is TRUE. For promoters: use promoter coordinates, not the regulated gene. For genes, specify the coordinates corresponding to the specific gene-body feature being targeted. CRISPRa/i/KO: coordinates of regulatory element. Base/prime editing: coordinates of edit.",
+            "comment": "Required if targeting is TRUE. For promoters: use promoter coordinates, not the regulated gene. For genes, specify the coordinates of the gene-body region targeted when the perturbation is not more appropriately classified as a specific exon, intron, splice site, or regulatory element. CRISPRa/i/KO: coordinates of targeted element. Base/prime editing: coordinates of edit.",
             "constraints": {
                 "minimum": 0
             }
@@ -129,7 +131,7 @@
             "name": "intended_target_end",
             "type": "integer",
             "description": "0-based end coordinate of the targeted element.",
-            "comment": "Required if targeting is TRUE. For promoters: use promoter coordinates, not the regulated gene. For genes, specify the coordinates corresponding to the specific gene-body feature being targeted. CRISPRa/i/KO: coordinates of regulatory element. Base/prime editing: coordinates of edit.",
+            "comment": "Required if targeting is TRUE. For promoters: use promoter coordinates, not the regulated gene. For genes, specify the coordinates of the gene-body region targeted when the perturbation is not more appropriately classified as a specific exon, intron, splice site, or regulatory element. CRISPRa/i/KO: coordinates of targeted element. Base/prime editing: coordinates of edit.",
             "constraints": {
                 "minimum": 0
             }
