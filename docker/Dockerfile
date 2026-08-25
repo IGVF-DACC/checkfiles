@@ -32,7 +32,8 @@ RUN apt-get update && apt-get install -y \
     libboost-all-dev \
     libncurses-dev \
     libcurl4-openssl-dev \
-    rust-1.82-all \
+    pkg-config \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Install samtools
@@ -50,14 +51,25 @@ RUN wget https://github.com/EBIvariation/vcf-validator/releases/download/v0.10.0
     && cp vcf_assembly_checker_linux /usr/bin/vcf_assembly_checker \
     && rm vcf_assembly_checker_linux
 
+# Install the Rust toolchain via rustup. The distro cargo package links against the
+# system libgit2, which is older than the version cargo expects, so fetching git
+# dependencies fails with "invalid version 0 on git_proxy_options". rustup ships a
+# cargo with libgit2 statically vendored.
+ENV CARGO_HOME=/usr/local/cargo \
+    RUSTUP_HOME=/usr/local/rustup \
+    PATH=/usr/local/cargo/bin:$PATH
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+    | sh -s -- -y --profile minimal --default-toolchain 1.89.0
+
 # Install fastq_stats
 RUN git clone https://github.com/IGVF-DACC/fastq_stats.git \
     && cd fastq_stats \
-    && cargo-1.82 build --release \
+    && cargo build --release --locked \
     && cp target/release/fastq_stats /usr/bin \
     && chmod 755 /usr/bin/fastq_stats \
     && cd .. \
-    && rm -rf fastq_stats
+    && rm -rf fastq_stats $CARGO_HOME/registry $CARGO_HOME/git
 
 # Install validateFiles
 RUN curl -sS -L -o /usr/local/bin/validateFiles https://raw.githubusercontent.com/IGVF-DACC/validateFiles/main/validateFiles \
