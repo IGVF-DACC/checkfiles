@@ -60,7 +60,7 @@ TABULAR_FILE_SCHEMAS = {
     'prime editing guide RNA sequences': 'src/schemas/table_schemas/prime_editing_guide_rna_sequences.json',
     'reporter elements': 'src/schemas/table_schemas/reporter_elements.json',
     'reporter experiment': 'src/schemas/table_schemas/reporter_experiment.json',
-    'reporter variants': 'src/schemas/table_schemas/reporter_variants.json',
+    'reporter variants': 'src/schemas/table_schemas/reporter_variants.json'
 }
 
 TABULAR_FORMAT = [
