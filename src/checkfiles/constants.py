@@ -61,7 +61,6 @@ TABULAR_FILE_SCHEMAS = {
     'reporter elements': 'src/schemas/table_schemas/reporter_elements.json',
     'reporter experiment': 'src/schemas/table_schemas/reporter_experiment.json',
     'reporter variants': 'src/schemas/table_schemas/reporter_variants.json',
-    'spliceQTL': 'src/schemas/table_schemas/sqtl.json',
 }
 
 TABULAR_FORMAT = [
