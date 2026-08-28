@@ -14,21 +14,21 @@ URLs and never use local ones, so a placeholder path is sufficient.
 
 Returns the same error dict shape as the original ({} = valid).
 """
+from constants import SEQSPEC_FILE_VERSION
+from seqspec.seqspec_check import seqspec_check
+from seqspec.seqspec_version import seqspec_version
+from seqspec.utils import load_spec_stream
+from smart_open import open as s_open
+from botocore.config import Config
+from botocore import UNSIGNED
+import boto3
 import io
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'checkfiles'))
+sys.path.insert(0, os.path.join(
+    os.path.dirname(__file__), '..', 'src', 'checkfiles'))
 
-import boto3
-from botocore import UNSIGNED
-from botocore.config import Config
-from smart_open import open as s_open
-from seqspec.utils import load_spec_stream
-from seqspec.seqspec_version import seqspec_version
-from seqspec.seqspec_check import seqspec_check
-
-from constants import SEQSPEC_FILE_VERSION
 
 S3_REGION = 'us-west-2'
 
@@ -68,7 +68,8 @@ def validate_seqspec(url, validate_onlist_files=True, anon=False, spec_fn=None):
 
 
 if __name__ == '__main__':
-    import time, json as _json
+    import time
+    import json as _json
     cases = [
         ('GOOD  seqspec yaml.gz IGVFFI2649SJNI (onlist checks ON)',
          's3://igvf-public/2026/06/04/fffb3779-1583-4dd6-bf09-53392e1cbf24/IGVFFI2649SJNI.yaml.gz', True),
@@ -85,4 +86,5 @@ if __name__ == '__main__':
         t0 = time.time()
         err = validate_seqspec(url, validate_onlist_files=onlist, anon=True)
         s = _json.dumps(err, default=str)
-        print(f'{label}\n   -> {s[:500]}{"..." if len(s) > 500 else ""}  ({time.time()-t0:.1f}s)\n')
+        print(
+            f'{label}\n   -> {s[:500]}{"..." if len(s) > 500 else ""}  ({time.time()-t0:.1f}s)\n')

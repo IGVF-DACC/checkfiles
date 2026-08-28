@@ -35,7 +35,8 @@ def validate_bam(url, content_type=None,
 
 
 if __name__ == '__main__':
-    import sys, time
+    import sys
+    import time
     cases = [
         ('GOOD  bam 4.5MB  IGVFFI3323DCKT',
          's3://igvf-public/2026/06/10/155918fc-8dc2-4f25-8c1e-9d3fdfb07bc9/IGVFFI3323DCKT.bam',
@@ -53,4 +54,5 @@ if __name__ == '__main__':
     for label, url, ct in cases:
         t0 = time.time()
         errs, info = validate_bam(url, ct)
-        print(f'{label}\n   -> errors={errs}\n      info={info}  ({time.time()-t0:.1f}s)')
+        print(
+            f'{label}\n   -> errors={errs}\n      info={info}  ({time.time()-t0:.1f}s)')

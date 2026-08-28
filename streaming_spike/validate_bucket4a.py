@@ -17,6 +17,10 @@ returns the same error dict shape ({} = valid).
 Requires the external binaries; run inside the image built from
 streaming_spike/docker/Dockerfile.spike.
 """
+from smart_open import open as s_open
+from botocore.config import Config
+from botocore import UNSIGNED
+import boto3
 import os
 import shutil
 import subprocess
@@ -27,10 +31,6 @@ import threading
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
                                 'src', 'checkfiles'))
 
-import boto3
-from botocore import UNSIGNED
-from botocore.config import Config
-from smart_open import open as s_open
 
 S3_REGION = 'us-west-2'
 
@@ -218,7 +218,8 @@ def validate_fasta_stream(url, anon=False):
                         'import sys; from FastaValidator import fasta_validator; '
                         'sys.exit(fasta_validator(sys.argv[1]))', fifo.path])
     if rc != 0:
-        error['fasta_error'] = FASTA_VALIDATION_INFO.get(rc, f'unknown code {rc}: {out}')
+        error['fasta_error'] = FASTA_VALIDATION_INFO.get(
+            rc, f'unknown code {rc}: {out}')
     elif fifo.error:
         error['fasta_error'] = f'stream error: {fifo.error}'
     return error

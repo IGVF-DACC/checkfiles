@@ -13,23 +13,22 @@ Returns the same error dict shape as the original ({} = valid).
 
 Run from the repo root -- TABULAR_FILE_SCHEMAS paths are repo-relative.
 """
-import sys
-import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'checkfiles'))
-
-import boto3
-from botocore import UNSIGNED
-from botocore.config import Config
-from frictionless import system, validate, describe, Schema, Dialect
-from frictionless.exception import FrictionlessException
-from smart_open import open as s_open
-
+from guide_rna_sequences_check import GuideRnaSequencesCheck
 from constants import (
     TABULAR_FILE_SCHEMAS, NO_HEADER_CONTENT_TYPE, UTF_8_ENCODING,
     MAX_NUM_ERROR_FOR_TABULAR_FILE, MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE,
 )
-from guide_rna_sequences_check import GuideRnaSequencesCheck
+from smart_open import open as s_open
+from frictionless.exception import FrictionlessException
+from frictionless import system, validate, describe, Schema, Dialect
+from botocore.config import Config
+from botocore import UNSIGNED
+import boto3
+import sys
+import os
+
+sys.path.insert(0, os.path.join(
+    os.path.dirname(__file__), '..', 'src', 'checkfiles'))
 
 
 S3_REGION = 'us-west-2'
@@ -113,12 +112,14 @@ def validate_tabular(file_format, content_type, url, is_gzipped=None,
         else:
             checks = []
             if content_type == 'barcode to sample mapping':
-                infer_schema = describe(frictionless_url, type='schema', **frictionless_options)
+                infer_schema = describe(
+                    frictionless_url, type='schema', **frictionless_options)
                 if len(infer_schema.fields) not in [6, 3]:
                     return {'tabular_file_error':
                             f'barcode to sample mapping file should have 6 or 3 columns, '
                             f'but found {len(infer_schema.fields)} columns'}
-                schema_path = schema_path[0] if len(infer_schema.fields) == 6 else schema_path[1]
+                schema_path = schema_path[0] if len(
+                    infer_schema.fields) == 6 else schema_path[1]
                 report = validate(frictionless_url, schema=schema_path, limit_errors=max_error,
                                   checks=checks, **frictionless_options)
             else:
@@ -128,7 +129,8 @@ def validate_tabular(file_format, content_type, url, is_gzipped=None,
                     report = validate(frictionless_url, schema=schema_path, limit_errors=max_error,
                                       checks=checks, **frictionless_options)
                 else:
-                    infer_schema = describe(frictionless_url, type='schema', **frictionless_options)
+                    infer_schema = describe(
+                        frictionless_url, type='schema', **frictionless_options)
                     schema = Schema.from_descriptor(schema_path)
                     if len(infer_schema.fields) > len(schema.fields):
                         for i in range(len(schema.fields), len(infer_schema.fields)):
@@ -139,7 +141,8 @@ def validate_tabular(file_format, content_type, url, is_gzipped=None,
         return {'tabular_file_error': f'exception occurred when checking tabular file: {e}'}
 
     if not report.valid:
-        flat = report.flatten(['rowNumber', 'fieldNumber', 'type', 'note', 'description'])
+        flat = report.flatten(
+            ['rowNumber', 'fieldNumber', 'type', 'note', 'description'])
         tabular_file_error = {
             'schema': schema_path,
             'error_number_limit': max_error,
@@ -164,7 +167,8 @@ def validate_tabular(file_format, content_type, url, is_gzipped=None,
 
 
 if __name__ == '__main__':
-    import time, json as _json
+    import time
+    import json as _json
     cases = [
         ('GOOD  tsv.gz guide RNA sequences (schema + GuideRnaSequencesCheck) IGVFFI7982RBWP',
          'tsv', 'guide RNA sequences',
@@ -189,4 +193,5 @@ if __name__ == '__main__':
         except Exception as e:
             err = {'UNCAUGHT': f'{type(e).__name__}: {e}'}
         s = _json.dumps(err, default=str)
-        print(f'{label}\n   -> {s[:600]}{"..." if len(s) > 600 else ""}  ({time.time()-t0:.1f}s)\n')
+        print(
+            f'{label}\n   -> {s[:600]}{"..." if len(s) > 600 else ""}  ({time.time()-t0:.1f}s)\n')

@@ -26,8 +26,8 @@ def validate_bigwig(url, chrom_sizes_path):
     """Validate a remote bigWig via range requests. Returns list of errors ([] = valid)."""
     url = s3_to_https(url)
     errors = []
-    if not getattr(pyBigWig, "remote", 0):
-        return ["pyBigWig not built with libcurl (pyBigWig.remote == 0)"]
+    if not getattr(pyBigWig, 'remote', 0):
+        return ['pyBigWig not built with libcurl (pyBigWig.remote == 0)']
 
     chrom_sizes = {}
     with open(chrom_sizes_path) as f:
@@ -39,30 +39,30 @@ def validate_bigwig(url, chrom_sizes_path):
     try:
         bw = pyBigWig.open(url)
     except (RuntimeError, OSError) as e:
-        return [f"could not open as bigWig: {e}"]
+        return [f'could not open as bigWig: {e}']
     if bw is None:
-        return ["open() returned None (not found / unreadable)"]
+        return ['open() returned None (not found / unreadable)']
     try:
         if not bw.isBigWig():
-            errors.append("not a bigWig")
-        if (bw.header() or {}).get("nBasesCovered", 0) <= 0:
-            errors.append("header reports zero bases covered")
+            errors.append('not a bigWig')
+        if (bw.header() or {}).get('nBasesCovered', 0) <= 0:
+            errors.append('header reports zero bases covered')
         chroms = bw.chroms() or {}
         if not chroms:
-            errors.append("no chromosomes")
+            errors.append('no chromosomes')
         for c, length in chroms.items():
             if c not in chrom_sizes:
-                errors.append(f"chrom {c} not in chrom.sizes")
+                errors.append(f'chrom {c} not in chrom.sizes')
             elif length != chrom_sizes[c]:
-                errors.append(f"chrom {c} length {length} != {chrom_sizes[c]}")
+                errors.append(f'chrom {c} length {length} != {chrom_sizes[c]}')
         # exercise index + last data blocks at start AND end of the biggest chroms
         for name, length in sorted(chroms.items(), key=lambda kv: kv[1], reverse=True)[:3]:
             for lo, hi in [(0, min(10_000, length)), (max(0, length - 10_000), length)]:
                 if hi > lo:
                     try:
-                        bw.stats(name, lo, hi, type="mean", nBins=1)
+                        bw.stats(name, lo, hi, type='mean', nBins=1)
                     except Exception as e:
-                        errors.append(f"read failed {name}:{lo}-{hi}: {e}")
+                        errors.append(f'read failed {name}:{lo}-{hi}: {e}')
     finally:
         bw.close()
     return errors
@@ -87,5 +87,6 @@ if __name__ == '__main__':
     for label, url, cs in cases:
         t0 = time.time()
         errs = validate_bigwig(url, cs)
-        shown = errs if len(errs) <= 4 else errs[:4] + [f'... (+{len(errs)-4} more)']
+        shown = errs if len(
+            errs) <= 4 else errs[:4] + [f'... (+{len(errs)-4} more)']
         print(f'{label}\n   -> {shown}  ({time.time()-t0:.1f}s)\n')

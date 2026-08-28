@@ -10,6 +10,13 @@ not part of the streaming path being proven.
 FastaValidator (py_fasta_validator) has no aarch64 wheel and does not build in this sandbox,
 so it is stubbed purely to let `checkfiles` import. Nothing compared here touches fasta.
 """
+from validate_h5ad import validate_h5ad
+from validate_bam import validate_bam
+from validate_tabular import validate_tabular
+import checkfiles
+from botocore.config import Config
+from botocore import UNSIGNED
+import boto3
 import os
 import sys
 import types
@@ -24,16 +31,9 @@ _stub = types.ModuleType('FastaValidator')
 _stub.fasta_validator = lambda *a, **k: 0
 sys.modules.setdefault('FastaValidator', _stub)
 
-import boto3
-from botocore import UNSIGNED
-from botocore.config import Config
 
-import checkfiles
-from validate_tabular import validate_tabular
-from validate_bam import validate_bam
-from validate_h5ad import validate_h5ad
-
-S3 = boto3.client('s3', config=Config(signature_version=UNSIGNED), region_name='us-west-2')
+S3 = boto3.client('s3', config=Config(
+    signature_version=UNSIGNED), region_name='us-west-2')
 
 
 def fetch(s3_uri, dest_dir):
@@ -60,7 +60,8 @@ def main():
         (tsv_snp, 'guide RNA sequences', 'tabular BAD  wrong schema for content'),
     ]:
         local = fetch(uri, tmp)
-        local_res = checkfiles.tabular_file_check('tsv', ct, local, is_gzipped=True)
+        local_res = checkfiles.tabular_file_check(
+            'tsv', ct, local, is_gzipped=True)
         stream_res = validate_tabular('tsv', ct, uri, anon=True)
         results.append((label, local_res, stream_res))
 
@@ -94,7 +95,8 @@ def main():
     for label, loc, strm in results:
         loc_v = 'INVALID' if (loc and any(k.endswith('_error') or k in ('bam_error',)
                                           for k in loc)) else 'valid'
-        strm_v = 'INVALID' if (strm and any(k.endswith('_error') for k in strm)) else 'valid'
+        strm_v = 'INVALID' if (strm and any(k.endswith('_error')
+                               for k in strm)) else 'valid'
         agree = loc_v == strm_v
         all_agree &= agree
         print(f'{label:42} {loc_v:14} {strm_v:14} {"YES" if agree else "*** NO ***"}')
