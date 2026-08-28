@@ -1,0 +1,101 @@
+# Bucket 4a spike image -- NATIVE arm64.
+#
+# Why not just use docker/Dockerfile? That image is implicitly x86_64: it installs
+# prebuilt validateFiles (UCSC publishes linux.x86_64 only) and vcf_assembly_checker
+# (EBI publishes linux x86_64 only). This host is aarch64 with a 16 KB page size, and
+# qemu-user cannot map x86_64 shared objects at that page size -- any amd64 binary
+# needing libstdc++ dies with "failed to map segment from shared object". So the
+# x86_64 binaries cannot be emulated here and must be obtained natively:
+#
+#   validateFiles         built from UCSC kent source (src/hg/encode3/validateFiles).
+#                         Ubuntu 22.04's libhts-dev (1.13) is too old -- kent's
+#                         bamFile.c needs cram_ref_check_t -- so htslib is built from
+#                         source into /usr/local, which gcc searches before /usr/include
+#   vcf_assembly_checker  bioconda has a native linux-aarch64 build
+#   fastq_stats           Rust source, builds natively (needs modern cargo: the
+#                         Cargo.lock is v4, which ubuntu's cargo 1.75 rejects)
+#   FastaValidator        py_fasta_validator, C++ extension, needs python3-dev
+#
+# Reference genomes are bind-mounted at run time rather than baked in.
+FROM ubuntu:22.04
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential git curl wget ca-certificates bzip2 \
+    python3-pip python3-dev \
+    libpng-dev libssl-dev zlib1g-dev libbz2-dev liblzma-dev \
+    libcurl4-gnutls-dev uuid-dev default-libmysqlclient-dev autoconf \
+    && rm -rf /var/lib/apt/lists/*
+
+# --- fastq_stats (Rust; ubuntu's cargo is too old for the v4 Cargo.lock) ---
+RUN curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN git clone --depth 1 https://github.com/IGVF-DACC/fastq_stats.git /tmp/fastq_stats \
+    && cd /tmp/fastq_stats && cargo build --release \
+    && cp target/release/fastq_stats /usr/bin/fastq_stats \
+    && chmod 755 /usr/bin/fastq_stats \
+    && rm -rf /tmp/fastq_stats /root/.cargo/registry
+
+# --- FastaValidator + python deps for the streaming wrappers ---
+RUN python3 -m pip install --no-cache-dir py_fasta_validator "smart_open[s3]" boto3
+
+# --- vcf_assembly_checker (bioconda ships linux-aarch64) ---
+RUN curl -sL https://micro.mamba.pm/api/micromamba/linux-aarch64/latest \
+      | tar -xj -C /usr/local bin/micromamba \
+    && MAMBA_ROOT_PREFIX=/opt/mamba /usr/local/bin/micromamba create -y -p /opt/vcf \
+        -c bioconda -c conda-forge vcf-validator \
+    && ln -s /opt/vcf/bin/vcf_assembly_checker /usr/bin/vcf_assembly_checker \
+    && rm -rf /opt/mamba/pkgs
+
+# --- validateFiles, built from UCSC's own source distribution ---
+#
+# Use jksrc.vNNN.zip, NOT a git clone of kent. kent's bamFile.c/knetUdc.c call
+# cram_get_Md5, cram_get_ref_url, cram_get_cache_dir, cram_set_cache_url and
+# knet_init_alt -- and master additionally calls cram_check_required_refs(). None of
+# these exist in ANY upstream htslib release (checked 1.20/1.21/1.22/develop): they are
+# UCSC's forked htslib, which ships vendored inside jksrc under src/htslib. Building
+# against stock htslib compiles but fails at link with undefined references to exactly
+# those symbols. v442 matches the validateFiles version the repo pins.
+RUN curl -sSL -o /tmp/jksrc.zip https://hgdownload.soe.ucsc.edu/admin/jksrc.v442.zip \
+    && mkdir -p /kentsrc && cd /kentsrc \
+    && python3 -c "import zipfile; zipfile.ZipFile('/tmp/jksrc.zip').extractall('/kentsrc')" \
+    && rm /tmp/jksrc.zip \
+    && ls /kentsrc
+
+ENV MACHTYPE=aarch64
+ENV CFLAGS="-fcommon"
+
+# aarch64 portability fix. kent compares a va_list against NULL, which compiles on
+# x86_64 (va_list is an array type there, so it decays to a pointer) but is a hard
+# error on aarch64 (va_list is a struct):
+#   htmshell.c:714: invalid operands to binary != (have 'va_list' and 'void *')
+# Dropping the redundant half of the condition is safe -- a va_list is never NULL.
+#
+# MySQL client API drift. kent v442 uses my_bool and MYSQL_OPT_SSL_VERIFY_SERVER_CERT,
+# both removed in MySQL 8 / MariaDB Connector-C 3.x (what ubuntu 22.04 ships).
+# Neutralising that block only affects MySQL server-certificate verification, and this
+# binary never opens a MySQL connection: checkfiles always passes -chromInfo=<file>,
+# never -chromDb, so the MySQL path is link-time only.
+RUN KENT=$(find /kentsrc -maxdepth 2 -type d -name src | head -1) \
+    && echo "kent src at $KENT" && echo "$KENT" > /kent_src_path \
+    && sed -i 's/if (format != NULL \&\& args != NULL)/if (format != NULL)/' \
+        "$KENT/lib/htmshell.c" \
+    && sed -i \
+        -e 's/my_bool flag = TRUE;/char flag = 1; (void)flag;/' \
+        -e 's/mysql_options(conn, MYSQL_OPT_SSL_VERIFY_SERVER_CERT, &flag);/;/' \
+        "$KENT/hg/lib/jksql.c"
+
+RUN KENT=$(cat /kent_src_path) \
+    && mkdir -p /root/bin/${MACHTYPE} \
+    && cd "$KENT/htslib" && make -j"$(nproc)" \
+    && cd "$KENT/lib" && make -j"$(nproc)" \
+    && cd "$KENT/hg/lib" && make -j"$(nproc)" \
+    && cd "$KENT/hg/encode3/validateFiles" && make \
+    && cp /root/bin/${MACHTYPE}/validateFiles /usr/local/bin/validateFiles \
+    && chmod +x /usr/local/bin/validateFiles \
+    && rm -rf /kentsrc
+
+WORKDIR /checkfiles

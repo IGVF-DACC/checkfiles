@@ -57,19 +57,19 @@ Data is read once, front to back, by our own Python. Stream the object (e.g. `sm
 | bigWig | 3 | pyBigWig: isBigWig + chroms vs chrom.sizes + start/end `stats()` probes | **Proven** — re-confirmed independently; 875 MB bigWig validates in 2.1 s |
 | bigBed | 3 | pyBigWig: isBigBed + chroms vs chrom.sizes + start/end `entries()` probes | **Deferred — no bigBed files exist on the portal**; function written, awaits data |
 | bigInteract | 3 | pyBigWig (opens as bigBed); optional `SQL()` schema check vs `.as` | **Deferred — no bigInteract files exist on the portal**; covered by the bigBed function |
-| bed | 4a | validateFiles via FIFO | Not written (pattern established by bedpe) |
-| bedpe | 4a | validateFiles via FIFO, **decompress to plain text** | **Shell path proven** (`Error count 0`); Python FIFO wrapper written, not run |
-| fastq | 4a | validateFiles `-type=fastq` + fastq_stats via FIFO | Not written (stdin streaming explored earlier in-depth) |
-| fasta | 4a | FastaValidator via FIFO (decompress upstream, not temp) | Not written |
-| vcf | 4a | vcf_assembly_checker via FIFO + reference file | Not written |
-| gvcf | 4a | vcf_assembly_checker via FIFO + reference file | Not written |
+| bed | 4a | validateFiles via FIFO | **Proven** — real objects, good + bad |
+| bedpe | 4a | validateFiles via FIFO, **decompress to plain text** | **Proven** — python FIFO wrapper now run against real objects, good + bad |
+| fastq | 4a | validateFiles `-type=fastq` + fastq_stats via FIFO | **Proven** — both tools, good + bad; fastq_stats fed raw `.gz` |
+| fasta | 4a | FastaValidator via FIFO (decompress upstream, not temp) | **Proven** — but the validator must run in a **subprocess**, see findings |
+| vcf | 4a | vcf_assembly_checker via FIFO + reference file | **Proven** — real objects + local reference, good + bad |
+| gvcf | 4a | vcf_assembly_checker via FIFO + reference file | **Proven by the vcf run** — `vcf_sequence_check` does not branch on format |
 
-> **Spike run, 2026-08-27.** Buckets 1–3 closed against real released portal objects; working
-> code in `streaming_spike/`, full run log and open questions in `streaming-spike-checklist.md`.
-> Bucket 4a was out of scope for that pass (external binaries unavailable in the sandbox), and
-> bigBed / bigInteract / cram are **deferred by decision**: the portal holds zero files of those
-> three formats in any status (not merely zero released ones), so there is nothing to validate
-> against until such data is submitted.
+> **Spike complete, 2026-08-27/28.** Buckets 1, 2, 3 and 4a are all proven against real
+> released portal objects. Working code in `streaming_spike/` (Bucket 4a runs in the image built
+> from `streaming_spike/docker/Dockerfile.spike`); full run log in
+> `streaming-spike-checklist.md`. Only bigBed / bigInteract / cram remain, **deferred by
+> decision**: the portal holds zero files of those three formats in any status (not merely zero
+> released ones), so there is nothing to validate against until such data is submitted.
 
 ## Hard-won technical findings (don't rediscover these)
 
@@ -302,15 +302,6 @@ list are done; what remains is below. Original ordering rationale — prove bam/
    copies in `src/checkfiles/src/checkfiles/supporting_files/{grch38,grcm39}.fa`) and that
    `cram_pysam_check` runs a `samtools view -h -T ref | samtools stats -` pipe.
 
-**Blocked on tooling:**
-
-3. **Bucket 4a (fastq, fasta, bed, bedpe, vcf, gvcf).** Out of scope for the 2026-08-27 run:
-   `validateFiles`, `fastq_stats`, `FastaValidator` and `vcf_assembly_checker` were not available
-   in that sandbox and are not pip-installable. Needs an environment carrying those binaries —
-   the repo's docker image is the obvious source. The bedpe FIFO pattern is already written and
-   its shell path proven, so the remaining wrappers follow it; mind the per-tool compression rule
-   (decompress upstream for `validateFiles`, raw `.gz` bytes for `fastq_stats`).
-
 ## Feasibility bar for each format (how to know a format is "proven")
 
 For each format, "proven" means all of: (a) a known-good real object returns valid/`[]`; (b) a known-bad object is rejected with a sensible error; (c) the data was read by streaming from S3 (no mount, no whole-file download); (d) for the formats where we're changing the *checker* (pyBigWig replacing validateFiles for big*; frictionless for tabular), a quick side-by-side against the current checker on a few known-good and known-bad files shows they agree on the accept/reject boundary. Point (d) is the one place semantics can drift — where the old checker catches something the new one misses and it matters, note it (e.g. pyBigWig `SQL()` schema comparison for bigInteract, or a frictionless `Schema` for tabular) so the eventual refactor can decide whether to add it.
@@ -363,3 +354,42 @@ that is 3x egress per bam; worth collapsing at integration time.
 **A missing S3 key and a corrupt file produce the same SamtoolsError.** Both surface as
 `could not be opened for reading`. The transient-vs-invalid split noted elsewhere in this document
 cannot be made from the message text alone — it needs an existence/HEAD probe or an errno.
+
+
+## Spike findings added 2026-08-28 (Bucket 4a)
+
+**The FIFO must be opened before the network read.** The natural writer body --
+`with s_open(url) as fin: with open(fifo,'wb') as out: copyfileobj(fin, out)` -- deadlocks
+whenever the remote read raises. The writer dies before ever opening the write end, so the tool
+blocks in `open()` on the read end forever: a hang, not an error. Open the FIFO first, then read.
+The reader then always reaches EOF and the stream error is still reported.
+
+**A path-only tool that is an in-process C extension cannot be fed by a writer thread.**
+`FastaValidator` (py_fasta_validator) is a python extension, not an external binary. It blocks
+while holding the GIL, so the writer *thread* never gets scheduled to open its end of the FIFO
+and the two deadlock. This bites fasta only -- validateFiles, fastq_stats and vcf_assembly_checker
+are subprocesses and release the GIL. A writer *process* is not the fix: `fork` inherits lock
+state from earlier thread-based cases in the same run (passes alone, hangs in the suite) and
+`spawn` re-imports in a fresh interpreter and exited before opening the FIFO. The fix that works
+is to run **the validator** in a subprocess, restoring the same shape as every other 4a tool.
+
+**docker/Dockerfile is implicitly x86_64, and cannot be emulated on a 16 KB-page host.** It
+installs prebuilt `validateFiles` (UCSC ships linux.x86_64 only) and `vcf_assembly_checker` (EBI
+ships x86_64 only). On an aarch64 host with a **16 KB page size**, qemu-user cannot map x86_64
+shared objects: anything needing libstdc++ dies with `failed to map segment from shared object`,
+even with binfmt correctly registered and a current qemu. Both tools must then be obtained
+natively -- see `streaming_spike/docker/Dockerfile.spike`.
+
+**validateFiles must be built from `jksrc.vNNN.zip`, not from a kent git clone.** kent's
+`bamFile.c`/`knetUdc.c` reference `cram_get_Md5`, `cram_get_ref_url`, `cram_get_cache_dir`,
+`cram_set_cache_url` and `knet_init_alt` (master adds `cram_check_required_refs`). None of these
+exist in any upstream htslib release -- they are UCSC's forked htslib, vendored inside jksrc at
+`src/htslib`. Against stock htslib the build compiles and then fails at link on exactly those
+symbols. Two further patches are needed on a modern aarch64 distro: kent compares a `va_list`
+against NULL (`htmshell.c`, legal on x86_64 where va_list is an array type, a hard error on
+aarch64), and uses `my_bool` / `MYSQL_OPT_SSL_VERIFY_SERVER_CERT` (`jksql.c`), both removed in
+MySQL 8 / MariaDB Connector-C 3.x.
+
+**The other two tools are easy natively.** bioconda's `vcf-validator` has a linux-aarch64 build;
+`fastq_stats` builds from Rust source but needs a current cargo (ubuntu 22.04's 1.75 rejects its
+v4 `Cargo.lock`); `py_fasta_validator` builds once `python3-dev` is installed.

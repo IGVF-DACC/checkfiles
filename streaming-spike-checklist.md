@@ -1,8 +1,8 @@
 # S3-streaming feasibility spike — working checklist
 
-**Scope this pass:** Buckets 1–3 only. Bucket 4a (fastq/fasta/bed/bedpe/vcf/gvcf) is **blocked** —
-external UCSC/other binaries (`validateFiles`, `fastq_stats`, `FastaValidator`,
-`vcf_assembly_checker`) are not present in this sandbox and are not pip-installable.
+**Scope:** Buckets 1–4a. Buckets 1–3 were closed first; Bucket 4a
+(bed/bedpe/fastq/fasta/vcf/gvcf) was closed afterwards using a purpose-built docker image
+that carries the four external binaries — see `streaming_spike/docker/`.
 
 **Test data rule:** only released files from the IGVF portal (`api.data.igvf.org`).
 Find by format: `https://api.data.igvf.org/search/?type=File&file_format={fmt}`.
@@ -57,9 +57,19 @@ a side-by-side sanity check against the current checker's accept/reject boundary
 
 ---
 
-## Blocked / out of scope this pass
-- [!] Bucket 4a — fastq, fasta, bed, bedpe, vcf, gvcf: external binaries unavailable in sandbox.
-      `validate_bedpe` FIFO wrapper stays written-but-unrun; shell path already proven separately.
+## 5. Bucket 4a — FIFO into path-only external binaries
+- [x] docker image carrying validateFiles, fastq_stats, FastaValidator, vcf_assembly_checker
+- [x] bed — validateFiles via FIFO, good + bad
+- [x] bedpe — validateFiles via FIFO, good + bad (supersedes the written-but-unrun wrapper)
+- [x] fastq — validateFiles `-type=fastq` via FIFO, good + bad
+- [x] fastq — fastq_stats via FIFO on RAW .gz bytes
+- [x] fasta — FastaValidator via FIFO, good + bad
+- [x] vcf — vcf_assembly_checker via FIFO + local reference, good + bad
+- [x] gvcf — same code path as vcf (`vcf_sequence_check` does not branch on format)
+
+---
+
+## Out of scope
 - Out of scope (deferred phase): dispatch refactor, `local_file_path` replacement, folding universal
   checks into one pass, pool wiring, crash-isolation, transient-vs-invalid retry, portal patching.
 
@@ -73,6 +83,9 @@ a side-by-side sanity check against the current checker's accept/reject boundary
 | `streaming_spike/validate_bam.py` | bam | `bam_pysam_check` |
 | `streaming_spike/validate_h5ad.py` | h5ad | `check_valid_h5ad_file_format` |
 | `streaming_spike/validate_bigwig.py` | bigWig | replaces `validateFiles -type=bigWig` |
+| `streaming_spike/validate_bucket4a.py` | bed / bedpe / fastq / fasta / vcf / gvcf | `validate_files_check`, `validate_files_fastq_check`, `fasta_check`, `vcf_sequence_check` |
+| `streaming_spike/docker/Dockerfile.spike` | Bucket 4a image | native-aarch64 build of the four external binaries |
+| `streaming_spike/docker/run_4a.sh` | runner | mounts the repo + reference genomes, runs the 4a proofs |
 | `streaming_spike/compare_local_vs_stream.py` | harness | feasibility bar (d) |
 
 `validate_bigbed` (bigBed / bigInteract) is **not** in this directory: it stays in the hand-off doc
@@ -249,6 +262,42 @@ Accept/reject boundary matches on every case, and the **error payloads are byte-
 Note: `py_fasta_validator` has no aarch64 wheel and fails to build here, so `FastaValidator` is
 stubbed to let `checkfiles` import. Nothing compared touches fasta.
 
+### Bucket 4a environment: the x86_64 problem (aarch64 host, 16 KB pages)
+`docker/Dockerfile` is implicitly x86_64 — it installs a prebuilt `validateFiles` (UCSC ships
+linux.x86_64 only) and `vcf_assembly_checker` (EBI ships linux x86_64 only). Neither can run
+here, and **emulation is not an option**: this host has a **16 KB page size**, and qemu-user
+cannot map x86_64 shared objects at that granularity. Any amd64 binary needing libstdc++ dies
+with `libstdc++.so.6: failed to map segment from shared object` — confirmed for `apt-get`,
+`validateFiles` and `vcf_assembly_checker`, with qemu 10.2.3 and binfmt correctly registered
+(`mount -t binfmt_misc` + `tonistiigi/binfmt --install amd64`; simple binaries like `uname` do
+run, so the emulator itself works). So all four tools were obtained natively for aarch64 in
+`streaming_spike/docker/Dockerfile.spike`:
+
+| tool | how |
+|---|---|
+| `validateFiles` | built from UCSC source, `jksrc.v442.zip` (2 patches, below) |
+| `vcf_assembly_checker` | bioconda `vcf-validator` has a native linux-aarch64 build (0.10.2) |
+| `fastq_stats` | Rust source; needs rustup — ubuntu's cargo 1.75 rejects the v4 `Cargo.lock` |
+| `FastaValidator` | `py_fasta_validator` builds fine once `python3-dev` is present |
+
+**Finding — validateFiles must come from `jksrc.vNNN.zip`, not a kent git clone.** kent's
+`bamFile.c`/`knetUdc.c` call `cram_get_Md5`, `cram_get_ref_url`, `cram_get_cache_dir`,
+`cram_set_cache_url`, `knet_init_alt`, and master additionally `cram_check_required_refs()`.
+**None of these exist in any upstream htslib** (checked 1.20 / 1.21 / 1.22 / develop) — they are
+UCSC's forked htslib, which ships vendored inside jksrc under `src/htslib`. Building against
+stock htslib compiles and then fails at link with undefined references to exactly those symbols.
+`v442` also matches the validateFiles version the repo pins.
+
+Two source patches are still needed on aarch64 / modern distros:
+1. `htmshell.c:714` compares a `va_list` against NULL. Fine on x86_64 (`va_list` is an array
+   type that decays to a pointer), a hard error on aarch64 (it is a struct).
+2. `jksql.c:1121-1122` uses `my_bool` and `MYSQL_OPT_SSL_VERIFY_SERVER_CERT`, both removed in
+   MySQL 8 / MariaDB Connector-C 3.x. Neutralising that block only disables MySQL
+   server-certificate verification, and this binary never opens a MySQL connection — checkfiles
+   always passes `-chromInfo=<file>`, never `-chromDb`, so MySQL is link-time only.
+
+Also note `libhts-dev` pulls `libcurl4-gnutls-dev`, which conflicts with `libcurl4-openssl-dev`.
+
 ## Deferred by decision: bigBed, bigInteract, cram
 
 `api.data.igvf.org` holds **zero** files of these three formats in any status, so none of them
@@ -269,3 +318,48 @@ actually exists.** The reasoning, and what a future reader should pick up:
 
 *(Also resolved: seqspec onlist/read entries never use a local path in practice — confirmed by the
 team — so streaming's lack of a spec directory is a non-issue.)*
+
+### Bucket 4a — bed / bedpe / fastq / fasta / vcf: **PROVEN**
+`streaming_spike/validate_bucket4a.py`, run inside `checkfiles-spike:4a` via
+`streaming_spike/docker/run_4a.sh`. A writer thread streams the object into a named FIFO
+while the tool reads it as an ordinary path. Ports `validate_files_check`,
+`validate_files_fastq_check`, `fasta_check` and `vcf_sequence_check`, returning the same
+error dicts.
+
+| case | result |
+|---|---|
+| GOOD bed (mpra_element, GRCh38) IGVFFI8982IPDD | `{}` 0.2 s |
+| BAD fastq streamed as bed | `found 1 columns, expected 11` |
+| GOOD bedpe (element to gene interactions) IGVFFI6067WOIM | `{}` 0.3 s |
+| BAD bed streamed as bedpe | `found 11 columns, expected 10` |
+| GOOD fastq via validateFiles IGVFFI2243EVBX | `{}` 0.2 s |
+| BAD bed streamed as fastq | `sequence name first char invalid (got 'c', wanted '@')` |
+| GOOD fastq via fastq_stats (RAW .gz) | `read_count: 13, mean_read_length: 50` |
+| GOOD fasta IGVFFI2830EFZS | `{}` 0.2 s |
+| BAD bed streamed as fasta | `the first line does not start with a > (rule 1 violated).` |
+| GOOD vcf (GRCh38) IGVFFI4053BKXV | `{}` 0.3 s |
+| BAD bed streamed as vcf | `Number of matches: 0/1` |
+| BAD vcf vs wrong assembly (GRCm39) | `matches 3315/13909 (23.8%)`, `Contig 'chr20' not found` |
+
+gvcf needs no separate proof: `vcf_sequence_check` does not branch on file_format, so it is
+the same code path as vcf.
+
+Compression behaves exactly as the hand-off warned: `validateFiles` on a FIFO does **not**
+decompress (no `.gz` extension to key off), so the stream is decompressed upstream and fed as
+plain text, while `fastq_stats` decompresses itself and gets the raw `.gz` bytes.
+
+**Finding — open the FIFO before touching the network.** The obvious writer body
+(`with s_open(url) as fin: with open(fifo,'wb') as out: copyfileobj(...)`) deadlocks whenever
+the remote read raises: the writer dies before ever opening the write end, and the tool sits in
+`open()` on the read end forever — a hang instead of an error. Open the FIFO **first**, then
+read; the reader is then guaranteed to reach EOF, and the stream error is still reported.
+
+**Finding — an in-process C extension cannot be fed by a writer thread.** FastaValidator is a
+python C extension, not an external binary. It blocks while holding the GIL, so the writer
+*thread* is never scheduled to open its end and the two deadlock — reproducibly, and only for
+fasta, since the other three tools are subprocesses that release the GIL. Fixes tried:
+- writer in a **fork**ed process — unreliable: forking after the earlier thread-based cases
+  inherits lock state with no threads alive to release it; passed alone, hung in the full run.
+- writer in a **spawn**ed process — child exited before opening the FIFO, same hang.
+- **running the validator itself in a subprocess** — works, and restores the same shape as
+  every other Bucket 4a tool. This is what the code does.
