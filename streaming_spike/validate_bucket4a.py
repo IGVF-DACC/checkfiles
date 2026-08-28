@@ -17,7 +17,6 @@ returns the same error dict shape ({} = valid).
 Requires the external binaries; run inside the image built from
 streaming_spike/docker/Dockerfile.spike.
 """
-import multiprocessing
 import os
 import shutil
 import subprocess
@@ -43,52 +42,26 @@ def _transport_params(url, anon):
     return {}
 
 
-def _fifo_writer(url, path, decompress, anon, errq):
-    """Module-level so it can be pickled by the 'spawn' start method.
-
-    Opens the FIFO BEFORE touching the network: if the remote read raises and the write
-    end was never opened, a reader blocked in open() on the other end waits forever --
-    the tool hangs instead of failing. Opening first guarantees the reader reaches EOF.
-    """
-    compression = 'infer_from_extension' if decompress else 'disable'
-    try:
-        with open(path, 'wb') as out:          # blocks until the tool opens its end
-            try:
-                with s_open(url, 'rb', compression=compression,
-                            transport_params=_transport_params(url, anon)) as fin:
-                    shutil.copyfileobj(fin, out)
-            except BrokenPipeError:
-                pass                            # tool exited early; not a stream failure
-            except Exception as e:
-                errq.put(f'{type(e).__name__}: {e}')
-    except Exception as e:
-        errq.put(f'{type(e).__name__}: {e}')
-
-
 class FifoStream:
-    """Streams a remote object into a named FIFO from a writer thread (or process).
+    """Streams a remote object into a named FIFO from a writer thread.
 
     decompress=True  -> smart_open infers .gz from the key and yields plain text bytes
     decompress=False -> raw bytes pass through untouched
 
-    use_process=True runs the writer in a separate PROCESS rather than a thread. This
-    is REQUIRED when the reader is an in-process C extension (FastaValidator) rather
-    than a subprocess: such an extension blocks while holding the GIL, so a Python
-    writer *thread* never gets scheduled to open its end of the FIFO and both sides
-    deadlock forever. Tools invoked via subprocess (validateFiles, fastq_stats,
-    vcf_assembly_checker) release the GIL while waiting, so a thread is fine for them.
+    The reader must be a SUBPROCESS. Every tool here is one, which is why a writer
+    thread suffices: the subprocess runs independently of the GIL. An in-process C
+    extension reader (FastaValidator) would block holding the GIL and deadlock this
+    thread -- see validate_fasta_stream for how that case is handled.
     """
 
-    def __init__(self, url, decompress, anon=False, name='stream', use_process=False):
+    def __init__(self, url, decompress, anon=False, name='stream'):
         self.url = url
         self.decompress = decompress
         self.anon = anon
         self.name = name
-        self.use_process = use_process
         self.error = None
         self._tmpdir = None
         self._thread = None
-        self._errq = None
         self.path = None
 
     def __enter__(self):
@@ -96,22 +69,7 @@ class FifoStream:
         # deliberately NOT named *.gz -- see module docstring
         self.path = os.path.join(self._tmpdir, self.name)
         os.mkfifo(self.path)
-        if self.use_process:
-            # 'spawn', not the default 'fork'. By the time a fasta file is validated,
-            # earlier formats in the same run have already started (and joined) writer
-            # THREADS. Forking a process that has had threads copies whatever lock state
-            # existed at fork time -- with no threads alive in the child to release it --
-            # and the child can deadlock on an internal lock. Observed exactly that: the
-            # case passes when run alone and hangs when run after the thread-based ones.
-            # spawn starts a clean interpreter, so no inherited lock state.
-            ctx = multiprocessing.get_context('spawn')
-            self._errq = ctx.Queue()
-            self._thread = ctx.Process(
-                target=_fifo_writer,
-                args=(self.url, self.path, self.decompress, self.anon, self._errq),
-                daemon=True)
-        else:
-            self._thread = threading.Thread(target=self._feed, daemon=True)
+        self._thread = threading.Thread(target=self._feed, daemon=True)
         self._thread.start()
         return self
 
@@ -132,16 +90,9 @@ class FifoStream:
                     # tool exited early (e.g. rejected the file) -- not a stream failure
                     pass
                 except Exception as e:
-                    self._report(f'{type(e).__name__}: {e}')
+                    self.error = f'{type(e).__name__}: {e}'
         except Exception as e:
-            self._report(f'{type(e).__name__}: {e}')
-
-    def _report(self, msg):
-        """Set the error where the parent can see it (a Process has its own memory)."""
-        if self._errq is not None:
-            self._errq.put(msg)
-        else:
-            self.error = msg
+            self.error = f'{type(e).__name__}: {e}'
 
     def __exit__(self, *exc):
         # drain the FIFO so a writer blocked on a tool that never read cannot hang us
@@ -153,8 +104,6 @@ class FifoStream:
             except Exception:
                 pass
         self._thread.join(timeout=60)
-        if self._errq is not None and not self._errq.empty():
-            self.error = self._errq.get()
         try:
             os.remove(self.path)
             os.rmdir(self._tmpdir)

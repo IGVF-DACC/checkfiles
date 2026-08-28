@@ -9,7 +9,8 @@ Find by format: `https://api.data.igvf.org/search/?type=File&file_format={fmt}`.
 The S3 location is the file object's `s3_uri` property (public bucket `igvf-public`).
 Ask for help locating files rather than probing the portal API excessively.
 
-**Feasibility bar per format:** (a) known-good real object → `[]`; (b) known-bad object rejected
+**Feasibility bar per format:** (a) known-good real object passes (`[]` or `{}` — each PoC
+returns whatever shape the checkfiles function it mirrors returns); (b) known-bad object rejected
 with a sensible error; (c) data read by streaming/range requests, no mount and no whole-file
 download; (d) where the checker itself changes (pyBigWig for big*, frictionless for tabular),
 a side-by-side sanity check against the current checker's accept/reject boundary.
@@ -49,15 +50,7 @@ a side-by-side sanity check against the current checker's accept/reject boundary
       (`yaml.safe_load`, as the hand-off proposed, does **not** work — see run log)
 - [x] large-object sanity: one Bucket 1 case on a big gzipped object — memory stays flat; record wall-clock + egress
 
-## 4. Deliverable
-- [x] one standalone PoC function per format above, each with recorded good/bad run output (in `streaming_spike/`)
-- [x] update `streaming-migration-handoff.md` feasibility table with results
-- [x] write up findings (incl. anything that did **not** work) — run log below + the
-      "Spike findings added 2026-08-27" section appended to `streaming-migration-handoff.md`
-
----
-
-## 5. Bucket 4a — FIFO into path-only external binaries
+## 4. Bucket 4a — FIFO into path-only external binaries
 - [x] docker image carrying validateFiles, fastq_stats, FastaValidator, vcf_assembly_checker
 - [x] bed — validateFiles via FIFO, good + bad
 - [x] bedpe — validateFiles via FIFO, good + bad (supersedes the written-but-unrun wrapper)
@@ -69,9 +62,18 @@ a side-by-side sanity check against the current checker's accept/reject boundary
 
 ---
 
-## Out of scope
-- Out of scope (deferred phase): dispatch refactor, `local_file_path` replacement, folding universal
-  checks into one pass, pool wiring, crash-isolation, transient-vs-invalid retry, portal patching.
+## 5. Deliverable
+- [x] one standalone PoC function per format above, each with recorded good/bad run output (in `streaming_spike/`)
+- [x] update `streaming-migration-handoff.md` feasibility table with results
+- [x] write up findings (incl. anything that did **not** work) — run log below, plus the
+      "Spike findings added 2026-08-27" (Buckets 1–3) and "added 2026-08-28" (Bucket 4a)
+      sections appended to `streaming-migration-handoff.md`
+
+---
+
+## Out of scope (the deferred next phase, not this spike)
+Dispatch refactor, `local_file_path` replacement, folding the universal checks into one pass,
+pool wiring, crash-isolation, transient-vs-invalid retry, portal patching.
 
 ## Deliverables produced
 
@@ -89,11 +91,13 @@ a side-by-side sanity check against the current checker's accept/reject boundary
 | `streaming_spike/compare_local_vs_stream.py` | harness | feasibility bar (d) |
 
 `validate_bigbed` (bigBed / bigInteract) is **not** in this directory: it stays in the hand-off doc
-as written-but-unrun code, because no object exists to run it against. See open questions.
+as written-but-unrun code, because no object exists to run it against. See
+"Deferred by decision" below.
 
 ## Run log
 
-### Environment (aarch64!)
+### Environment for Buckets 1–3 (aarch64!)
+Bucket 4a has its own environment — a docker image, see "Bucket 4a environment" below.
 Sandbox is `linux-aarch64`. micromamba env `spike` (python 3.11) from conda-forge+bioconda:
 `pysam 0.24.0` (htslib 1.23.1), `pyBigWig` (**`remote == 1`**), `h5py 3.16.0` (ros3 driver present),
 then pip: `s3fs 2026.7.0`, `frictionless 5.19.0` + aws, `smart_open 8.0.1`, `seqspec`.
@@ -298,27 +302,6 @@ Two source patches are still needed on aarch64 / modern distros:
 
 Also note `libhts-dev` pulls `libcurl4-gnutls-dev`, which conflicts with `libcurl4-openssl-dev`.
 
-## Deferred by decision: bigBed, bigInteract, cram
-
-`api.data.igvf.org` holds **zero** files of these three formats in any status, so none of them
-could be run against a real object. **Team decision (2026-08-28): leave them until such data
-actually exists.** The reasoning, and what a future reader should pick up:
-
-- **cram** is expected to behave like bam, which is proven. Two real differences to expect when the
-  time comes: the checker needs a reference (`-T`, and local copies already sit in
-  `src/checkfiles/src/checkfiles/supporting_files/{grch38,grcm39}.fa`), and `cram_pysam_check` uses
-  a `samtools view -h -T ref | samtools stats -` pipe rather than a single call.
-- **bigBed / bigInteract**: `validate_bigbed` is already written (in the hand-off doc) and should
-  just need a run. **Do not reach for the bed FIFO pattern for these.** Despite the name they are
-  not a bed variant at the transport level — they are indexed binary that seeks immediately, which
-  is what killed `validateFiles -type=bigWig stdin` with `Illegal seek / lseek(0, -4, SEEK_END)`
-  and emptied Bucket 4b. pyBigWig over range requests is the approach that works, the same one
-  already proven for bigWig. `bigInteract` opens as a bigBed; the `SQL()` schema check against
-  `src/schemas/as/interact.as` remains optional.
-
-*(Also resolved: seqspec onlist/read entries never use a local path in practice — confirmed by the
-team — so streaming's lack of a spec directory is a non-issue.)*
-
 ### Bucket 4a — bed / bedpe / fastq / fasta / vcf: **PROVEN**
 `streaming_spike/validate_bucket4a.py`, run inside `checkfiles-spike:4a` via
 `streaming_spike/docker/run_4a.sh`. A writer thread streams the object into a named FIFO
@@ -340,6 +323,7 @@ error dicts.
 | GOOD vcf (GRCh38) IGVFFI4053BKXV | `{}` 0.3 s |
 | BAD bed streamed as vcf | `Number of matches: 0/1` |
 | BAD vcf vs wrong assembly (GRCm39) | `matches 3315/13909 (23.8%)`, `Contig 'chr20' not found` |
+| BAD unsupported assembly (hg19) | `assembly hg19 is not supported.` |
 
 gvcf needs no separate proof: `vcf_sequence_check` does not branch on file_format, so it is
 the same code path as vcf.
@@ -363,3 +347,24 @@ fasta, since the other three tools are subprocesses that release the GIL. Fixes 
 - writer in a **spawn**ed process — child exited before opening the FIFO, same hang.
 - **running the validator itself in a subprocess** — works, and restores the same shape as
   every other Bucket 4a tool. This is what the code does.
+
+## Deferred by decision: bigBed, bigInteract, cram
+
+`api.data.igvf.org` holds **zero** files of these three formats in any status, so none of them
+could be run against a real object. **Team decision (2026-08-28): leave them until such data
+actually exists.** The reasoning, and what a future reader should pick up:
+
+- **cram** is expected to behave like bam, which is proven. Two real differences to expect when the
+  time comes: the checker needs a reference (`-T`, and local copies already sit in
+  `src/checkfiles/src/checkfiles/supporting_files/{grch38,grcm39}.fa`), and `cram_pysam_check` uses
+  a `samtools view -h -T ref | samtools stats -` pipe rather than a single call.
+- **bigBed / bigInteract**: `validate_bigbed` is already written (in the hand-off doc) and should
+  just need a run. **Do not reach for the bed FIFO pattern for these.** Despite the name they are
+  not a bed variant at the transport level — they are indexed binary that seeks immediately, which
+  is what killed `validateFiles -type=bigWig stdin` with `Illegal seek / lseek(0, -4, SEEK_END)`
+  and emptied Bucket 4b. pyBigWig over range requests is the approach that works, the same one
+  already proven for bigWig. `bigInteract` opens as a bigBed; the `SQL()` schema check against
+  `src/schemas/as/interact.as` remains optional.
+
+*(Also resolved: seqspec onlist/read entries never use a local path in practice — confirmed by the
+team — so streaming's lack of a spec directory is a non-issue.)*

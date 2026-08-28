@@ -1,8 +1,15 @@
 # checkfiles S3-streaming — feasibility spike hand-off
 
+> **STATUS (2026-08-28): the spike is COMPLETE.** Every required format that has data on the
+> portal is proven to validate while streaming from S3 — Buckets 1, 2, 3 and 4a. Only bigBed,
+> bigInteract and cram remain, deferred by decision because the portal holds no such files.
+> Results, run log and reproduction steps: `streaming-spike-checklist.md`.
+> Code: `streaming_spike/`. This document is the original hand-off, updated in place — the
+> per-format table below and the two "Spike findings" sections at the end carry the outcome.
+
 ## Where we are: feasibility, not refactoring (read this first)
 
-**This is a feasibility spike. We are NOT refactoring the suite yet.** The single goal of the current phase is to **prove that every required file format can be validated while streaming from S3** (HTTP range requests / streaming), with no goofys/FUSE mount and no full download.
+**This was a feasibility spike. We are NOT refactoring the suite yet.** The single goal of the current phase is to **prove that every required file format can be validated while streaming from S3** (HTTP range requests / streaming), with no goofys/FUSE mount and no full download.
 
 Concretely, the deliverable of this phase is **one standalone proof-of-concept validation function per file format**, each demonstrated against real S3 objects to (a) return "valid" for a known-good file and (b) reject a known-bad file — reading the data by streaming, not from a mounted path or a local download.
 
@@ -111,8 +118,9 @@ Original note retained below.
 
 These are the standalone proof-of-concept functions produced so far. They are exactly the right shape for the spike: each takes an S3/https reference and returns a **list of error strings (`[]` = valid)**. They are deliberately **not** integrated into `checkfiles.py` — that's the later phase. (The pyBigWig ones are synchronous; the child-process isolation noted in the findings is an integration concern, not needed to prove feasibility.)
 
-> **As of the 2026-08-27 run, the runnable code lives in `streaming_spike/`** — see the table in
-> `streaming-spike-checklist.md`. Those versions are faithful ports of the *actual* checkfiles
+> **The runnable code lives in `streaming_spike/`** — see the deliverables table in
+> `streaming-spike-checklist.md`. Bucket 4a is `streaming_spike/validate_bucket4a.py`, run inside
+> the image built from `streaming_spike/docker/Dockerfile.spike` via `docker/run_4a.sh`. Those versions are faithful ports of the *actual* checkfiles
 > functions (same error-dict shapes, same constants and schemas) and supersede the sketches below,
 > which are kept for context. The one exception is `validate_bigbed` below: it is still
 > written-but-unrun, because no bigBed or bigInteract object exists to run it against.
@@ -244,7 +252,7 @@ def validate_tabular(source, fmt="tsv", comment_char="#", max_errors=100):
     return errors
 ```
 
-### bedpe via FIFO (shell path verified `Error count 0`; Python wrapper written, not run)
+### bedpe via FIFO — *superseded by `streaming_spike/validate_bucket4a.py`*, which runs this pattern for bed/bedpe/fastq/fasta/vcf against real objects (see findings: open the FIFO **before** the network read)
 
 ```python
 import os, shutil, subprocess, tempfile, threading
@@ -285,9 +293,10 @@ def validate_bedpe(url, as_path, chrom_sizes_path, bed_type="bed3+7"):
 
 ## Next steps for the spike (prioritized)
 
-*Rewritten 2026-08-27 after the Buckets 1–3 run. Items 1, 2 (partly), 4, 5 and 6 of the original
-list are done; what remains is below. Original ordering rationale — prove bam/cram first because
-`s3://` support is build-dependent — was followed, and the pysam risk is now retired.*
+*Rewritten 2026-08-27 (Buckets 1–3) and 2026-08-28 (Bucket 4a). Everything on the original list
+is done except the two items below, which have no data to run against. The original ordering
+rationale — prove bam/cram first because `s3://` support is build-dependent — was followed, and
+the pysam risk is retired.*
 
 **Deferred until the data exists (team decision, 2026-08-28):**
 
