@@ -15,7 +15,7 @@ download; (d) where the checker itself changes (pyBigWig for big*, frictionless 
 a side-by-side sanity check against the current checker's accept/reject boundary.
 
 ## Status legend
-`[ ]` not started · `[x]` done · `[!]` blocked (needs something this pass could not get)
+`[ ]` not started · `[x]` done · `[!]` deferred (needs data or tooling this pass could not get)
 
 ---
 
@@ -30,15 +30,15 @@ a side-by-side sanity check against the current checker's accept/reject boundary
 - [x] locate a released bam on the portal
 - [x] bam: `pysam.quickcheck` / `AlignmentFile` / `stats` against real object → good case
 - [x] bam: known-bad case rejected (e.g. non-bam object)
-- [!] locate a released cram + matching reference (local ref copies exist: `src/checkfiles/src/checkfiles/supporting_files/grch38.fa`, `grcm39.fa`)
+- [!] locate a released cram + matching reference — **deferred, no such data exists** (local ref copies exist: `src/checkfiles/src/checkfiles/supporting_files/grch38.fa`, `grcm39.fa`)
 - [!] cram: streaming open + `view→stats` pipe, good case
 - [!] cram: known-bad case rejected
 
 ## 2. Bucket 3 — run the already-written functions vs real objects
 - [x] bigWig — previously proven by the team; **re-confirmed independently here** (good → `[]`,
       wrong-assembly → 24 length mismatches, bam-as-bigWig → open error), up to 875 MB
-- [!] bigBed — `validate_bigbed` written but never run; needs real object, good + bad
-- [!] bigInteract — same function (opens as bigBed); needs real object, good + bad; optional `SQL()` schema check vs `.as`
+- [!] bigBed — `validate_bigbed` written but never run — **deferred, no such data exists**
+- [!] bigInteract — same function (opens as bigBed) — **deferred, no such data exists**
 - [x] h5ad — written + run: h5py over s3fs file object (blockcache); reproduce `check_valid_h5ad_file_format` (X/obs/var present); good + bad
 
 ## 3. Bucket 1 — forward streaming
@@ -249,16 +249,23 @@ Accept/reject boundary matches on every case, and the **error payloads are byte-
 Note: `py_fasta_validator` has no aarch64 wheel and fails to build here, so `FastaValidator` is
 stubbed to let `checkfiles` import. Nothing compared touches fasta.
 
-## Open questions for the team (blocking the remaining formats)
+## Deferred by decision: bigBed, bigInteract, cram
 
-1. **bigBed and bigInteract have no test objects.** `api.data.igvf.org` reports **zero** files of
-   either format (the `file_format` facet over all 31530 files lists no `bigBed` and no
-   `bigInteract`), yet both are required per the README and `VALIDATE_FILES_ARGS` in
-   `constants.py` (`('bigBed','bed3')`, `('bigBed','bed3+')`, `('bigInteract', None)`).
-   `validate_bigbed` therefore still cannot be run against a real object. Where should I get one —
-   a staging/sandbox portal, a specific `igvf-public` key, or a file you can point me at?
-2. **cram likewise has no released files** on the portal (no `cram` in the facet), so Bucket 2 is
-   only half proven: bam is done, cram is not. Same question.
+`api.data.igvf.org` holds **zero** files of these three formats in any status, so none of them
+could be run against a real object. **Team decision (2026-08-28): leave them until such data
+actually exists.** The reasoning, and what a future reader should pick up:
 
-*(Resolved: seqspec onlist/read entries never use a local path in practice — confirmed by the
+- **cram** is expected to behave like bam, which is proven. Two real differences to expect when the
+  time comes: the checker needs a reference (`-T`, and local copies already sit in
+  `src/checkfiles/src/checkfiles/supporting_files/{grch38,grcm39}.fa`), and `cram_pysam_check` uses
+  a `samtools view -h -T ref | samtools stats -` pipe rather than a single call.
+- **bigBed / bigInteract**: `validate_bigbed` is already written (in the hand-off doc) and should
+  just need a run. **Do not reach for the bed FIFO pattern for these.** Despite the name they are
+  not a bed variant at the transport level — they are indexed binary that seeks immediately, which
+  is what killed `validateFiles -type=bigWig stdin` with `Illegal seek / lseek(0, -4, SEEK_END)`
+  and emptied Bucket 4b. pyBigWig over range requests is the approach that works, the same one
+  already proven for bigWig. `bigInteract` opens as a bigBed; the `SQL()` schema check against
+  `src/schemas/as/interact.as` remains optional.
+
+*(Also resolved: seqspec onlist/read entries never use a local path in practice — confirmed by the
 team — so streaming's lack of a spec directory is a non-issue.)*

@@ -52,11 +52,11 @@ Data is read once, front to back, by our own Python. Stream the object (e.g. `sm
 | tabular (txt/tsv) | 1 | frictionless v5, `s3://` scheme or presigned https | **Proven** — real objects, gz + plain, schema + no-schema paths; payload identical to local checker |
 | seqspec | 1 | read small YAML into memory via smart_open; **`seqspec.utils.load_spec_stream`** (NOT `yaml.safe_load`) | **Proven** — real objects, no disk touched |
 | bam | 2 | pysam `quickcheck`/`stats`/`AlignmentFile` on `s3://` | **Proven** — conda-forge pysam 0.24.0 opens `s3://` anonymously on a 10 GB object; verdict identical to local checker |
-| cram | 2 | pysam on `s3://` + reference file; keep `view→stats` pipe | **Blocked — no cram files exist on the portal** (see checklist open questions) |
+| cram | 2 | pysam on `s3://` + reference file; keep `view→stats` pipe | **Deferred — no cram files exist on the portal**; expected to follow bam |
 | h5ad | 3 | h5py over s3fs file object (blockcache) or ros3 driver | **Proven** — 656 MB validates in 0.9 s (metadata ranges only); verdict identical to local checker |
 | bigWig | 3 | pyBigWig: isBigWig + chroms vs chrom.sizes + start/end `stats()` probes | **Proven** — re-confirmed independently; 875 MB bigWig validates in 2.1 s |
-| bigBed | 3 | pyBigWig: isBigBed + chroms vs chrom.sizes + start/end `entries()` probes | **Blocked — no bigBed files exist on the portal** (see checklist open questions) |
-| bigInteract | 3 | pyBigWig (opens as bigBed); optional `SQL()` schema check vs `.as` | **Blocked — no bigInteract files exist on the portal** (see checklist open questions) |
+| bigBed | 3 | pyBigWig: isBigBed + chroms vs chrom.sizes + start/end `entries()` probes | **Deferred — no bigBed files exist on the portal**; function written, awaits data |
+| bigInteract | 3 | pyBigWig (opens as bigBed); optional `SQL()` schema check vs `.as` | **Deferred — no bigInteract files exist on the portal**; covered by the bigBed function |
 | bed | 4a | validateFiles via FIFO | Not written (pattern established by bedpe) |
 | bedpe | 4a | validateFiles via FIFO, **decompress to plain text** | **Shell path proven** (`Error count 0`); Python FIFO wrapper written, not run |
 | fastq | 4a | validateFiles `-type=fastq` + fastq_stats via FIFO | Not written (stdin streaming explored earlier in-depth) |
@@ -67,8 +67,9 @@ Data is read once, front to back, by our own Python. Stream the object (e.g. `sm
 > **Spike run, 2026-08-27.** Buckets 1–3 closed against real released portal objects; working
 > code in `streaming_spike/`, full run log and open questions in `streaming-spike-checklist.md`.
 > Bucket 4a was out of scope for that pass (external binaries unavailable in the sandbox), and
-> bigBed / bigInteract / cram are blocked on test data — **the portal holds zero files of those
-> three formats in any status**, not merely zero released ones.
+> bigBed / bigInteract / cram are **deferred by decision**: the portal holds zero files of those
+> three formats in any status (not merely zero released ones), so there is nothing to validate
+> against until such data is submitted.
 
 ## Hard-won technical findings (don't rediscover these)
 
@@ -288,16 +289,18 @@ def validate_bedpe(url, as_path, chrom_sizes_path, bed_type="bed3+7"):
 list are done; what remains is below. Original ordering rationale — prove bam/cram first because
 `s3://` support is build-dependent — was followed, and the pysam risk is now retired.*
 
-**Blocked on test data (cannot proceed without help):**
+**Deferred until the data exists (team decision, 2026-08-28):**
 
-1. **bigBed and bigInteract.** `validate_bigbed` is written but has never touched a real object,
-   because `api.data.igvf.org` holds **zero** files of either format, while both are required per
-   the README and `VALIDATE_FILES_ARGS`. Need a staging/sandbox portal, a specific `igvf-public`
-   key, or a file from the team. Once an object exists this is a single run.
-2. **cram.** Same situation — no released cram files on the portal, so Bucket 2 is only half
-   proven. The pysam `s3://` risk is retired by the bam result, so cram should be quick: point
-   `-T` at the local reference copies already in
-   `src/checkfiles/src/checkfiles/supporting_files/{grch38,grcm39}.fa`.
+1. **bigBed and bigInteract.** `validate_bigbed` is written but has never touched a real object —
+   the portal holds zero files of either format. When one appears this should be a single run.
+   Note for whoever picks it up: these are **not** a bed variant at the transport level. They are
+   indexed binary that seeks immediately, which is what killed `validateFiles -type=bigWig stdin`
+   (`Illegal seek / lseek(0, -4, SEEK_END)`) and emptied Bucket 4b — the bed FIFO pattern will not
+   work on them. pyBigWig over range requests is the proven approach, as for bigWig.
+2. **cram.** Also absent from the portal, so Bucket 2 is half proven. Expected to work like bam,
+   whose `s3://` risk is now retired; the differences are that it needs a reference (`-T`, local
+   copies in `src/checkfiles/src/checkfiles/supporting_files/{grch38,grcm39}.fa`) and that
+   `cram_pysam_check` runs a `samtools view -h -T ref | samtools stats -` pipe.
 
 **Blocked on tooling:**
 
