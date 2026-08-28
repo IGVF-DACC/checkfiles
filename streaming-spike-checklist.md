@@ -1,5 +1,8 @@
 # S3-streaming feasibility spike — working checklist
 
+> New here? Read **`streaming-spike-START-HERE.md`** first — it is the one-page orientation.
+> This file is the detailed run log behind it.
+
 **Scope:** Buckets 1–4a. Buckets 1–3 were closed first; Bucket 4a
 (bed/bedpe/fastq/fasta/vcf/gvcf) was closed afterwards using a purpose-built docker image
 that carries the four external binaries — see `streaming_spike/docker/`.

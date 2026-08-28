@@ -1,5 +1,7 @@
 # checkfiles S3-streaming — feasibility spike hand-off
 
+> New here? Read **`streaming-spike-START-HERE.md`** first — one-page orientation.
+>
 > **STATUS (2026-08-28): the spike is COMPLETE.** Every required format that has data on the
 > portal is proven to validate while streaming from S3 — Buckets 1, 2, 3 and 4a. Only bigBed,
 > bigInteract and cram remain, deferred by decision because the portal holds no such files.
