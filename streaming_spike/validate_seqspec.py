@@ -9,8 +9,8 @@ NOTE: use seqspec's loader, not `yaml.safe_load`. The spec YAML carries python o
 tags (`!Assay`, `!Region`, ...) and safe_load rejects them.
 
 `seqspec_check(spec, spec_fn, ...)` takes a path, but only uses `os.path.dirname(spec_fn)`
-to resolve onlist/read entries whose `urltype == "local"`. IGVF specs reference portal
-http(s) URLs, so a placeholder path is sufficient -- see the run log for the caveat.
+to resolve onlist/read entries carrying a local path. IGVF specs reference portal http(s)
+URLs and never use local ones, so a placeholder path is sufficient.
 
 Returns the same error dict shape as the original ({} = valid).
 """
@@ -42,8 +42,8 @@ def _transport_params(url, anon):
 
 def validate_seqspec(url, validate_onlist_files=True, anon=False, spec_fn=None):
     """url: 's3://bucket/key.yaml[.gz]'. spec_fn is only used by seqspec to resolve
-    `urltype: local` onlist/read paths; it defaults to the object's own key so relative
-    resolution keeps the same shape it had on the mount."""
+    local onlist/read paths, which IGVF specs do not use; it defaults to the object's own
+    key so relative resolution keeps the same shape it had on the mount."""
     error = {}
     if 'IGVF_API_KEY' not in os.environ or 'IGVF_SECRET_KEY' not in os.environ:
         print('  [warn] IGVF_API_KEY / IGVF_SECRET_KEY not set: seqspec check cannot '

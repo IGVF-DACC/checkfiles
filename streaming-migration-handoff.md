@@ -308,12 +308,6 @@ list are done; what remains is below. Original ordering rationale — prove bam/
    its shell path proven, so the remaining wrappers follow it; mind the per-tool compression rule
    (decompress upstream for `validateFiles`, raw `.gz` bytes for `fastq_stats`).
 
-**Open question, no blocker:**
-
-4. **Does `urltype: local` occur in real IGVF seqspecs?** Such onlist/read entries resolve against
-   the spec's directory, which streaming does not have. If they exist in practice, that path needs
-   a plan before the refactor.
-
 ## Feasibility bar for each format (how to know a format is "proven")
 
 For each format, "proven" means all of: (a) a known-good real object returns valid/`[]`; (b) a known-bad object is rejected with a sensible error; (c) the data was read by streaming from S3 (no mount, no whole-file download); (d) for the formats where we're changing the *checker* (pyBigWig replacing validateFiles for big*; frictionless for tabular), a quick side-by-side against the current checker on a few known-good and known-bad files shows they agree on the accept/reject boundary. Point (d) is the one place semantics can drift — where the old checker catches something the new one misses and it matters, note it (e.g. pyBigWig `SQL()` schema comparison for bigInteract, or a frictionless `Schema` for tabular) so the eventual refactor can decide whether to add it.
@@ -349,9 +343,9 @@ boundary or it will silently disagree with the mounted implementation, on exactl
 
 **seqspec: use `load_spec_stream`, not `yaml.safe_load`.** The spec YAML carries python object tags
 (`!Assay`, `!Region`); `safe_load` rejects them. `seqspec.utils.load_spec` is literally
-`open(spec_fn)` + `load_spec_stream`, so the streaming swap is exact. Caveat: `seqspec_check(spec,
-spec_fn, ...)` still takes a path and uses `os.path.dirname(spec_fn)` to resolve onlist/read entries
-whose `urltype` is `local` — those have no meaning without a mount directory.
+`open(spec_fn)` + `load_spec_stream`, so the streaming swap is exact. `seqspec_check(spec, spec_fn,
+...)` still takes a path, but only to resolve onlist/read entries carrying a local path, which IGVF
+specs never use — passing the object key satisfies it and no mount is needed.
 
 **Anonymous S3 is awkward for smart_open and frictionless (test-time only).** Both sign via boto3,
 so reading a public bucket with no credentials raises `NoCredentialsError`. smart_open accepts an

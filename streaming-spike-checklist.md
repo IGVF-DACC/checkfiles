@@ -185,12 +185,10 @@ YAML carries python object tags (`!Assay`, `!Region`) and seqspec loads with `ya
 `seqspec.utils.load_spec_stream`, which is the exact streaming twin of `load_spec` (which is only
 `open(spec_fn)` + `load_spec_stream`). Zero disk touched.
 
-**Finding — `spec_fn` is still a path.** `seqspec_check(spec, spec_fn, filter_type)` uses `spec_fn`
-only as `os.path.dirname(spec_fn)`, to resolve onlist/read entries with `urltype: local`. IGVF specs
-reference portal http(s) URLs, so passing the object key is enough. **But** a spec with a *local*
-onlist file would today be resolved against the goofys mount directory; with streaming there is no
-such directory and those checks would silently report "does not exist". Worth confirming with the
-team whether `urltype: local` occurs in practice.
+**Finding — `spec_fn` is still a path, but harmlessly so.** `seqspec_check(spec, spec_fn,
+filter_type)` uses `spec_fn` only as `os.path.dirname(spec_fn)`, and only for onlist/read entries
+that carry a local path. IGVF specs reference portal http(s) URLs instead — confirmed with the team
+that local ones never occur — so passing the object key is enough and nothing here needs a mount.
 (The onlist-ON run reported one onlist "does not exist" — that is the unauthenticated portal HEAD
 with no `IGVF_API_KEY`/`IGVF_SECRET_KEY`, not a streaming failure.)
 
@@ -261,5 +259,6 @@ stubbed to let `checkfiles` import. Nothing compared touches fasta.
    a staging/sandbox portal, a specific `igvf-public` key, or a file you can point me at?
 2. **cram likewise has no released files** on the portal (no `cram` in the facet), so Bucket 2 is
    only half proven: bam is done, cram is not. Same question.
-3. **`urltype: local` in seqspec** — does it occur in practice? If a spec references an onlist file
-   sitting next to it on the mount, streaming has no directory to resolve it against.
+
+*(Resolved: seqspec onlist/read entries never use a local path in practice — confirmed by the
+team — so streaming's lack of a spec directory is a non-issue.)*
