@@ -22,7 +22,7 @@ from typing import Optional
 
 import pysam
 from FastaValidator import fasta_validator
-from frictionless import system, validate, describe, Schema, Dialect
+from frictionless import system, validate, describe, Schema, Dialect, Field
 from frictionless.exception import FrictionlessException
 from seqspec.utils import load_spec as seqspec_load_spec
 from seqspec.seqspec_version import seqspec_version
@@ -440,7 +440,11 @@ def tabular_file_check(file_format, content_type, file_path, is_gzipped=True, sc
                     schema = Schema.from_descriptor(schema_path)
                     if len(infer_schema.fields) > len(schema.fields):
                         for i in range(len(schema.fields), len(infer_schema.fields)):
-                            schema.add_field(infer_schema.fields[i])
+                            # Do not copy inferred types; extra columns are untyped (any).
+                            schema.add_field(Field.from_descriptor({
+                                'name': infer_schema.fields[i].name,
+                                'type': 'any',
+                            }))
                     report = validate(file_path, schema=schema,
                                       limit_errors=max_error, checks=checks, **frictionless_options)
     except (UnicodeDecodeError, FrictionlessException) as e:
