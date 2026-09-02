@@ -171,6 +171,16 @@ def test_validate_files_check_pass():
     assert error == {}
 
 
+def test_validate_files_check_bigbed_bed6_plus_valid():
+    file_path = 'src/tests/data/bigbed_bed6_plus_valid.bigBed'
+    file_format = 'bigBed'
+    file_format_type = 'bed6+'
+    assembly = 'GRCh38'
+    error = validate_files_check(
+        file_path, file_format, file_format_type, assembly)
+    assert error == {}
+
+
 def test_validate_files_check_invalid_chrom():
     file_path = 'src/tests/data/invalid_chrom.bed'
     file_format = 'bed'
