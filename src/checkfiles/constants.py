@@ -91,6 +91,7 @@ VALIDATE_FILES_ARGS = {
     ],
     ('bigBed', 'bed3'): ['-type=bigBed3'],
     ('bigBed', 'bed3+'): ['-tab', '-type=bigBed3+'],
+    ('bigBed', 'bed6+'): ['-tab', '-type=bigBed6+'],
     ('bigWig', None): ['-type=bigWig'],
     ('bigInteract', None): ['-type=bigBed5+13', '-as=src/schemas/as/interact.as'],
 
