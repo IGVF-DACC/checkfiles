@@ -202,12 +202,12 @@
             "description": "Permutation p value."
         },
         {
-            "name": "fdr",
+            "name": "FDR",
             "type": "number",
             "description": "False discovery rate after multiple testing correction."
         },
         {
-            "name": "fdr_method",
+            "name": "FDR_method",
             "type": "string",
             "description": "Method used for multiple testing correction."
         },
