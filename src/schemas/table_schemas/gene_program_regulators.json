@@ -12,23 +12,22 @@
         {
             "name": "gene",
             "type": "string",
-            "description": "Ensembl ID using official IGVF GENCODE version (V43)",
-            "constraints": {
-                "required": true
-            }
+            "description": "Ensembl ID of perturbed gene using official IGVF GENCODE version (V43). Conditionally required for promoter-targeting regulators.",
+            "example": "ENSG00000139618",
+            "comment": "Required when promoter_coordinates is provided or genomic_element is promoter."
         },
         {
             "name": "gene_symbol",
             "type": "string",
-            "description": "Gene symbol from official IGVF GENCODE version (V43)",
-            "constraints": {
-                "required": true
-            }
+            "description": "Gene symbol of perturbed gene from official IGVF GENCODE version (V43). Conditionally required for promoter-targeting regulators.",
+            "example": "BRCA2",
+            "comment": "Required when promoter_coordinates is provided or genomic_element is promoter."
         },
         {
             "name": "promoter_coordinates",
             "type": "string",
-            "description": "The hg38 coordinates used for the targeted promoter element. N/A"
+            "description": "The hg38 coordinates used for the targeted promoter element.",
+            "example": "Chr1:123 - Chr1:125"
         },
         {
             "name": "log2FC",
@@ -58,21 +57,28 @@
         {
             "name": "p_nominal_nlog10",
             "type": "number",
-            "description": "-log10 uncorrected nominal p-value for test statistic. If not available, NaN"
+            "description": "-log10 uncorrected nominal p-value for test statistic. If not available, NaN",
+            "example": 2.5
         },
         {
             "name": "fdr_nlog10",
             "type": "number",
-            "description": "-log10 p-value corrected for multiple hypothesis testing, as appropriate for this experiment. If not available, NaN"
+            "description": "-log10 p-value corrected for multiple hypothesis testing, as appropriate for this experiment. If not available, NaN",
+            "example": 1.3
         },
         {
             "name": "fdr_method",
             "type": "string",
-            "description": "Method used for multiple testing correction, e.g. 'Bonferroni', 'permutation', 'Benjamini-Hochberg', …"
+            "description": "Method used for multiple testing correction, e.g. 'Bonferroni', 'permutation', 'Benjamini-Hochberg', …",
+            "example": "Benjamini-Hochberg",
+            "constraints": {
+                "required": true
+            }
         }
     ],
     "missingValues": [
         "N/A",
-        "NaN"
+        "NaN",
+        ""
     ]
 }

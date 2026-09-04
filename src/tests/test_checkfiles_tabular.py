@@ -196,6 +196,68 @@ def test_tabular_file_check_gene_program_regulators_valid():
     assert error == {}
 
 
+def test_tabular_file_check_gene_program_regulators_invalid():
+    file_path = 'src/tests/data/gene_program_regulators_invalid.csv'
+    is_gzipped = False
+    file_format = 'csv'
+    content_type = 'gene program regulators'
+    error = tabular_file_check(
+        file_format, content_type, file_path, is_gzipped)
+    tabular_file_error = error['tabular_file_error']
+    assert 'constraint-error' in tabular_file_error['error_types']
+    constraint_notes = [
+        detail['note']
+        for detail in tabular_file_error['constraint-error']['details']
+    ]
+    assert any(
+        'gene is required for promoter-targeting regulators' in note
+        for note in constraint_notes
+    )
+
+
+def test_tabular_file_check_regulator_regulator_correlation_valid():
+    file_path = 'src/tests/data/regulator_regulator_correlation_valid.csv'
+    is_gzipped = False
+    file_format = 'csv'
+    content_type = 'regulator-regulator correlation'
+    error = tabular_file_check(
+        file_format, content_type, file_path, is_gzipped)
+    assert error == {}
+
+
+def test_tabular_file_check_regulator_regulator_correlation_valid_gzipped():
+    file_path = 'src/tests/data/regulator_regulator_correlation_valid.csv.gz'
+    is_gzipped = True
+    file_format = 'csv'
+    content_type = 'regulator-regulator correlation'
+    error = tabular_file_check(
+        file_format, content_type, file_path, is_gzipped)
+    assert error == {}
+
+
+def test_tabular_file_check_regulator_regulator_correlation_invalid():
+    file_path = 'src/tests/data/regulator_regulator_correlation_invalid.csv'
+    is_gzipped = False
+    file_format = 'csv'
+    content_type = 'regulator-regulator correlation'
+    error = tabular_file_check(
+        file_format, content_type, file_path, is_gzipped)
+    tabular_file_error = error['tabular_file_error']
+    assert tabular_file_error['schema'] == (
+        'src/schemas/table_schemas/regulator_regulator_correlation.json'
+    )
+    assert 'type-error' in tabular_file_error['error_types']
+    assert 'constraint-error' in tabular_file_error['error_types']
+    constraint_notes = [
+        detail['note']
+        for detail in tabular_file_error['constraint-error']['details']
+    ]
+    assert any(
+        'gene_1 is required when genomic_element_1 is promoter' in note
+        for note in constraint_notes
+    )
+
+
 def test_tabular_file_check_cell_annotations_valid():
     file_path = 'src/tests/data/cell_annotations_valid.csv'
     is_gzipped = False

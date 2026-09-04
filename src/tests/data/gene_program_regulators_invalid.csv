@@ -1,0 +1,2 @@
+program_id,gene,gene_symbol,promoter_coordinates,log2FC,reference_group,test_statistic,p_nominal_nlog10,fdr_nlog10,fdr_method
+GP_6,,,chr1:123-chr1:125,1.5,non-targeting,8.1,2.5,1.3,Benjamini-Hochberg
