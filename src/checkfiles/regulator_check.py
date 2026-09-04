@@ -27,7 +27,7 @@ def _row_field_names(row):
     return []
 
 
-class RegulatorRegulatorCorrelationCheck(Check):
+class RegulatorCheck(Check):
     Errors = [errors.ConstraintError]
 
     def validate_row(self, row):

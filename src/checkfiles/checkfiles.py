@@ -36,7 +36,7 @@ from constants import GZIP_CHECK_IGNORED_FILE_FORMAT, NO_HEADER_CONTENT_TYPE, TA
 from constants import VALIDATE_FILES_ARGS, ASSEMBLY_TO_CHROMINFO_PATH_MAP, ASSEMBLY_FOR_VCF, ASSEMBLY_TO_SEQUENCE_FILE_MAP
 from constants import FASTA_VALIDATION_INFO, SEQSPEC_FILE_VERSION, NO_SQ_HEADER_BAM_CONTENT_TYPES
 from guide_rna_sequences_check import GuideRnaSequencesCheck
-from regulator_check import RegulatorRegulatorCorrelationCheck
+from regulator_check import RegulatorCheck
 from version import get_checkfiles_version
 
 
@@ -435,7 +435,7 @@ def tabular_file_check(file_format, content_type, file_path, is_gzipped=True, sc
                     'regulator-regulator correlation',
                     'gene program regulators',
                 ]:
-                    checks = [RegulatorRegulatorCorrelationCheck()]
+                    checks = [RegulatorCheck()]
 
                 if not allow_additional_fields:
                     report = validate(file_path, schema=schema_path,
