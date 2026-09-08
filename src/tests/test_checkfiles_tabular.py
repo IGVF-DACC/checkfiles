@@ -210,7 +210,7 @@ def test_tabular_file_check_gene_program_regulators_invalid():
         for detail in tabular_file_error['constraint-error']['details']
     ]
     assert any(
-        'gene is required for promoter-targeting regulators' in note
+        'gene is required when genomic_element is promoter' in note
         for note in constraint_notes
     )
 

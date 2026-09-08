@@ -14,20 +14,32 @@
             "type": "string",
             "description": "Ensembl ID of perturbed gene using official IGVF GENCODE version (V43). Conditionally required for promoter-targeting regulators.",
             "example": "ENSG00000139618",
-            "comment": "Required when promoter_coordinates is provided or genomic_element is promoter."
+            "comment": "Required when genomic_element is promoter."
         },
         {
             "name": "gene_symbol",
             "type": "string",
             "description": "Gene symbol of perturbed gene from official IGVF GENCODE version (V43). Conditionally required for promoter-targeting regulators.",
             "example": "BRCA2",
-            "comment": "Required when promoter_coordinates is provided or genomic_element is promoter."
+            "comment": "Required when genomic_element is promoter."
         },
         {
-            "name": "promoter_coordinates",
+            "name": "genomic_element",
             "type": "string",
-            "description": "The hg38 coordinates used for the targeted promoter element.",
-            "example": "Chr1:123 - Chr1:125"
+            "description": "The perturbed element type e.g. promoter, enhancer, etc.",
+            "example": "promoter",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "genomic_element_coordinates",
+            "type": "string",
+            "description": "The hg38 coordinates of the perturbed regulator. If aggregated across multiple elements, comma-separate the coordinates.",
+            "example": "chr1:123-chr1:125",
+            "constraints": {
+                "required": true
+            }
         },
         {
             "name": "log2FC",
