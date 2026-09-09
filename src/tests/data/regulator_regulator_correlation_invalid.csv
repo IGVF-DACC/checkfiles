@@ -1,0 +1,4 @@
+gene_1,gene_1_symbol,genomic_element_1,genomic_element_coordinates_1,gene_2,gene_2_symbol,genomic_element_2,genomic_element_coordinates_2,pearson_correlation
+ENSG00000139687,RB1,promoter,chr13:48303814-chr13:48303919,ENSG00000156374,PCGF6,promoter,chr10:103350606-chr10:103351145,not_a_number
+,,promoter,chr1:150876336-chr1:150876712,ENSG00000154305,ARNT,promoter,chr1:150876336-chr1:150876712,0.5
+ENSG00000020256,ZFP64,enhancer,chr20:52191376-chr20:52191771,ENSG00000198824,CHAMP1,promoter,chr13:114314348-chr13:114314719,

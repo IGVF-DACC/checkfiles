@@ -3,15 +3,31 @@
         {
             "name": "gene_1",
             "type": "string",
-            "description": "Ensembl gene ID for the first perturbed regulator in the pair, using official IGVF GENCODE version (V43)",
+            "description": "Ensembl gene ID for the first perturbed regulator in the pair, using official IGVF GENCODE version (V43). Conditionally required for promoter-targeting regulators.",
+            "example": "ENSG00000139618",
+            "comment": "Required when genomic_element_1 is promoter."
+        },
+        {
+            "name": "gene_1_symbol",
+            "type": "string",
+            "description": "Gene symbol for the first perturbed regulator in the pair, from official IGVF GENCODE version (V43). Conditionally required for promoter-targeting regulators.",
+            "example": "BRCA2",
+            "comment": "Required when genomic_element_1 is promoter."
+        },
+        {
+            "name": "genomic_element_1",
+            "type": "string",
+            "description": "The perturbed element type e.g. promoter, enhancer, etc of the first perturbed regulator in the pair.",
+            "example": "promoter",
             "constraints": {
                 "required": true
             }
         },
         {
-            "name": "gene_1_symbol",
+            "name": "genomic_element_coordinates_1",
             "type": "string",
-            "description": "Gene symbol for the first perturbed regulator in the pair, from official IGVF GENCODE version (V43)",
+            "description": "The hg38 coordinates of the first perturbed regulator in the pair. If aggregated across multiple elements, comma-separate the coordinates.",
+            "example": "chr1:123-chr1:125",
             "constraints": {
                 "required": true
             }
@@ -19,15 +35,31 @@
         {
             "name": "gene_2",
             "type": "string",
-            "description": "Ensembl gene ID for the second perturbed regulator in the pair, using official IGVF GENCODE version (V43)",
+            "description": "Ensembl gene ID for the second perturbed regulator in the pair, using official IGVF GENCODE version (V43). Conditionally required for promoter-targeting regulators.",
+            "example": "ENSG00000141510",
+            "comment": "Required when genomic_element_2 is promoter."
+        },
+        {
+            "name": "gene_2_symbol",
+            "type": "string",
+            "description": "Gene symbol for the second perturbed regulator in the pair, from official IGVF GENCODE version (V43). Conditionally required for promoter-targeting regulators.",
+            "example": "TP53",
+            "comment": "Required when genomic_element_2 is promoter."
+        },
+        {
+            "name": "genomic_element_2",
+            "type": "string",
+            "description": "The perturbed element type e.g. promoter, enhancer, etc of the second perturbed regulator in the pair.",
+            "example": "promoter",
             "constraints": {
                 "required": true
             }
         },
         {
-            "name": "gene_2_symbol",
+            "name": "genomic_element_coordinates_2",
             "type": "string",
-            "description": "Gene symbol for the second perturbed regulator in the pair, from official IGVF GENCODE version (V43)",
+            "description": "The hg38 coordinates of the second perturbed regulator in the pair. If aggregated across multiple elements, comma-separate the coordinates.",
+            "example": "chr2:123-chr2:125",
             "constraints": {
                 "required": true
             }
@@ -36,6 +68,7 @@
             "name": "pearson_correlation",
             "type": "number",
             "description": "Pearson correlation between the two regulators' log2FC values across gene programs.",
+            "example": 0.842,
             "constraints": {
                 "required": true
             }
