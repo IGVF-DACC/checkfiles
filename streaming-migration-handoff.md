@@ -2,9 +2,10 @@
 
 > New here? Read **`streaming-spike-START-HERE.md`** first — one-page orientation.
 >
-> **STATUS (2026-08-28): the spike is COMPLETE.** Every required format that has data on the
-> portal is proven to validate while streaming from S3 — Buckets 1, 2, 3 and 4a. Only bigBed,
-> bigInteract and cram remain, deferred by decision because the portal holds no such files.
+> **STATUS (2026-08-28, updated 2026-09-10): the spike is COMPLETE.** Every required format that
+> has data on the portal is proven to validate while streaming from S3 — Buckets 1, 2, 3 and 4a.
+> bigBed joined the proven list on 2026-09-10 when the first object arrived. Only bigInteract
+> and cram remain, deferred by decision because the portal holds no such files.
 > Results, run log and reproduction steps: `streaming-spike-checklist.md`.
 > Code: `streaming_spike/`. This document is the original hand-off, updated in place — the
 > per-format table below and the two "Spike findings" sections at the end carry the outcome.
@@ -64,8 +65,8 @@ Data is read once, front to back, by our own Python. Stream the object (e.g. `sm
 | cram | 2 | pysam on `s3://` + reference file; keep `view→stats` pipe | **Deferred — no cram files exist on the portal**; expected to follow bam |
 | h5ad | 3 | h5py over s3fs file object (blockcache) or ros3 driver | **Proven** — 656 MB validates in 0.9 s (metadata ranges only); verdict identical to local checker |
 | bigWig | 3 | pyBigWig: isBigWig + chroms vs chrom.sizes + start/end `stats()` probes | **Proven** — re-confirmed independently; 875 MB bigWig validates in 2.1 s |
-| bigBed | 3 | pyBigWig: isBigBed + chroms vs chrom.sizes + start/end `entries()` probes | **Deferred — no bigBed files exist on the portal**; function written, awaits data |
-| bigInteract | 3 | pyBigWig (opens as bigBed); optional `SQL()` schema check vs `.as` | **Deferred — no bigInteract files exist on the portal**; covered by the bigBed function |
+| bigBed | 3 | pyBigWig: isBigBed + chroms vs chrom.sizes + start/end `entries()` probes; presigned URL for private buckets | **Proven (2026-09-10)** — first object (unreleased, `igvf-private`), good + wrong-assembly + non-bigBed; agrees with `validateFiles -type=bigBed3+` on every case |
+| bigInteract | 3 | pyBigWig (opens as bigBed); optional `SQL()` schema check vs `.as` | **Deferred — no bigInteract files exist on the portal**; covered by the now-proven bigBed function |
 | bed | 4a | validateFiles via FIFO | **Proven** — real objects, good + bad |
 | bedpe | 4a | validateFiles via FIFO, **decompress to plain text** | **Proven** — python FIFO wrapper now run against real objects, good + bad |
 | fastq | 4a | validateFiles `-type=fastq` + fastq_stats via FIFO | **Proven** — both tools, good + bad; fastq_stats fed raw `.gz` |
@@ -76,9 +77,10 @@ Data is read once, front to back, by our own Python. Stream the object (e.g. `sm
 > **Spike complete, 2026-08-27/28.** Buckets 1, 2, 3 and 4a are all proven against real
 > released portal objects. Working code in `streaming_spike/` (Bucket 4a runs in the image built
 > from `streaming_spike/docker/Dockerfile.spike`); full run log in
-> `streaming-spike-checklist.md`. Only bigBed / bigInteract / cram remain, **deferred by
-> decision**: the portal holds zero files of those three formats in any status (not merely zero
-> released ones), so there is nothing to validate against until such data is submitted.
+> `streaming-spike-checklist.md`. bigBed was closed on 2026-09-10 against the first submitted
+> object. Only bigInteract / cram remain, **deferred by decision**: the portal holds zero files
+> of those two formats in any status (not merely zero released ones), so there is nothing to
+> validate against until such data is submitted.
 
 ## Hard-won technical findings (don't rediscover these)
 
@@ -126,8 +128,9 @@ These are the standalone proof-of-concept functions produced so far. They are ex
 > `streaming-spike-checklist.md`. Bucket 4a is `streaming_spike/validate_bucket4a.py`, run inside
 > the image built from `streaming_spike/docker/Dockerfile.spike` via `docker/run_4a.sh`. Those versions are faithful ports of the *actual* checkfiles
 > functions (same error-dict shapes, same constants and schemas) and supersede the sketches below,
-> which are kept for context. The one exception is `validate_bigbed` below: it is still
-> written-but-unrun, because no bigBed or bigInteract object exists to run it against.
+> which are kept for context. `validate_bigbed` below was run for real on 2026-09-10
+> (`streaming_spike/validate_bigbed.py`, same body plus a presigned-URL helper); bigInteract
+> will reuse it once an object exists.
 
 ### bigWig (proven; also in `streaming_spike/validate_bigwig.py`)
 
@@ -179,7 +182,7 @@ def validate_bigwig(url, chrom_sizes_path):
     return errors
 ```
 
-### bigBed / bigInteract (written, **still not tested — no such file exists on the portal**)
+### bigBed / bigInteract (proven for bigBed 2026-09-10 — runnable copy in `streaming_spike/validate_bigbed.py`; bigInteract still has no object)
 
 ```python
 import pyBigWig
@@ -304,12 +307,14 @@ the pysam risk is retired.*
 
 **Deferred until the data exists (team decision, 2026-08-28):**
 
-1. **bigBed and bigInteract.** `validate_bigbed` is written but has never touched a real object —
-   the portal holds zero files of either format. When one appears this should be a single run.
-   Note for whoever picks it up: these are **not** a bed variant at the transport level. They are
-   indexed binary that seeks immediately, which is what killed `validateFiles -type=bigWig stdin`
-   (`Illegal seek / lseek(0, -4, SEEK_END)`) and emptied Bucket 4b — the bed FIFO pattern will not
-   work on them. pyBigWig over range requests is the proven approach, as for bigWig.
+1. **bigInteract.** (bigBed was closed on 2026-09-10 against the first object — it was indeed a
+   single run of `validate_bigbed`.) The portal holds zero bigInteract files; when one appears,
+   run `streaming_spike/validate_bigbed.py` against it, optionally adding the `SQL()` check
+   against `src/schemas/as/interact.as`. Note for whoever picks it up: these are **not** a bed
+   variant at the transport level. They are indexed binary that seeks immediately, which is what
+   killed `validateFiles -type=bigWig stdin` (`Illegal seek / lseek(0, -4, SEEK_END)`) and emptied
+   Bucket 4b — the bed FIFO pattern will not work on them. pyBigWig over range requests is the
+   proven approach, as for bigWig and now bigBed.
 2. **cram.** Also absent from the portal, so Bucket 2 is half proven. Expected to work like bam,
    whose `s3://` risk is now retired; the differences are that it needs a reference (`-T`, local
    copies belong at `src/checkfiles/supporting_files/{grch38,grcm39}.fa`, gitignored, fetched by

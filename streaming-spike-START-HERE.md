@@ -3,9 +3,10 @@
 **Question:** can every checkfiles format be validated by streaming from S3 — no goofys/FUSE
 mount, no full download — so the suite can move to Fargate?
 
-**Answer: yes.** Every format that has data on the portal is proven. bigBed, bigInteract and cram
-are deferred: the portal holds zero files of them in any status (last checked 2026-09-10), so
-there is nothing to run against.
+**Answer: yes.** Every format that has data on the portal is proven, bigBed included as of
+2026-09-10 (first unreleased object, private bucket). bigInteract and cram are deferred: the
+portal holds zero files of them in any status (last checked 2026-09-10), so there is nothing to
+run against.
 
 Nothing in `src/checkfiles/` was changed. This is a spike: standalone PoCs only.
 
@@ -42,7 +43,8 @@ cases for bigWig and vcf), so both good and bad paths ran against real data.
 | fasta | `FastaValidator` via FIFO, validator run in a subprocess | `s3://igvf-public/2025/05/12/12ff0dcc-f4d8-457a-b761-a428946637ba/IGVFFI2830EFZS.fasta.gz` |
 | vcf | `vcf_assembly_checker` via FIFO + local reference genome | `s3://igvf-public/2026/07/13/8a7eb415-bc25-466f-b6ee-b4c6560ecbe8/IGVFFI4053BKXV.vcf.gz` |
 | gvcf | same code path as vcf — `vcf_sequence_check` does not branch on file_format | covered by the vcf run |
-| bigBed / bigInteract | pyBigWig (function written, never run) | **none exist on the portal — deferred** |
+| bigBed | pyBigWig over a **presigned** https URL (private bucket, read-only profile), **replacing** `validateFiles -type=bigBed*`; side-by-side with validateFiles on a downloaded copy agrees on all cases | `s3://igvf-private/2026/08/27/e4e2dfe7-faf1-49fe-b7cd-e0a45e00272e/IGVFFI7693ROCN.bigBed` (161 KB, narrowPeak bed6+4, GRCh38, unreleased)<br>bad: the public bigWig and bam above posing as bigBed, plus wrong-assembly |
+| bigInteract | same function as bigBed (it opens as a bigBed) | **none exist on the portal — deferred** |
 | cram | pysam + reference; expected to follow bam | **none exist on the portal — deferred** |
 
 ## Does the streamed verdict match today's checker?
@@ -52,6 +54,13 @@ cases for bigWig and vcf), so both good and bad paths ran against real data.
 and diffs them against the streamed verdicts. **Accept/reject agrees on all 7 cases; the error
 payloads are byte-identical on 6 of 7** (the 7th differs only in the file path echoed inside a
 samtools message).
+
+For bigBed, where the checker itself changes (pyBigWig instead of `validateFiles`), the
+side-by-side was run by hand: good, wrong-assembly and bam-as-bigBed all get the same
+accept/reject from both. The one semantic difference to carry into the refactor: `validateFiles`
+checks every feature's `chromEnd` against `chromInfo`, pyBigWig checks the chromosome lengths
+recorded in the file header. Both reject a wrong assembly; only the former would catch a single
+out-of-range feature inside a correctly-built file.
 
 ## The five findings that matter for the refactor
 
@@ -75,6 +84,8 @@ samtools message).
 
 Buckets 1–3 need pysam and pyBigWig built with libcurl — a plain pip venv on python 3.11 gives
 that today (recipe in the checklist's "Re-verification 2026-09-10"; conda is the fallback).
+The bigBed proof reads an unreleased object in `igvf-private` and needs a read-only AWS
+profile (`SPIKE_AWS_PROFILE`, default `prod-read-only-cdk`) purely to presign the URL.
 Bucket 4a needs the docker image that carries `validateFiles`, `fastq_stats`, `FastaValidator`
 and `vcf_assembly_checker`:
 
