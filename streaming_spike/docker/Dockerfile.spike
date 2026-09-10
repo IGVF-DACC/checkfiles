@@ -7,10 +7,9 @@
 # needing libstdc++ dies with "failed to map segment from shared object". So the
 # x86_64 binaries cannot be emulated here and must be obtained natively:
 #
-#   validateFiles         built from UCSC kent source (src/hg/encode3/validateFiles).
-#                         Ubuntu 22.04's libhts-dev (1.13) is too old -- kent's
-#                         bamFile.c needs cram_ref_check_t -- so htslib is built from
-#                         source into /usr/local, which gcc searches before /usr/include
+#   validateFiles         built from UCSC's jksrc.v442.zip (src/hg/encode3/validateFiles)
+#                         against the htslib fork vendored inside it -- stock htslib
+#                         (apt or upstream source) does not link; see the note below
 #   vcf_assembly_checker  bioconda has a native linux-aarch64 build
 #   fastq_stats           Rust source, builds natively (needs modern cargo: the
 #                         Cargo.lock is v4, which ubuntu's cargo 1.75 rejects)

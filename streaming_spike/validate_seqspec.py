@@ -14,20 +14,23 @@ URLs and never use local ones, so a placeholder path is sufficient.
 
 Returns the same error dict shape as the original ({} = valid).
 """
-from constants import SEQSPEC_FILE_VERSION
-from seqspec.seqspec_check import seqspec_check
-from seqspec.seqspec_version import seqspec_version
-from seqspec.utils import load_spec_stream
-from smart_open import open as s_open
-from botocore.config import Config
-from botocore import UNSIGNED
-import boto3
 import io
 import os
 import sys
 
+# Path bootstrap: `constants` lives in src/checkfiles and is not a package, so it must be
+# on sys.path BEFORE the imports below. Do not let an import sorter move these up.
 sys.path.insert(0, os.path.join(
-    os.path.dirname(__file__), '..', 'src', 'checkfiles'))
+    os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'checkfiles'))
+
+import boto3  # noqa: E402
+from botocore import UNSIGNED  # noqa: E402
+from botocore.config import Config  # noqa: E402
+from smart_open import open as s_open  # noqa: E402
+from seqspec.utils import load_spec_stream  # noqa: E402
+from seqspec.seqspec_version import seqspec_version  # noqa: E402
+from seqspec.seqspec_check import seqspec_check  # noqa: E402
+from constants import SEQSPEC_FILE_VERSION  # noqa: E402
 
 
 S3_REGION = 'us-west-2'

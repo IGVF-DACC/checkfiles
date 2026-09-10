@@ -106,7 +106,9 @@ if __name__ == '__main__':
         t0 = time.time()
         r = universal_checks(url, anon=True)
         dt = time.time() - t0
-        peak_mb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+        # ru_maxrss is kilobytes on Linux but BYTES on macOS
+        rss_div = 1024 * 1024 if sys.platform == 'darwin' else 1024
+        peak_mb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / rss_div
         size_ok = 'OK' if r['size'] == expect_size else f'MISMATCH (portal {expect_size})'
         md5_ok = ('OK' if expect_md5 is None or r['md5sum'] == expect_md5
                   else f'MISMATCH (portal {expect_md5})')

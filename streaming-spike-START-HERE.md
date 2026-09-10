@@ -4,9 +4,14 @@
 mount, no full download — so the suite can move to Fargate?
 
 **Answer: yes.** Every format that has data on the portal is proven. bigBed, bigInteract and cram
-are deferred: the portal holds zero files of them in any status, so there is nothing to run against.
+are deferred: the portal holds zero files of them in any status (last checked 2026-09-10), so
+there is nothing to run against.
 
 Nothing in `src/checkfiles/` was changed. This is a spike: standalone PoCs only.
+
+Everything below was re-run from the docs on a second machine on 2026-09-10 (macOS arm64,
+fresh docker build for Bucket 4a, plain pip venv for Buckets 1–3) and produced the same
+verdicts — see "Re-verification 2026-09-10" in `streaming-spike-checklist.md`.
 
 ## What to read
 
@@ -68,8 +73,10 @@ samtools message).
 
 ## Reproducing
 
-Buckets 1–3 need a conda env (pysam/pyBigWig with libcurl); Bucket 4a needs the docker image that
-carries `validateFiles`, `fastq_stats`, `FastaValidator` and `vcf_assembly_checker`:
+Buckets 1–3 need pysam and pyBigWig built with libcurl — a plain pip venv on python 3.11 gives
+that today (recipe in the checklist's "Re-verification 2026-09-10"; conda is the fallback).
+Bucket 4a needs the docker image that carries `validateFiles`, `fastq_stats`, `FastaValidator`
+and `vcf_assembly_checker`:
 
 ```bash
 docker build -f streaming_spike/docker/Dockerfile.spike -t checkfiles-spike:4a .

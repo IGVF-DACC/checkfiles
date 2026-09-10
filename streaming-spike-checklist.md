@@ -34,7 +34,7 @@ a side-by-side sanity check against the current checker's accept/reject boundary
 - [x] locate a released bam on the portal
 - [x] bam: `pysam.quickcheck` / `AlignmentFile` / `stats` against real object → good case
 - [x] bam: known-bad case rejected (e.g. non-bam object)
-- [!] locate a released cram + matching reference — **deferred, no such data exists** (local ref copies exist: `src/checkfiles/src/checkfiles/supporting_files/grch38.fa`, `grcm39.fa`)
+- [!] locate a released cram + matching reference — **deferred, no such data exists** (the references themselves are no obstacle: `grch38.fa` / `grcm39.fa` belong at the gitignored `src/checkfiles/supporting_files/`, fetched by `utils/download_ref_files.py`)
 - [!] cram: streaming open + `view→stats` pipe, good case
 - [!] cram: known-bad case rejected
 
@@ -99,6 +99,49 @@ as written-but-unrun code, because no object exists to run it against. See
 
 ## Run log
 
+### Re-verification 2026-09-10 (second machine: macOS 26 arm64, not the original sandbox)
+Purpose: confirm the deliverable reproduces from the docs alone before review closes.
+
+- **Portal re-checked:** still **0** bigBed, **0** bigInteract, **0** cram files in any status
+  (`/search/?type=File&file_format=…&limit=0`), so the three deferrals stand.
+- **Regression found and fixed:** the final "lint" commit (`64b98ce`) had re-sorted imports above
+  the `sys.path.insert` bootstrap in `validate_tabular.py`, `validate_seqspec.py` and
+  `compare_local_vs_stream.py`, so all three died at import with `No module named 'constants'`
+  (and the FastaValidator stub ran too late). Order restored, marked `# noqa: E402` with a
+  comment so an import sorter does not undo it again. Also: `validate_universal.py` printed peak
+  RSS in the wrong unit on macOS (`ru_maxrss` is bytes there, KB on Linux) — fixed.
+- **Bucket 4a:** `Dockerfile.spike` rebuilt (`docker build …`, layer cache warm) and
+  `run_4a.sh` run unchanged: all **13 cases identical** to the log below, every good case `{}`,
+  every bad case the same message.
+- **Buckets 1–3:** run from a plain **pip** venv — no conda needed on a host with a sane python:
+  `pyBigWig 0.3.25` (built against system libcurl, `remote == 1`), `pysam 0.24.1` PyPI wheel
+  (htslib 1.24, opens `s3://` directly — the wheel caveat in the hand-off is not hit by current
+  wheels), `h5py 3.14.0` + `s3fs`, `frictionless 5.18.0` (the repo's pin), `smart_open 8.0.1`,
+  seqspec `v25-09-23`. tabular 5/5, seqspec 5/5, bam 4/4, h5ad 4/4, bigWig 5/5 and the 52 MB
+  universal case (md5 + content-md5 match the portal) all produced the same verdicts as below.
+- **Feasibility bar (d):** `compare_local_vs_stream.py` again agrees on all 7 cases, payloads
+  byte-identical on 6 of 7 (the samtools path echo, as before).
+- Housekeeping: `run_4a.sh` now looks for the reference genomes at the canonical gitignored path
+  first (`src/checkfiles/supporting_files/`) and only falls back to bind-mounting a stray copy.
+  **Trap found doing this:** bind-mounting a file onto a not-yet-existing path makes docker leave
+  a **0-byte placeholder** on the host at the target. The August runs left four such placeholders
+  at the canonical path, and a naive "file exists" check then shadowed the real references, so
+  `vcf_assembly_checker` read an empty fasta and reported `0/0 matches` (no error, wrong verdict).
+  The script now requires non-empty files. Anyone integrating vcf/gvcf should assert the
+  reference is non-empty at startup for the same reason.
+
+```bash
+# pip-only rebuild of the Buckets 1-3 environment (python 3.11, macOS arm64 / linux x86_64)
+python3 -m venv venv && venv/bin/pip install -U pip
+venv/bin/pip install "boto3>=1.26" "frictionless[aws]==5.18.0" "h5py==3.14.0" s3fs \
+    "smart_open[s3]" pysam pyBigWig pyyaml requests py-fasta-validator \
+    "git+https://github.com/IGVF-DACC/seqspec.git@v25-09-23"
+venv/bin/python -c "import pyBigWig; assert pyBigWig.remote == 1"
+# then, from the repo root:
+venv/bin/python streaming_spike/validate_tabular.py     # and the other validate_*.py
+venv/bin/python streaming_spike/compare_local_vs_stream.py
+```
+
 ### Environment for Buckets 1–3 (aarch64!)
 Bucket 4a has its own environment — a docker image, see "Bucket 4a environment" below.
 Sandbox is `linux-aarch64`. micromamba env `spike` (python 3.11) from conda-forge+bioconda:
@@ -139,7 +182,7 @@ bedpe 2 · (others small)
 Released-only counts run slightly lower (e.g. bam 2799, h5ad 1531, tsv 628, csv 195, bigWig 125);
 the figures above are deliberately unfiltered, because that makes the absence below the stronger
 claim: **no `bigBed`, no `bigInteract` and no `cram` exist on the portal in _any_ status.**
-See open questions.
+(Re-checked 2026-09-10: still zero of each.) See "Deferred by decision" below.
 
 ### Bucket 2 — bam: **PROVEN**
 `pysam.AlignmentFile("s3://igvf-public/...bam")` opens on a **10 GB** object, reads 195 `@SQ`
@@ -359,7 +402,7 @@ actually exists.** The reasoning, and what a future reader should pick up:
 
 - **cram** is expected to behave like bam, which is proven. Two real differences to expect when the
   time comes: the checker needs a reference (`-T`, and local copies already sit in
-  `src/checkfiles/src/checkfiles/supporting_files/{grch38,grcm39}.fa`), and `cram_pysam_check` uses
+  `src/checkfiles/supporting_files/{grch38,grcm39}.fa`, gitignored), and `cram_pysam_check` uses
   a `samtools view -h -T ref | samtools stats -` pipe rather than a single call.
 - **bigBed / bigInteract**: `validate_bigbed` is already written (in the hand-off doc) and should
   just need a run. **Do not reach for the bed FIFO pattern for these.** Despite the name they are

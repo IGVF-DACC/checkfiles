@@ -13,22 +13,26 @@ Returns the same error dict shape as the original ({} = valid).
 
 Run from the repo root -- TABULAR_FILE_SCHEMAS paths are repo-relative.
 """
-from guide_rna_sequences_check import GuideRnaSequencesCheck
-from constants import (
+import os
+import sys
+
+# Path bootstrap: `constants` and `guide_rna_sequences_check` live in src/checkfiles and
+# are not a package, so they must be on sys.path BEFORE the imports below. Do not let an
+# import sorter move these up.
+sys.path.insert(0, os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'checkfiles'))
+
+import boto3  # noqa: E402
+from botocore import UNSIGNED  # noqa: E402
+from botocore.config import Config  # noqa: E402
+from frictionless import system, validate, describe, Schema, Dialect  # noqa: E402
+from frictionless.exception import FrictionlessException  # noqa: E402
+from smart_open import open as s_open  # noqa: E402
+from constants import (  # noqa: E402
     TABULAR_FILE_SCHEMAS, NO_HEADER_CONTENT_TYPE, UTF_8_ENCODING,
     MAX_NUM_ERROR_FOR_TABULAR_FILE, MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE,
 )
-from smart_open import open as s_open
-from frictionless.exception import FrictionlessException
-from frictionless import system, validate, describe, Schema, Dialect
-from botocore.config import Config
-from botocore import UNSIGNED
-import boto3
-import sys
-import os
-
-sys.path.insert(0, os.path.join(
-    os.path.dirname(__file__), '..', 'src', 'checkfiles'))
+from guide_rna_sequences_check import GuideRnaSequencesCheck  # noqa: E402
 
 
 S3_REGION = 'us-west-2'

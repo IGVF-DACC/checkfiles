@@ -10,19 +10,15 @@ not part of the streaming path being proven.
 FastaValidator (py_fasta_validator) has no aarch64 wheel and does not build in this sandbox,
 so it is stubbed purely to let `checkfiles` import. Nothing compared here touches fasta.
 """
-from validate_h5ad import validate_h5ad
-from validate_bam import validate_bam
-from validate_tabular import validate_tabular
-import checkfiles
-from botocore.config import Config
-from botocore import UNSIGNED
-import boto3
+import json
 import os
 import sys
-import types
 import tempfile
-import json
+import types
 
+# Path bootstrap + FastaValidator stub. Both must run BEFORE `import checkfiles` and the
+# validate_* imports below: checkfiles is not a package, and importing it pulls in
+# FastaValidator. Do not let an import sorter move the imports above this block.
 REPO = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, os.path.join(REPO, 'src', 'checkfiles'))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -30,6 +26,14 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 _stub = types.ModuleType('FastaValidator')
 _stub.fasta_validator = lambda *a, **k: 0
 sys.modules.setdefault('FastaValidator', _stub)
+
+import boto3  # noqa: E402
+from botocore import UNSIGNED  # noqa: E402
+from botocore.config import Config  # noqa: E402
+import checkfiles  # noqa: E402
+from validate_tabular import validate_tabular  # noqa: E402
+from validate_bam import validate_bam  # noqa: E402
+from validate_h5ad import validate_h5ad  # noqa: E402
 
 
 S3 = boto3.client('s3', config=Config(

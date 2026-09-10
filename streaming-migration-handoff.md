@@ -102,7 +102,9 @@ Data is read once, front to back, by our own Python. Stream the object (e.g. `sm
 **pysam `s3://` support is build-dependent — CONFIRMED WORKING.** conda-forge/bioconda
 `pysam 0.24.0` (htslib 1.23.1, linux-aarch64) opens `s3://igvf-public/...` with **no credentials
 configured**, on a 10 GB object, and the region-explicit `https://` form behaves identically.
-Original note retained below.
+Re-verified 2026-09-10: the plain **PyPI wheel** `pysam 0.24.1` (htslib 1.24, macOS arm64) also
+opens `s3://` — so current wheels are fine too, but the startup assertion below stays the safety
+net since this is a property of the build, not of the version. Original note retained below.
 
 **pysam `s3://` support is build-dependent.** htslib reads `s3://`/`https://` natively *only if built with libcurl + S3 plugins*. conda-forge/bioconda pysam has it; some pip wheels throw `Protocol not supported`. Pin pysam from conda-forge in the image and add a **startup assertion** that opens a known S3 object so a bad build fails loudly, not mid-batch. Watch the egress gotcha: unbounded `fetch()` range requests can egress the whole tail — fine for our full-file reads (quickcheck/stats/count), but don't "optimize" into open-ended region fetches.
 
@@ -310,7 +312,8 @@ the pysam risk is retired.*
    work on them. pyBigWig over range requests is the proven approach, as for bigWig.
 2. **cram.** Also absent from the portal, so Bucket 2 is half proven. Expected to work like bam,
    whose `s3://` risk is now retired; the differences are that it needs a reference (`-T`, local
-   copies in `src/checkfiles/src/checkfiles/supporting_files/{grch38,grcm39}.fa`) and that
+   copies belong at `src/checkfiles/supporting_files/{grch38,grcm39}.fa`, gitignored, fetched by
+   `utils/download_ref_files.py`) and that
    `cram_pysam_check` runs a `samtools view -h -T ref | samtools stats -` pipe.
 
 ## Feasibility bar for each format (how to know a format is "proven")
@@ -334,7 +337,7 @@ Captured so the reasoning isn't lost — do not start these during the spike:
 - AutoSql schemas: `src/schemas/as/`. Chrom sizes: `src/schemas/genome_builds/chrom_sizes/` (e.g. `GRCh38.chrom.sizes`, `mm39.chrom.sizes`).
 - External binaries: UCSC `validateFiles`, `fastq_stats`, `FastaValidator` (py_fasta_validator), `vcf_assembly_checker`.
 - Packages to have available for the spike: `pyBigWig` (libcurl-enabled — check `pyBigWig.remote == 1`), `frictionless[aws]` (pulls boto3; the base install does **not**), `smart_open`, `h5py` + `s3fs`, and a `pysam` build with libcurl S3 support (conda-forge/bioconda). Plus local copies of any reference genomes needed by the cram/vcf checkers.
-- Test objects used so far (public, `--no-sign-request`): bigWig, bigInteract/bedpe, and fastq objects under `s3://igvf-public/...`. Use region-explicit https URLs for pyBigWig (e.g. `https://igvf-public.s3.us-west-2.amazonaws.com/...`).
+- Test objects: all public, under `s3://igvf-public/...` (anonymous / `--no-sign-request`). The full per-format list of `s3_uri`s used is the table in `streaming-spike-START-HERE.md`. Use region-explicit https URLs for pyBigWig (e.g. `https://igvf-public.s3.us-west-2.amazonaws.com/...`).
 - The `dev` branch README enumerates the required formats; the spike is done when every one of them has a proven streaming validation per the bar above.
 
 
