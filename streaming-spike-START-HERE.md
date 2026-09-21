@@ -22,6 +22,7 @@ verdicts — see "Re-verification 2026-09-10" in `streaming-spike-checklist.md`.
 | `streaming-spike-checklist.md` | full run log, findings, how to rebuild the environments |
 | `streaming-migration-handoff.md` | original hand-off, updated in place (bucket model, per-format table) |
 | `streaming_spike/` | the PoC code |
+| `fargate-migration-plan.md` | **what comes next**: the approved design and PR-by-PR plan for moving checkfiles to SQS-fed Fargate workers that stream from S3 |
 
 ## What was proven, and against what
 
