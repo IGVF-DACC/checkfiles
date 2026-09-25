@@ -1,9 +1,17 @@
 import datetime
+import json
+import pickle
+
+import pytest
+import requests
+
 from checkfiles.checkfiles import check_valid_gzipped_file_format, fasta_check, get_reference_file_path, vcf_sequence_check, seqspec_file_check, cram_pysam_check, check_valid_h5ad_file_format
 from checkfiles.checkfiles import make_content_md5sum_search_url, bam_pysam_check, fastq_get_average_read_length_and_number_of_reads, file_validation
 from checkfiles.checkfiles import get_validate_files_args, validate_files_check, validate_files_fastq_check
 from checkfiles.checkfiles import PortalAuth
 from checkfiles.checkfiles import upload_credentials_are_expired
+from checkfiles.checkfiles import check_content_md5sum, make_portal_session, portal_request, patching_worker, worker
+from checkfiles.checkfiles import PORTAL_REQUEST_TIMEOUT
 from checkfiles.file import FileValidationRecord
 from checkfiles.file import get_file
 from checkfiles.version import get_checkfiles_version
@@ -583,7 +591,7 @@ def test_upload_credentials_are_expired_expired(mocker):
                 }
             ]
     }
-    mocker.patch('checkfiles.checkfiles.requests.get',
+    mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response)
     assert upload_credentials_are_expired(
         'uri_to_portal', 'file_uuid', PortalAuth('fake', 'creds')) == True
@@ -606,10 +614,105 @@ def test_upload_credentials_are_expired_not_expired(mocker):
                 }
             ]
     }
-    mocker.patch('checkfiles.checkfiles.requests.get',
+    mocker.patch('checkfiles.checkfiles.requests.Session.get',
                  return_value=mock_response)
     assert upload_credentials_are_expired(
         'uri_to_portal', 'file_uuid', PortalAuth('fake', 'creds')) == False
+
+
+def make_json_response(status_code, body, url='url_to_portal'):
+    response = requests.Response()
+    response.status_code = status_code
+    response._content = json.dumps(body).encode()
+    response.url = url
+    return response
+
+
+def make_worker_job(ignore_active_credentials=False):
+    record = FileValidationRecord(
+        get_file('src/tests/data/ENCFF594AYI.fastq.gz', 'fastq'), 'some-uuid')
+    return (ignore_active_credentials, 'url_to_portal', PortalAuth('fake', 'creds'), record,
+            'md5sum', 'reads', None, None, None, True)
+
+
+def test_requests_json_decode_error_survives_pickling():
+    error = requests.exceptions.JSONDecodeError(
+        'Expecting value', '<html>502 Bad Gateway</html>', 0)
+    restored = pickle.loads(pickle.dumps(error))
+    assert isinstance(restored, requests.exceptions.JSONDecodeError)
+
+
+def test_patching_worker_returns_none_when_validation_raises(mocker):
+    mocker.patch('checkfiles.checkfiles.upload_credentials_are_expired',
+                 return_value=True)
+    mocker.patch('checkfiles.checkfiles.file_validation',
+                 side_effect=requests.exceptions.JSONDecodeError('Expecting value', '<html>', 0))
+    mock_logger = mocker.patch('checkfiles.checkfiles.logger')
+    assert patching_worker(make_worker_job()) is None
+    mock_logger.exception.assert_called_once()
+    assert 'some-uuid' in mock_logger.exception.call_args.args[0]
+
+
+def test_patching_worker_returns_none_when_portal_request_fails(mocker):
+    mocker.patch('checkfiles.checkfiles.upload_credentials_are_expired',
+                 side_effect=requests.exceptions.HTTPError('502 Server Error'))
+    mock_logger = mocker.patch('checkfiles.checkfiles.logger')
+    assert patching_worker(make_worker_job()) is None
+    mock_logger.exception.assert_called_once()
+
+
+def test_worker_returns_none_when_validation_raises(mocker):
+    mocker.patch('checkfiles.checkfiles.file_validation',
+                 side_effect=ValueError('boom'))
+    mock_logger = mocker.patch('checkfiles.checkfiles.logger')
+    assert worker(make_worker_job()) is None
+    mock_logger.exception.assert_called_once()
+    assert 'some-uuid' in mock_logger.exception.call_args.args[0]
+
+
+def test_portal_request_passes_timeout(mocker):
+    mock_get = mocker.patch('checkfiles.checkfiles.requests.Session.get',
+                            return_value=make_json_response(200, {}))
+    portal_request('get', 'url_to_portal', PortalAuth('fake', 'creds'))
+    assert mock_get.call_args.kwargs['timeout'] == PORTAL_REQUEST_TIMEOUT
+
+
+def test_portal_request_allows_not_found_for_searches(mocker):
+    mocker.patch('checkfiles.checkfiles.requests.Session.get',
+                 return_value=make_json_response(404, {'@graph': []}))
+    response = portal_request('get', 'url_to_portal/search/',
+                              allow_not_found=True)
+    assert response.json() == {'@graph': []}
+
+
+def test_portal_request_raises_on_not_found_by_default(mocker):
+    mocker.patch('checkfiles.checkfiles.requests.Session.get',
+                 return_value=make_json_response(404, {'@graph': []}))
+    with pytest.raises(requests.exceptions.HTTPError):
+        portal_request('get', 'url_to_portal/some-uuid')
+
+
+def test_portal_request_raises_on_server_error(mocker):
+    mocker.patch('checkfiles.checkfiles.requests.Session.get',
+                 return_value=make_json_response(500, {}))
+    with pytest.raises(requests.exceptions.HTTPError):
+        portal_request('get', 'url_to_portal/search/', allow_not_found=True)
+
+
+def test_make_portal_session_retries_transient_errors():
+    session = make_portal_session(PortalAuth('fake', 'creds'))
+    assert session.auth == PortalAuth('fake', 'creds')
+    retry = session.get_adapter('https://api.data.igvf.org').max_retries
+    assert retry.total == 5
+    assert 502 in retry.status_forcelist
+    assert {'GET', 'PATCH'} <= set(retry.allowed_methods)
+
+
+def test_check_content_md5sum_no_conflicts_when_search_returns_not_found(mocker):
+    mocker.patch('checkfiles.checkfiles.requests.Session.get',
+                 return_value=make_json_response(404, {'@graph': []}))
+    assert check_content_md5sum(
+        '123456', 'some-uuid', None, 'url_to_portal') == {}
 
 
 def test_make_content_md5sum_search_url():

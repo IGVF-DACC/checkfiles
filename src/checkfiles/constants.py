@@ -42,6 +42,15 @@ NO_HEADER_CONTENT_TYPE = [
     'methylation counts'
 ]
 
+PORTAL_REQUEST_BACKOFF_FACTOR = 1
+
+PORTAL_REQUEST_RETRIES = 5
+
+# (connect, read) in seconds; the pending files search uses limit=all and can be slow
+PORTAL_REQUEST_TIMEOUT = (10, 300)
+
+PORTAL_RETRY_STATUS_CODES = (429, 500, 502, 503, 504)
+
 TABULAR_FILE_SCHEMAS = {
     'barcode to sample mapping': ['src/schemas/table_schemas/barcode_to_sample_mapping.json', 'src/schemas/table_schemas/barcode_to_sample_mapping_three_columns.json'],
     'caQTL': 'src/schemas/table_schemas/caqtl.json',

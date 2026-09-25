@@ -24,6 +24,8 @@ import pysam
 from FastaValidator import fasta_validator
 from frictionless import system, validate, describe, Schema, Dialect, Field
 from frictionless.exception import FrictionlessException
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from seqspec.utils import load_spec as seqspec_load_spec
 from seqspec.seqspec_version import seqspec_version
 from seqspec.seqspec_check import seqspec_check
@@ -35,6 +37,7 @@ from constants import MAX_NUM_DETAILED_ERROR_FOR_TABULAR_FILE, ASSEMBLY_REPORT_F
 from constants import GZIP_CHECK_IGNORED_FILE_FORMAT, NO_HEADER_CONTENT_TYPE, TABULAR_FORMAT, TABULAR_FILE_SCHEMAS
 from constants import VALIDATE_FILES_ARGS, ASSEMBLY_TO_CHROMINFO_PATH_MAP, ASSEMBLY_FOR_VCF, ASSEMBLY_TO_SEQUENCE_FILE_MAP
 from constants import FASTA_VALIDATION_INFO, SEQSPEC_FILE_VERSION, NO_SQ_HEADER_BAM_CONTENT_TYPES
+from constants import PORTAL_REQUEST_BACKOFF_FACTOR, PORTAL_REQUEST_RETRIES, PORTAL_REQUEST_TIMEOUT, PORTAL_RETRY_STATUS_CODES
 from guide_rna_sequences_check import GuideRnaSequencesCheck
 from regulator_check import RegulatorCheck
 from version import get_checkfiles_version
@@ -222,6 +225,36 @@ def check_md5sum(expected_md5sum, calculated_md5sum):
     return error
 
 
+def make_portal_session(portal_auth: Optional[PortalAuth] = None):
+    session = requests.Session()
+    session.auth = portal_auth
+    retry = Retry(
+        total=PORTAL_REQUEST_RETRIES,
+        backoff_factor=PORTAL_REQUEST_BACKOFF_FACTOR,
+        status_forcelist=PORTAL_RETRY_STATUS_CODES,
+        allowed_methods=frozenset({'GET', 'PATCH'}),
+        raise_on_status=False,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('https://', adapter)
+    session.mount('http://', adapter)
+    return session
+
+
+def portal_request(method: str, url: str, portal_auth: Optional[PortalAuth] = None, allow_not_found=False, **kwargs):
+    session = make_portal_session(portal_auth)
+    response = getattr(session, method)(
+        url, timeout=PORTAL_REQUEST_TIMEOUT, **kwargs)
+    # portal searches with no results return 404 with a valid JSON body
+    if allow_not_found and response.status_code == 404:
+        return response
+    if not response.ok:
+        logger.error(
+            f'{method.upper()} {url} returned {response.status_code}: {response.text[:1000]}')
+    response.raise_for_status()
+    return response
+
+
 def make_content_md5sum_search_url(content_md5sum, uuid, portal_url):
     search_url = f'{portal_url}/search/?type=File&format=json&status!=replaced&status!=deleted&uuid!={uuid}&content_md5sum={content_md5sum}'
     logger.info(f'content_md5sum search url: {search_url}')
@@ -231,9 +264,8 @@ def make_content_md5sum_search_url(content_md5sum, uuid, portal_url):
 def check_content_md5sum(content_md5sum, uuid, portal_auth: Optional[PortalAuth] = None, portal_url=None):
     error = {}
     url = make_content_md5sum_search_url(content_md5sum, uuid, portal_url)
-    session = requests.Session()
-    session.auth = portal_auth
-    conflict_files = session.get(url).json()['@graph']
+    conflict_files = portal_request(
+        'get', url, portal_auth, allow_not_found=True).json()['@graph']
     if conflict_files:
         accessions = []
         for file in conflict_files:
@@ -271,9 +303,7 @@ def bam_pysam_check(file_path, content_type, no_sq_header_bam_content_types=NO_S
 def get_reference_file_path(reference_file, portal_url, portal_auth):
     # reference_file looks like this: /reference-files/TSTFI36924773/
     search_url = f'{portal_url}{reference_file}'
-    session = requests.Session()
-    session.auth = portal_auth
-    metadata = session.get(search_url).json()
+    metadata = portal_request('get', search_url, portal_auth).json()
     reference_file_path = os.environ.get(
         'HOME') + make_local_path_from_s3_uri(metadata['s3_uri'])
     return reference_file_path
@@ -589,8 +619,7 @@ def validate_files_fastq_check(file_path):
 
 
 def fetch_file_metadata_by_uuid(uuid: str, server: str, portal_auth: PortalAuth):
-    response = requests.get(server + '/' + uuid, auth=portal_auth)
-    # todo handle exceptions, retries etc.
+    response = portal_request('get', server + '/' + uuid, portal_auth)
     return response.json()
 
 
@@ -619,7 +648,7 @@ def upload_credentials_are_expired(portal_uri: str, file_uuid: str, portal_auth:
     logger.info(
         f'Checking upload credential expiration status for {file_uuid}')
     request_uri = f'{portal_uri}/{file_uuid}/@@upload'
-    response = requests.get(request_uri, auth=portal_auth)
+    response = portal_request('get', request_uri, portal_auth)
     expiration = response.json(
     )['@graph'][0]['upload_credentials']['expiration']
     # portal times are utc
@@ -634,14 +663,15 @@ def fetch_pending_files_metadata(portal_uri: str, portal_auth: PortalAuth, numbe
     else:
         search = 'search?type=File&upload_status=pending&field=uuid&field=upload_status&field=md5sum&field=file_format&field=file_format_type&field=s3_uri&field=assembly&field=content_type&field=validate_onlist_files&field=reference_files&limit=all'
     search_uri = f'{portal_uri}/{search}'
-    response = requests.get(search_uri, auth=portal_auth)
+    response = portal_request(
+        'get', search_uri, portal_auth, allow_not_found=True)
     metadata = response.json()['@graph']
     return metadata
 
 
 def fetch_etag_for_uuid(portal_uri: str, file_uuid: str, portal_auth: PortalAuth) -> str:
     request_uri = f'{portal_uri}/{file_uuid}?frame=edit&datastore=database'
-    etag_response = requests.get(request_uri, auth=portal_auth)
+    etag_response = portal_request('get', request_uri, portal_auth)
     etag = etag_response.headers['etag']
     return etag
 
@@ -649,7 +679,15 @@ def fetch_etag_for_uuid(portal_uri: str, file_uuid: str, portal_auth: PortalAuth
 def worker(job):
     # throw away the active credential info, since we are not patching it does not matter
     _, *job = job
-    return file_validation(*job)
+    current_uuid = job[2].uuid
+    # Exceptions must not propagate: the pool pickles them back to the parent, and one
+    # that fails to unpickle kills the pool's result handler thread and hangs pool.map.
+    try:
+        return file_validation(*job)
+    except Exception:
+        logger.exception(
+            f'Unhandled exception while processing file uuid {current_uuid}')
+        return None
 
 
 def patching_worker(job):
@@ -658,29 +696,37 @@ def patching_worker(job):
     portal_auth = job[1]
     file_validation_record = job[2]
     current_uuid = file_validation_record.uuid
-    credentials_expired = upload_credentials_are_expired(
-        portal_uri, current_uuid, portal_auth)
-    if not credentials_expired and not ignore_active_credentials:
-        logger.info(
-            f'Upload credentials for {current_uuid} are not expired yet. Skipping.')
-        return
-    if not credentials_expired and ignore_active_credentials:
-        logger.info(
-            f'Upload credentials for {current_uuid} are not expired yet and ignore_active_credentials is set, proceeding to patch.')
-    result = file_validation(*job)
-    original_etag = file_validation_record.original_etag
-    etag_after = fetch_etag_for_uuid(portal_uri, current_uuid, portal_auth)
-    if not etag_after == original_etag:
-        logger.warning(
-            f'etag original {original_etag} does not match etag after validation {etag_after}. Will not patch {current_uuid}.')
-        return
-    else:
-        logger.info(
-            f'etag original {original_etag} matches etag after validation {etag_after}. Will patch {current_uuid}.')
-        patch_response = patch_file(portal_uri, portal_auth, result)
-        logger.info(f'Attempted patching {current_uuid}. patch response:')
-        logger.info(json.dumps(patch_response))
-        return patch_response
+    # Exceptions must not propagate: the pool pickles them back to the parent, and one
+    # that fails to unpickle kills the pool's result handler thread and hangs pool.map.
+    try:
+        credentials_expired = upload_credentials_are_expired(
+            portal_uri, current_uuid, portal_auth)
+        if not credentials_expired and not ignore_active_credentials:
+            logger.info(
+                f'Upload credentials for {current_uuid} are not expired yet. Skipping.')
+            return
+        if not credentials_expired and ignore_active_credentials:
+            logger.info(
+                f'Upload credentials for {current_uuid} are not expired yet and ignore_active_credentials is set, proceeding to patch.')
+        result = file_validation(*job)
+        original_etag = file_validation_record.original_etag
+        etag_after = fetch_etag_for_uuid(
+            portal_uri, current_uuid, portal_auth)
+        if not etag_after == original_etag:
+            logger.warning(
+                f'etag original {original_etag} does not match etag after validation {etag_after}. Will not patch {current_uuid}.')
+            return
+        else:
+            logger.info(
+                f'etag original {original_etag} matches etag after validation {etag_after}. Will patch {current_uuid}.')
+            patch_response = patch_file(portal_uri, portal_auth, result)
+            logger.info(f'Attempted patching {current_uuid}. patch response:')
+            logger.info(json.dumps(patch_response))
+            return patch_response
+    except Exception:
+        logger.exception(
+            f'Unhandled exception while processing file uuid {current_uuid}')
+        return None
 
 
 def patch_file(portal_uri: str, portal_auth: PortalAuth, validation_record: file.FileValidationRecord) -> dict:
@@ -691,8 +737,8 @@ def patch_file(portal_uri: str, portal_auth: PortalAuth, validation_record: file
     uuid_to_patch = validation_record.uuid
     payload = validation_record.make_payload()
     logger.info(f'Patching {uuid_to_patch} on {portal_uri}')
-    response = requests.patch(
-        f'{portal_uri}/{uuid_to_patch}', data=payload, headers=headers, auth=portal_auth)
+    response = portal_request(
+        'patch', f'{portal_uri}/{uuid_to_patch}', portal_auth, data=payload, headers=headers)
     return response.json()
 
 
