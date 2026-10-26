@@ -85,7 +85,10 @@ def file_validation(input_file_path, validation_record: file.FileValidationRecor
         h5ad_check_error = check_valid_h5ad_file_format(input_file_path)
         validation_record.update_errors(h5ad_check_error)
     elif file_format in TABULAR_FORMAT:
-        if not content_type and not tabular_file_schema_path:
+        if file_format == 'parquet' and not content_type and not tabular_file_schema_path:
+            logger.info(
+                'validating parquet file using the schema stored in the file')
+        elif not content_type and not tabular_file_schema_path:
             logger.info(
                 'file content type and tabular file schema are not provided for the tabular file, will only perform tabular file baseline check')
         tabular_file_check_error = tabular_file_check(
@@ -145,7 +148,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--content_type', help='content type of the file to be checked.')
     parser.add_argument('--file_format', choices=['bam', 'bed', 'bigWig', 'bigInteract', 'bigBed', 'bedpe', 'cram',
-                        'csv', 'fasta', 'fastq', 'h5ad', 'mtx', 'rds', 'tbi', 'tsv', 'txt', 'vcf', 'yaml'], required=True, help='file format of the file to be checked.')
+                        'csv', 'fasta', 'fastq', 'h5ad', 'mtx', 'parquet', 'rds', 'tbi', 'tsv', 'txt', 'vcf', 'yaml'], required=True, help='file format of the file to be checked.')
     # file_format_type is required for bed file and bigBed file
     parser.add_argument('--file_format_type',
                         help='file format type of the file to be checked.')

@@ -32,6 +32,13 @@ def test_check_valid_gzipped_file_format_error_unzip():
     assert error == {'gzip': 'bam file should be gzipped'}
 
 
+def test_check_valid_gzipped_file_format_parquet():
+    assert check_valid_gzipped_file_format(False, 'parquet') == {}
+    assert check_valid_gzipped_file_format(True, 'parquet') == {
+        'gzip': 'parquet file should not be gzipped'
+    }
+
+
 def test_bam_pysam_check_invalid_bam_file():
     file_path = 'src/tests/data/ENCFF594AYI.fastq.gz'
     error = bam_pysam_check(file_path, 'reads')

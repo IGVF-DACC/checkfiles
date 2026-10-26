@@ -278,6 +278,13 @@ def test_tabular_file_check_marker_genes_valid():
     assert error == {}
 
 
+def test_tabular_file_check_parquet_valid():
+    file_path = 'src/tests/data/parquet_sample_file_valid.parquet'
+    error = tabular_file_check(
+        'parquet', None, file_path, is_gzipped=False)
+    assert error == {}
+
+
 def test_tabular_file_check_encoding_invalid():
     """tabular_file_check rejects non-UTF-8 encodings and returns tabular_file_error."""
     file_path = 'src/tests/data/tabular_file_encoding.tsv'

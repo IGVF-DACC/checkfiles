@@ -75,6 +75,7 @@ TABULAR_FILE_SCHEMAS = {
 TABULAR_FORMAT = [
     'tsv',
     'csv',
+    'parquet',
 ]
 
 VALIDATE_FILES_ARGS = {
