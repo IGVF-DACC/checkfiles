@@ -50,13 +50,18 @@ def create_checkfiles_instance(event, context):
     instance_profile_arn = get_instance_profile_arn()
     security_group = get_security_group()
     tag = get_checkfiles_tag()
+    # refresh system CA certificates before any network fetches (the AMI may be stale),
     # clone checkfiles code and build the virtual environment
+    # with a hash-pinned pip bootstrap before installing anything else
     user_data = f'''#!/bin/bash
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade ca-certificates
     cd /home/ubuntu
     git clone https://github.com/IGVF-DACC/checkfiles.git --branch {tag} --single-branch
     cd checkfiles
     python3 -m venv venv
     source venv/bin/activate
+    python -m pip install --require-hashes -r pip-bootstrap.txt
     pip install -r src/checkfiles/requirements.txt
     python src/checkfiles/utils/download_ref_files.py
     cd ..

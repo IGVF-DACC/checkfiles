@@ -15,6 +15,7 @@ Create python 3.11 virtual environment, and install packages:
 
 ```bash
 $ python -m venv venv
+$ python -m pip install --require-hashes -r ../pip-bootstrap.txt
 $ pip install -r requirements.txt -r requirements-dev.txt
 ```
 

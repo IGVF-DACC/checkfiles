@@ -16,7 +16,8 @@ ENV IGVF_SECRET_KEY=$IGVF_SECRET_KEY
 RUN useradd -u 1444 -m checkfiles
 
 # Install base system packages
-RUN apt-get update && apt-get install -y \
+# apt-get upgrade picks up current ca-certificates even if the base image is stale
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     python3-pip \
     python3-venv \
     build-essential \
@@ -83,6 +84,9 @@ RUN chown -R  checkfiles:checkfiles $VIRTUAL_ENV
 
 RUN mkdir -p /scripts
 
+# hash-pinned pip bootstrap, see pip-bootstrap.txt
+COPY --chown=checkfiles:checkfiles pip-bootstrap.txt /checkfiles/pip-bootstrap.txt
+
 COPY --chown=checkfiles:checkfiles scripts/entrypoint.sh /scripts/entrypoint.sh
 
 RUN chmod +x /scripts/entrypoint.sh
@@ -96,8 +100,9 @@ COPY --chown=checkfiles:checkfiles src/ /checkfiles/src/
 # Change working directory to checkfiles module
 WORKDIR /checkfiles/src/checkfiles
 
-# Install Python dependencies
-RUN python -m pip install -r requirements.txt
+# Install Python dependencies with a hash-pinned pip
+RUN python -m pip install --require-hashes -r /checkfiles/pip-bootstrap.txt \
+    && python -m pip install -r requirements.txt
 
 # Download reference files for VCF validation to the correct location
 RUN python utils/download_ref_files.py --local-dir /checkfiles/src/checkfiles/supporting_files/
