@@ -16,6 +16,7 @@ jobs:
         python-version: 3.11
     - name: Install dependencies
       run: |
+        echo "pip==26.2.2 --hash=sha256:fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70" > /tmp/pip-bootstrap.txt
         python -m pip install --require-hashes -r ../pip-bootstrap.txt
         python -m pip install -r requirements.txt -r requirements-dev.txt
       working-directory: ./cdk
