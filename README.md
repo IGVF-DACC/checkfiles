@@ -95,6 +95,8 @@ To run checkfiles on the instance prepared above:
 $ cd checkfiles
 $ python3 -m venv venv
 $ source venv/bin/activate
+$ echo "pip==26.2.2 --hash=sha256:fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70" > /tmp/pip-bootstrap.txt
+$ python -m pip install --require-hashes -r /tmp/pip-bootstrap.txt
 $ pip install -r src/checkfiles/requirements.txt
 ```
 

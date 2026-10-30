@@ -1,4 +1,6 @@
-boto3==1.26.0
+boto3==1.43.118
+botocore==1.43.118
+certifi==2026.10.23
 frictionless==5.18.0
 h5py==3.14.0
 pysam==0.21.0
