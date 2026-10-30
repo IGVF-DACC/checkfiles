@@ -98,7 +98,7 @@
             "Properties": {
                 "Code": {
                     "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
-                    "S3Key": "334b180d22a4ec668c4de3b3fd7437d1229fedce62df6024625b2111c4602523.zip"
+                    "S3Key": "f13a5de6d48317bdd5a5187992d247114bba81bce42925a3244540d534b9987e.zip"
                 },
                 "Environment": {
                     "Variables": {

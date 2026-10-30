@@ -84,9 +84,6 @@ RUN chown -R  checkfiles:checkfiles $VIRTUAL_ENV
 
 RUN mkdir -p /scripts
 
-# hash-pinned pip bootstrap, see pip-bootstrap.txt
-COPY --chown=checkfiles:checkfiles pip-bootstrap.txt /checkfiles/pip-bootstrap.txt
-
 COPY --chown=checkfiles:checkfiles scripts/entrypoint.sh /scripts/entrypoint.sh
 
 RUN chmod +x /scripts/entrypoint.sh
@@ -101,7 +98,8 @@ COPY --chown=checkfiles:checkfiles src/ /checkfiles/src/
 WORKDIR /checkfiles/src/checkfiles
 
 # Install Python dependencies with a hash-pinned pip
-RUN python -m pip install --require-hashes -r /checkfiles/pip-bootstrap.txt \
+RUN echo "pip==26.2.2 --hash=sha256:fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70" > /tmp/pip-bootstrap.txt \
+    && python -m pip install --require-hashes -r /tmp/pip-bootstrap.txt \
     && python -m pip install -r requirements.txt
 
 # Download reference files for VCF validation to the correct location
