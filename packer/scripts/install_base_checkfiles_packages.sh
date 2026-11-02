@@ -2,6 +2,7 @@
 set -ex
 
 sudo apt-get update
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y upgrade
 sudo apt-get -y install \
     python3-pip \
     python3-venv \
