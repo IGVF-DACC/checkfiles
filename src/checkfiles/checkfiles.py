@@ -417,23 +417,29 @@ def tabular_file_check(file_format, content_type, file_path, is_gzipped=True, sc
     try:
         system.trusted = True
         error = {}
-        # Build minimal dialect with comment_char and header_rows.
-        if content_type not in NO_HEADER_CONTENT_TYPE:
-            header_row = get_header_row(
-                file_path, is_gzipped)
-            dialect = Dialect(comment_char='#', header_rows=[header_row])
+        if file_format == 'parquet':
+            # Column names and compression live in the Parquet file.
+            frictionless_options = {
+                'format': 'parquet',
+            }
         else:
-            dialect = Dialect(header=False, comment_char='#')
+            # Build minimal dialect with comment_char and header_rows.
+            if content_type not in NO_HEADER_CONTENT_TYPE:
+                header_row = get_header_row(
+                    file_path, is_gzipped)
+                dialect = Dialect(comment_char='#', header_rows=[header_row])
+            else:
+                dialect = Dialect(header=False, comment_char='#')
 
-        # When file is gzipped but filename lacks .gz, frictionless won't auto-detect compression.
-        # Pass compression='gz' when the file is gzipped and force UTF-8.
-        frictionless_options = {
-            'dialect': dialect,
-            'format': file_format,
-            'encoding': UTF_8_ENCODING
-        }
-        if is_gzipped:
-            frictionless_options['compression'] = 'gz'
+            # When file is gzipped but filename lacks .gz, frictionless won't auto-detect compression.
+            # Pass compression='gz' when the file is gzipped and force UTF-8.
+            frictionless_options = {
+                'dialect': dialect,
+                'format': file_format,
+                'encoding': UTF_8_ENCODING
+            }
+            if is_gzipped:
+                frictionless_options['compression'] = 'gz'
         if not schema_path:
             schema_path = schemas.get(content_type)
         if not schema_path:
